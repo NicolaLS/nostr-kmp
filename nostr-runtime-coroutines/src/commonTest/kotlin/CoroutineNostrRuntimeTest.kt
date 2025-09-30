@@ -1,10 +1,7 @@
 package nostr.runtime.coroutines
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
@@ -18,6 +15,10 @@ import nostr.core.model.SubscriptionId
 import nostr.core.model.UnsignedEvent
 import nostr.core.session.ConnectionSnapshot
 import nostr.core.session.RelaySessionOutput
+import nostr.core.relay.RelayConnection
+import nostr.core.relay.RelayConnectionFactory
+import nostr.core.relay.RelayConnectionListener
+import nostr.core.relay.RelaySendResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -29,10 +30,10 @@ class CoroutineNostrRuntimeTest {
 
     @Test
     fun subscribeSendsReqWhenConnected() = runTest {
-        val connection = FakeCoroutineConnection("wss://relay")
+        val connection = FakeRelayConnection("wss://relay")
         val runtime = CoroutineNostrRuntime(
             scope = this,
-            connectionFactory = CoroutineRelayConnectionFactory { connection },
+            connectionFactory = RelayConnectionFactory { connection },
             wireEncoder = codec,
             wireDecoder = codec
         )
@@ -47,10 +48,10 @@ class CoroutineNostrRuntimeTest {
 
     @Test
     fun incomingEventFlowsToOutputs() = runTest {
-        val connection = FakeCoroutineConnection("wss://relay")
+        val connection = FakeRelayConnection("wss://relay")
         val runtime = CoroutineNostrRuntime(
             scope = this,
-            connectionFactory = CoroutineRelayConnectionFactory { connection },
+            connectionFactory = RelayConnectionFactory { connection },
             wireEncoder = codec,
             wireDecoder = codec
         )
@@ -73,10 +74,10 @@ class CoroutineNostrRuntimeTest {
 
     @Test
     fun disconnectTransitionsToDisconnected() = runTest {
-        val connection = FakeCoroutineConnection("wss://relay")
+        val connection = FakeRelayConnection("wss://relay")
         val runtime = CoroutineNostrRuntime(
             scope = this,
-            connectionFactory = CoroutineRelayConnectionFactory { connection },
+            connectionFactory = RelayConnectionFactory { connection },
             wireEncoder = codec,
             wireDecoder = codec
         )
@@ -113,25 +114,27 @@ class CoroutineNostrRuntimeTest {
         return Json.encodeToString(JsonElement.serializer(), element)
     }
 
-    private class FakeCoroutineConnection(override val url: String) : CoroutineRelayConnection {
-        private val channel = Channel<String>(Channel.UNLIMITED)
+    private class FakeRelayConnection(override val url: String) : RelayConnection {
+        var listener: RelayConnectionListener? = null
         val sentFrames = mutableListOf<String>()
 
-        override val incoming: Flow<String> = channel.receiveAsFlow()
-
-        override suspend fun open() { /* no-op */
+        override fun connect(listener: RelayConnectionListener) {
+            this.listener = listener
+            listener.onOpen(this)
         }
 
-        override suspend fun send(frame: String) {
+        override fun send(frame: String): RelaySendResult {
             sentFrames += frame
+            return RelaySendResult.Accepted
         }
 
-        override suspend fun close(code: Int, reason: String?) {
-            channel.close()
+        override fun close(code: Int, reason: String?) {
+            listener?.onClosed(code, reason)
+            listener = null
         }
 
-        suspend fun emit(frame: String) {
-            channel.send(frame)
+        fun emit(frame: String) {
+            listener?.onMessage(frame)
         }
     }
 }

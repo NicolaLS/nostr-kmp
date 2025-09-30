@@ -9,10 +9,11 @@ import nostr.core.model.Event
 import nostr.core.model.Filter
 import nostr.core.model.SubscriptionId
 import nostr.core.session.*
+import nostr.core.relay.RelayConnectionFactory
 
 class CoroutineNostrRuntime(
     private val scope: CoroutineScope,
-    private val connectionFactory: CoroutineRelayConnectionFactory,
+    private val connectionFactory: RelayConnectionFactory,
     private val wireEncoder: WireEncoder,
     private val wireDecoder: WireDecoder,
     settings: RelaySessionSettings = RelaySessionSettings(),
@@ -23,7 +24,7 @@ class CoroutineNostrRuntime(
     private val stateFlow = MutableStateFlow(engine.state)
     private val outputFlow = MutableSharedFlow<RelaySessionOutput>(replay = 0, extraBufferCapacity = 64)
     private val intents = Channel<RelaySessionIntent>(Channel.UNLIMITED)
-    private var connection: CoroutineRelayConnection? = null
+    private var connection: RelayConnectionAdapter? = null
     private var connectionJob: Job? = null
     private val processorJob: Job
 
@@ -63,7 +64,14 @@ class CoroutineNostrRuntime(
         intents.close()
         processorJob.cancelAndJoin()
         connectionJob?.cancelAndJoin()
+        val current = connection
         connection = null
+        try {
+            current?.close(code = 1000, reason = null)
+        } catch (_: Throwable) {
+        } finally {
+            current?.dispose()
+        }
     }
 
     private suspend fun processIntents() {
@@ -106,13 +114,17 @@ class CoroutineNostrRuntime(
 
     private suspend fun openConnection(url: String, queue: ArrayDeque<RelaySessionIntent>) {
         if (connection?.url == url) return
+        val previous = connection
+        connection = null
         connectionJob?.cancelAndJoin()
         try {
-            connection?.close()
+            previous?.close(code = 1000, reason = null)
         } catch (_: Throwable) {
+        } finally {
+            previous?.dispose()
         }
         val created = try {
-            connectionFactory.create(url)
+            RelayConnectionAdapter(connectionFactory.create(url))
         } catch (failure: Throwable) {
             queue.addLast(RelaySessionIntent.ConnectionFailed(url, failure.message ?: "Failed to create connection"))
             return
@@ -121,6 +133,7 @@ class CoroutineNostrRuntime(
         val openResult = kotlin.runCatching { created.open() }
         if (openResult.isFailure) {
             connection = null
+            created.dispose()
             queue.addLast(
                 RelaySessionIntent.ConnectionFailed(
                     url,
@@ -134,12 +147,22 @@ class CoroutineNostrRuntime(
                 created.incoming.collect { frame ->
                     intents.send(RelaySessionIntent.RelayEvent(wireDecoder.relayMessage(frame)))
                 }
-                intents.send(RelaySessionIntent.ConnectionClosed(created.url, 1000, "EOF"))
+                val closure = created.closeInfo()
+                intents.send(
+                    RelaySessionIntent.ConnectionClosed(
+                        created.url,
+                        closure?.code ?: 1000,
+                        closure?.reason ?: "EOF"
+                    )
+                )
+            } catch (_: CancellationException) {
+                // moving away from this connection
             } catch (failure: Throwable) {
+                val cause = created.failure() ?: failure
                 intents.send(
                     RelaySessionIntent.ConnectionFailed(
                         created.url,
-                        failure.message ?: "Incoming stream failed"
+                        cause.message ?: "Incoming stream failed"
                     )
                 )
             }
@@ -160,6 +183,7 @@ class CoroutineNostrRuntime(
                 job.join()
             }
         }
+        current.dispose()
     }
 
     private suspend fun sendFrame(command: RelaySessionCommand.SendToRelay, queue: ArrayDeque<RelaySessionIntent>) {
