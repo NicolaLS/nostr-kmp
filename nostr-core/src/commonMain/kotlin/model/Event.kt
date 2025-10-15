@@ -125,7 +125,7 @@ internal fun requireValidTag(tag: List<String>, message: (() -> String)? = null)
  */
 class EventBuilder(
     private val clock: Clock? = SystemClock,
-    private val hasher: Sha256,
+    private val hasher: Sha256 = Sha256.Default,
     private val protectSigner: Boolean = false
 ) {
     private var createdAt: Long? = null
