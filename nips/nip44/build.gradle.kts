@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
@@ -20,7 +17,11 @@ kotlin {
     // TODO: Find out if I still need to set jvmTarget ie if it will default to 1.8 if not set..
     jvmToolchain(21)
 
-    jvm()
+    jvm {
+        testRuns["test"].executionTask.configure {
+            useJUnit()
+        }
+    }
     androidTarget()
     js(IR) {
         browser()
@@ -28,18 +29,40 @@ kotlin {
     }
 
     sourceSets {
-        val commonMain by getting
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.acinq.secp256k1)
+                implementation(libs.multiplatform.crypto.libsodium.bindings)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(project(":nostr-core"))
+            }
+        }
         val commonTest by getting {
             dependencies {
                 implementation(libs.kotlin.test)
             }
         }
+        val jvmMain by getting {
+            dependencies {
+                implementation(libs.acinq.secp256k1.jni.jvm)
+            }
+        }
+        val jvmTest by getting {
+            dependencies {
+                implementation(libs.kotlinx.serialization.json)
+                runtimeOnly(libs.acinq.secp256k1.jni.jvm)
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                implementation(libs.acinq.secp256k1.jni.android)
+            }
+        }
     }
-
 }
 
 android {
-    namespace = "io.github.nicolals.nostr.core"
+    namespace = "io.github.nicolals.nostr.nips.nip44"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()

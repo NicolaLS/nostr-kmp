@@ -25,3 +25,5 @@ include(":nostr-codec-kotlinx-serialization")
 include(":nostr-runtime-coroutines")
 include(":nostr-transport-ktor")
 include(":nostr-crypto")
+
+include("nips:nip44")

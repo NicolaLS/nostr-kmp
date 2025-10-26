@@ -14,6 +14,10 @@ kotlin {
 
     jvm()
     androidTarget()
+    js(IR) {
+        browser()
+        nodejs()
+    }
 
     sourceSets {
         val commonMain by getting {
@@ -22,6 +26,11 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.websockets)
+            }
+        }
+        val jsMain by getting {
+            dependencies {
+                implementation(libs.ktor.client.js)
             }
         }
         val jvmMain by getting {
