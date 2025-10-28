@@ -11,12 +11,13 @@ version = "1.0.0"
 kotlin {
     jvmToolchain(21)
 
+    applyDefaultHierarchyTemplate()
+
     jvm()
     androidTarget()
-    js(IR) {
-        browser()
-        nodejs()
-    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     sourceSets {
         val commonMain by getting {

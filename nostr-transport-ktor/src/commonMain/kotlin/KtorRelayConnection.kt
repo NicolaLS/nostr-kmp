@@ -13,6 +13,10 @@ import nostr.core.relay.RelayConnectionFactory
 import nostr.core.relay.RelayConnectionListener
 import nostr.core.relay.RelaySendResult
 
+/**
+ * WebSocket-backed connection that expects single-threaded use; state changes are unsynchronized
+ * and must remain confined to the supplied [scope].
+ */
 class KtorRelayConnection(
     override val url: String,
     private val client: HttpClient,
@@ -25,13 +29,10 @@ class KtorRelayConnection(
     private var readerJob: Job? = null
     private var writerJob: Job? = null
 
-    @Volatile
     private var session: WebSocketSession? = null
 
-    @Volatile
     private var listener: RelayConnectionListener? = null
 
-    @Volatile
     private var closed: Boolean = false
 
     override fun connect(listener: RelayConnectionListener) {

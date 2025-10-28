@@ -1,5 +1,6 @@
 package nostr.core.time
 
 /** Platform clock implementation returning epoch seconds. */
-expect object SystemClock : Clock
-
+expect object SystemClock : Clock {
+    override fun nowSeconds(): Long
+}

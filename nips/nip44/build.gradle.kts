@@ -22,11 +22,12 @@ kotlin {
             useJUnit()
         }
     }
+    applyDefaultHierarchyTemplate()
+
     androidTarget()
-    js(IR) {
-        browser()
-        nodejs()
-    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     sourceSets {
         val commonMain by getting {
@@ -58,6 +59,7 @@ kotlin {
                 implementation(libs.acinq.secp256k1.jni.android)
             }
         }
+        val iosMain by getting
     }
 }
 

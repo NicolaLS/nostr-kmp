@@ -1,5 +1,6 @@
 package nostr.core.crypto.event
 
+import kotlin.jvm.JvmInline
 import nostr.core.crypto.HEX_CHARS_32
 import nostr.core.utils.hexToByteArray
 import nostr.core.utils.requireHex

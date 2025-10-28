@@ -115,7 +115,7 @@ fun unpad(padded: UByteArray): String {
     val plaintext = padded.copyOfRange(2, 2 + plaintextLength)
     val padding = padded.copyOfRange(2 + plaintextLength, padded.size)
     require(padding.all { it == ZERO }) { "invalid padding" }
-    return plaintext.asByteArray().toString(Charsets.UTF_8)
+    return plaintext.asByteArray().decodeToString()
 }
 
 fun getMessageKeys(conversationKey: UByteArray, nonce: UByteArray): MessageKeys {

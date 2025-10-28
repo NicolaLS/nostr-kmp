@@ -1,0 +1,5 @@
+package = nostr.core.crypto.interop
+language = C
+headers = sha256_bridge.h
+headerFilter = **
+compilerOpts = -Isrc/nativeInterop/headers

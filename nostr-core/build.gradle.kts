@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.konan.target.Family
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -20,11 +22,20 @@ kotlin {
     // TODO: Find out if I still need to set jvmTarget ie if it will default to 1.8 if not set..
     jvmToolchain(21)
 
+    applyDefaultHierarchyTemplate()
+
     jvm()
     androidTarget()
-    js(IR) {
-        browser()
-        nodejs()
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
+
+    targets.withType<KotlinNativeTarget>().configureEach {
+        if (konanTarget.family == Family.IOS) {
+            compilations["main"].cinterops.create("sha256") {
+                defFile(project.file("src/nativeInterop/cinterop/sha256.def"))
+            }
+        }
     }
 
     sourceSets {

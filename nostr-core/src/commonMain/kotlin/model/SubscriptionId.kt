@@ -1,5 +1,7 @@
 package nostr.core.model
 
+import kotlin.jvm.JvmInline
+
 /**
  * Subscription identifiers per NIP-01: arbitrary non-empty UTF-8 strings with a maximum length
  * of 64 characters. Using a value class ensures each identifier is validated exactly once before

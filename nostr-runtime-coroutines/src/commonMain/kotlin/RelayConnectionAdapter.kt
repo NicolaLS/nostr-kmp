@@ -8,6 +8,10 @@ import nostr.core.relay.RelayConnection
 import nostr.core.relay.RelayConnectionListener
 import nostr.core.relay.RelaySendResult
 
+/**
+ * Lightweight adapter that assumes single-threaded access; callers should confine instances to a
+ * single coroutine context because state mutations are not synchronized.
+ */
 internal class RelayConnectionAdapter(
     private val delegate: RelayConnection
 ) : RelayConnectionListener {
@@ -17,10 +21,8 @@ internal class RelayConnectionAdapter(
     private val openSignal = CompletableDeferred<Unit>()
     private val messages = Channel<String>(Channel.BUFFERED)
 
-    @Volatile
     private var closure: RelayClosure? = null
 
-    @Volatile
     private var failure: Throwable? = null
 
     private var started = false

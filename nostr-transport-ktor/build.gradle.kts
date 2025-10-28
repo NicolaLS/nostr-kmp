@@ -12,12 +12,13 @@ version = "1.0.0"
 kotlin {
     jvmToolchain(21)
 
+    applyDefaultHierarchyTemplate()
+
     jvm()
     androidTarget()
-    js(IR) {
-        browser()
-        nodejs()
-    }
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     sourceSets {
         val commonMain by getting {
@@ -28,11 +29,6 @@ kotlin {
                 implementation(libs.ktor.client.websockets)
             }
         }
-        val jsMain by getting {
-            dependencies {
-                implementation(libs.ktor.client.js)
-            }
-        }
         val jvmMain by getting {
             dependencies {
                 implementation(libs.ktor.client.okhttp)
@@ -41,6 +37,11 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation(libs.ktor.client.okhttp)
+            }
+        }
+        val iosMain by getting {
+            dependencies {
+                implementation(libs.ktor.client.darwin)
             }
         }
         val commonTest by getting {
