@@ -5,9 +5,6 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
-group = "io.github.nicolals"
-version = "1.0.0"
-
 kotlin {
     jvmToolchain(21)
 

@@ -10,11 +10,6 @@ plugins {
     // alias(libs.plugins.kotlinSerialization)
 }
 
-// Maven Central Namespace
-group = "io.github.nicolals"
-version = "1.0.0"
-
-
 kotlin {
     // NOTE: Sets the toolchain for Java compile task as well.
     // NOTE: Gradle tasks fail if this version is not present. To streamline contributing to the
