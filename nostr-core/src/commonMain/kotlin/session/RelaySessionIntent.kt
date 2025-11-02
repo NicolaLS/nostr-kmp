@@ -33,7 +33,14 @@ sealed interface RelaySessionIntent {
     data class ConnectionClosed(val url: String, val code: Int, val reason: String?) : RelaySessionIntent
 
     /** Transport failed to open or maintain the connection. */
-    data class ConnectionFailed(val url: String?, val message: String) : RelaySessionIntent
+    data class ConnectionFailed(
+        val url: String?,
+        val reason: ConnectionFailureReason,
+        val message: String,
+        val closeCode: Int? = null,
+        val closeReason: String? = null,
+        val cause: String? = null
+    ) : RelaySessionIntent
 
     /** Raw relay message received from the active connection. */
     data class RelayEvent(val message: RelayMessage) : RelaySessionIntent

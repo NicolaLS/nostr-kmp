@@ -13,6 +13,7 @@ import nostr.core.model.Event
 import nostr.core.model.Filter
 import nostr.core.model.SubscriptionId
 import nostr.core.model.UnsignedEvent
+import nostr.core.session.ConnectionFailureReason
 import nostr.core.session.ConnectionSnapshot
 import nostr.core.session.RelaySessionOutput
 import nostr.core.relay.RelayConnection
@@ -120,19 +121,24 @@ class CoroutineNostrRuntimeTest {
 
         val failed = runtime.connectionTelemetry.value
         val failureSnapshot = failed.snapshot
-        assertIs<ConnectionSnapshot.Failed>(failureSnapshot)
+        val failedSnapshot = assertIs<ConnectionSnapshot.Failed>(failureSnapshot)
+        assertEquals(ConnectionFailureReason.ConnectionFactory, failedSnapshot.reason)
+        assertEquals("boom", failedSnapshot.message)
+        assertTrue(failedSnapshot.cause?.endsWith("IllegalStateException") == true)
         assertEquals(1, failed.attempt)
         val lastFailure = failed.lastFailure
         assertNotNull(lastFailure)
+        assertEquals(ConnectionFailureReason.ConnectionFactory, lastFailure.reason)
         assertEquals("wss://relay", lastFailure.url)
         assertEquals(1, lastFailure.attempt)
+        assertTrue(lastFailure.cause?.endsWith("IllegalStateException") == true)
         assertTrue(failed.isRetrying.not())
 
         runtime.connect("wss://relay")
         advanceUntilIdle()
 
         val recovered = runtime.connectionTelemetry.value
-        assertIs<ConnectionSnapshot.Connected>(recovered.snapshot)
+        val recoveredSnapshot = assertIs<ConnectionSnapshot.Connected>(recovered.snapshot)
         assertEquals(2, recovered.attempt)
         assertTrue(recovered.isRetrying)
         assertNotNull(recovered.lastFailure)

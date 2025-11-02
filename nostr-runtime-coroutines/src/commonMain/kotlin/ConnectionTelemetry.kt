@@ -1,18 +1,27 @@
 package nostr.runtime.coroutines
 
+import nostr.core.session.ConnectionFailureReason
 import nostr.core.session.ConnectionSnapshot
 
 /**
  * Describes the most recent transport-level failure encountered by the runtime.
  *
  * @property url relay url that failed to connect or collapsed, when known.
+ * @property reason classified stage/cause of the failure.
  * @property message human-readable explanation surfaced by the transport stack.
  * @property attempt ordinal of the connection attempt that triggered the failure.
+ * @property closeCode websocket close code supplied by the relay, if available.
+ * @property closeReason additional close reason emitted by the relay, if available.
+ * @property cause fully-qualified type name for the originating exception, when known.
  */
 data class ConnectionFailure(
     val url: String?,
+    val reason: ConnectionFailureReason,
     val message: String,
-    val attempt: Int
+    val attempt: Int,
+    val closeCode: Int? = null,
+    val closeReason: String? = null,
+    val cause: String? = null
 )
 
 /**

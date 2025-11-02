@@ -99,7 +99,7 @@ class CoroutineNostrRuntime(
                     intents.receiveCatching().getOrNull() ?: break
                 }
                 if (intent is RelaySessionIntent.ConnectionFailed) {
-                    recordFailure(intent.url, intent.message)
+                    recordFailure(intent)
                 }
                 val transition = engine.dispatch(intent)
                 stateFlow.value = transition.state
@@ -152,7 +152,14 @@ class CoroutineNostrRuntime(
         val created = try {
             RelayConnectionAdapter(connectionFactory.create(url))
         } catch (failure: Throwable) {
-            queue.addLast(RelaySessionIntent.ConnectionFailed(url, failure.message ?: "Failed to create connection"))
+            queue.addLast(
+                RelaySessionIntent.ConnectionFailed(
+                    url = url,
+                    reason = ConnectionFailureReason.ConnectionFactory,
+                    message = failure.describeMessage("Failed to create connection"),
+                    cause = failure.describeCause()
+                )
+            )
             return
         }
         connection = created
@@ -162,8 +169,12 @@ class CoroutineNostrRuntime(
             created.dispose()
             queue.addLast(
                 RelaySessionIntent.ConnectionFailed(
-                    url,
-                    openResult.exceptionOrNull()?.message ?: "Failed to open connection"
+                    url = url,
+                    reason = ConnectionFailureReason.OpenHandshake,
+                    message = openResult.exceptionOrNull()
+                        ?.describeMessage("Failed to open connection")
+                        ?: "Failed to open connection",
+                    cause = openResult.exceptionOrNull()?.describeCause()
                 )
             )
             return
@@ -187,8 +198,10 @@ class CoroutineNostrRuntime(
                 val cause = created.failure() ?: failure
                 intents.send(
                     RelaySessionIntent.ConnectionFailed(
-                        created.url,
-                        cause.message ?: "Incoming stream failed"
+                        url = created.url,
+                        reason = ConnectionFailureReason.StreamFailure,
+                        message = cause.describeMessage("Incoming stream failed"),
+                        cause = cause.describeCause()
                     )
                 )
             }
@@ -196,8 +209,17 @@ class CoroutineNostrRuntime(
         queue.addLast(RelaySessionIntent.ConnectionEstablished(url))
     }
 
-    private fun recordFailure(url: String?, message: String) {
-        lastFailure = ConnectionFailure(url, message, attemptCount)
+    private fun recordFailure(intent: RelaySessionIntent.ConnectionFailed) {
+        val failureUrl = intent.url ?: activeUrl
+        lastFailure = ConnectionFailure(
+            url = failureUrl,
+            reason = intent.reason,
+            message = intent.message,
+            attempt = attemptCount,
+            closeCode = intent.closeCode,
+            closeReason = intent.closeReason,
+            cause = intent.cause
+        )
         refreshTelemetry(connectionSnapshotState.value)
     }
 
@@ -223,7 +245,11 @@ class CoroutineNostrRuntime(
             }
 
             is ConnectionSnapshot.Disconnecting -> Unit
-            is ConnectionSnapshot.Failed -> Unit
+            is ConnectionSnapshot.Failed -> {
+                if (snapshot.url != null) {
+                    activeUrl = snapshot.url
+                }
+            }
         }
         publishTelemetry(snapshot)
     }
@@ -241,6 +267,16 @@ class CoroutineNostrRuntime(
             lastFailure = lastFailure
         )
     }
+
+    private fun Throwable.describeMessage(default: String): String {
+        val custom = message?.takeIf { it.isNotBlank() }
+        if (custom != null) return custom
+        val type = this::class.simpleName ?: this::class.qualifiedName
+        return type ?: default
+    }
+
+    private fun Throwable.describeCause(): String? =
+        this::class.qualifiedName ?: this::class.simpleName
 
     private suspend fun closeConnection(code: Int?, reason: String?) {
         val current = connection ?: return

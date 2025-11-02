@@ -282,6 +282,44 @@ class ReducerTest {
         assertEquals(listOf("abc"), refreshed.receivedEventIds)
     }
 
+    @Test
+    fun connectionFailedEmitsStructuredError() {
+        val state = RelaySessionState(
+            desiredRelayUrl = "wss://relay",
+            connection = ConnectionSnapshot.Connecting("wss://relay")
+        )
+        val reducer = DefaultRelaySessionReducer()
+        val intent = RelaySessionIntent.ConnectionFailed(
+            url = "wss://relay",
+            reason = ConnectionFailureReason.StreamFailure,
+            message = "stream exploded",
+            closeCode = 1006,
+            closeReason = "Abnormal closure",
+            cause = "io.exception"
+        )
+
+        val transition = reducer.reduce(state, intent)
+        val snapshot = assertIs<ConnectionSnapshot.Failed>(transition.state.connection)
+        assertEquals("wss://relay", snapshot.url)
+        assertEquals(ConnectionFailureReason.StreamFailure, snapshot.reason)
+        assertEquals("stream exploded", snapshot.message)
+        assertEquals(1006, snapshot.closeCode)
+        assertEquals("Abnormal closure", snapshot.closeReason)
+        assertEquals("io.exception", snapshot.cause)
+
+        val error = assertIs<EngineError.ConnectionFailure>(transition.state.lastError)
+        assertEquals("wss://relay", error.url)
+        assertEquals(ConnectionFailureReason.StreamFailure, error.reason)
+        assertEquals("stream exploded", error.message)
+        assertEquals(1006, error.closeCode)
+        assertEquals("Abnormal closure", error.closeReason)
+        assertEquals("io.exception", error.cause)
+
+        val emit = assertCommandExists<RelaySessionCommand.EmitOutput>(transition.commands) { it }
+        val output = assertIs<RelaySessionOutput.Error>(emit.output)
+        assertIs<EngineError.ConnectionFailure>(output.error)
+    }
+
     private inline fun <reified T : RelaySessionCommand> assertCommandExists(
         commands: List<RelaySessionCommand>,
         block: (T) -> Unit

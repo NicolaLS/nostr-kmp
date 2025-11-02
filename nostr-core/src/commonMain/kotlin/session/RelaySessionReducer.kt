@@ -209,9 +209,24 @@ class DefaultRelaySessionReducer(
         state: RelaySessionState,
         intent: RelaySessionIntent.ConnectionFailed
     ): EngineTransition {
-        val error = EngineError.ConnectionFailure(state.desiredRelayUrl, intent.message)
+        val url = intent.url ?: state.desiredRelayUrl
+        val error = EngineError.ConnectionFailure(
+            url = url,
+            reason = intent.reason,
+            message = intent.message,
+            closeCode = intent.closeCode,
+            closeReason = intent.closeReason,
+            cause = intent.cause
+        )
         val nextState = state.copy(
-            connection = ConnectionSnapshot.Failed(intent.url, intent.message),
+            connection = ConnectionSnapshot.Failed(
+                url = url,
+                message = intent.message,
+                reason = intent.reason,
+                closeCode = intent.closeCode,
+                closeReason = intent.closeReason,
+                cause = intent.cause
+            ),
             lastError = error
         )
         val commands = listOf(RelaySessionCommand.EmitOutput(RelaySessionOutput.Error(error)))
