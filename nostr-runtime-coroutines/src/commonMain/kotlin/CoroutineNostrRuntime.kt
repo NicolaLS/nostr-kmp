@@ -5,11 +5,14 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import nostr.core.codec.WireDecoder
 import nostr.core.codec.WireEncoder
+import nostr.core.model.ClientMessage
 import nostr.core.model.Event
 import nostr.core.model.Filter
+import nostr.core.model.RelayMessage
 import nostr.core.model.SubscriptionId
 import nostr.core.session.*
 import nostr.core.relay.RelayConnectionFactory
+import kotlin.coroutines.cancellation.CancellationException
 
 class CoroutineNostrRuntime(
     private val scope: CoroutineScope,
@@ -18,7 +21,8 @@ class CoroutineNostrRuntime(
     private val wireDecoder: WireDecoder,
     settings: RelaySessionSettings = RelaySessionSettings(),
     reducer: RelaySessionReducer = DefaultRelaySessionReducer(),
-    initialState: RelaySessionState = RelaySessionState()
+    initialState: RelaySessionState = RelaySessionState(),
+    interceptors: List<CoroutineRuntimeInterceptor> = emptyList()
 ) {
     private val engine = RelaySessionEngine(settings, reducer, initialState)
     private val stateFlow = MutableStateFlow(engine.state)
@@ -38,6 +42,7 @@ class CoroutineNostrRuntime(
     private var activeUrl: String? = (engine.state.connection as? ConnectionSnapshot.Connected)?.url
     private var attemptCount: Int = 0
     private var lastFailure: ConnectionFailure? = null
+    private val interceptors = interceptors.toList()
     private val processorJob: Job
 
     val states: StateFlow<RelaySessionState> = stateFlow.asStateFlow()
@@ -48,6 +53,18 @@ class CoroutineNostrRuntime(
     init {
         processorJob = scope.launch {
             processIntents()
+        }
+    }
+
+    private suspend fun notifyInterceptors(action: suspend (CoroutineRuntimeInterceptor) -> Unit) {
+        for (interceptor in interceptors) {
+            try {
+                action(interceptor)
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Throwable) {
+                // Ignore non-cancellation failures to keep runtime healthy
+            }
         }
     }
 
@@ -149,6 +166,7 @@ class CoroutineNostrRuntime(
         } finally {
             previous?.dispose()
         }
+        notifyInterceptors { it.onConnectionOpening(url) }
         val created = try {
             RelayConnectionAdapter(connectionFactory.create(url))
         } catch (failure: Throwable) {
@@ -179,12 +197,18 @@ class CoroutineNostrRuntime(
             )
             return
         }
+        notifyInterceptors { it.onConnectionEstablished(url) }
         connectionJob = scope.launch {
             try {
                 created.incoming.collect { frame ->
-                    intents.send(RelaySessionIntent.RelayEvent(wireDecoder.relayMessage(frame)))
+                    val relayMessage = wireDecoder.relayMessage(frame)
+                    notifyInterceptors { it.onMessageReceived(created.url, relayMessage) }
+                    intents.send(RelaySessionIntent.RelayEvent(relayMessage))
                 }
                 val closure = created.closeInfo()
+                notifyInterceptors {
+                    it.onConnectionClosed(created.url, closure?.code, closure?.reason)
+                }
                 intents.send(
                     RelaySessionIntent.ConnectionClosed(
                         created.url,
@@ -300,6 +324,7 @@ class CoroutineNostrRuntime(
             queue.addLast(RelaySessionIntent.OutboundFailure(command, "Connection not available"))
             return
         }
+        notifyInterceptors { it.onSend(current.url, command.message) }
         val payload = kotlin.runCatching { wireEncoder.clientMessage(command.message) }
         if (payload.isFailure) {
             queue.addLast(
