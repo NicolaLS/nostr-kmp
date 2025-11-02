@@ -4,26 +4,30 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
     }
-    plugins {
-        kotlin("jvm") version "1.9.22"
-    }
+    plugins { kotlin("jvm") version "1.9.22" }
 }
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
-}
+
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0" }
 
 dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven("https://central.sonatype.com/repository/maven-snapshots/")
     }
 }
 
 rootProject.name = "nostr-kmp"
+
 include(":nostr-core")
+
 include(":nostr-codec-kotlinx-serialization")
+
 include(":nostr-runtime-coroutines")
+
 include(":nostr-transport-ktor")
+
 include(":nostr-crypto")
 
+include("nips:nip44")
 include("nips:nip44")
