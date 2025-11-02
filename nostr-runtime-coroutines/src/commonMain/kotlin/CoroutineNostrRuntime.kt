@@ -24,12 +24,26 @@ class CoroutineNostrRuntime(
     private val stateFlow = MutableStateFlow(engine.state)
     private val outputFlow = MutableSharedFlow<RelaySessionOutput>(replay = 0, extraBufferCapacity = 64)
     private val intents = Channel<RelaySessionIntent>(Channel.UNLIMITED)
+    private val connectionSnapshotState = MutableStateFlow(engine.state.connection)
+    private val telemetryState = MutableStateFlow(
+        ConnectionTelemetry(
+            snapshot = engine.state.connection,
+            attempt = 0,
+            isRetrying = false,
+            lastFailure = null
+        )
+    )
     private var connection: RelayConnectionAdapter? = null
     private var connectionJob: Job? = null
+    private var activeUrl: String? = (engine.state.connection as? ConnectionSnapshot.Connected)?.url
+    private var attemptCount: Int = 0
+    private var lastFailure: ConnectionFailure? = null
     private val processorJob: Job
 
     val states: StateFlow<RelaySessionState> = stateFlow.asStateFlow()
     val outputs: SharedFlow<RelaySessionOutput> = outputFlow.asSharedFlow()
+    val connectionSnapshots: StateFlow<ConnectionSnapshot> = connectionSnapshotState.asStateFlow()
+    val connectionTelemetry: StateFlow<ConnectionTelemetry> = telemetryState.asStateFlow()
 
     init {
         processorJob = scope.launch {
@@ -84,9 +98,14 @@ class CoroutineNostrRuntime(
                 } else {
                     intents.receiveCatching().getOrNull() ?: break
                 }
+                if (intent is RelaySessionIntent.ConnectionFailed) {
+                    recordFailure(intent.url, intent.message)
+                }
                 val transition = engine.dispatch(intent)
                 stateFlow.value = transition.state
+                updateTelemetryFromState(transition.state)
                 handleCommands(transition.commands, queue, outputs)
+                refreshTelemetry()
                 if (outputs.isNotEmpty()) {
                     outputs.forEach { outputFlow.emit(it) }
                     outputs.clear()
@@ -114,6 +133,13 @@ class CoroutineNostrRuntime(
 
     private suspend fun openConnection(url: String, queue: ArrayDeque<RelaySessionIntent>) {
         if (connection?.url == url) return
+        if (activeUrl != url) {
+            activeUrl = url
+            attemptCount = 0
+            lastFailure = null
+        }
+        attemptCount += 1
+        refreshTelemetry(stateFlow.value.connection)
         val previous = connection
         connection = null
         connectionJob?.cancelAndJoin()
@@ -168,6 +194,52 @@ class CoroutineNostrRuntime(
             }
         }
         queue.addLast(RelaySessionIntent.ConnectionEstablished(url))
+    }
+
+    private fun recordFailure(url: String?, message: String) {
+        lastFailure = ConnectionFailure(url, message, attemptCount)
+        refreshTelemetry(connectionSnapshotState.value)
+    }
+
+    private fun updateTelemetryFromState(state: RelaySessionState) {
+        val snapshot = state.connection
+        when (snapshot) {
+            is ConnectionSnapshot.Connected -> {
+                activeUrl = snapshot.url
+            }
+
+            is ConnectionSnapshot.Connecting -> {
+                if (activeUrl == null) {
+                    activeUrl = snapshot.url
+                }
+            }
+
+            is ConnectionSnapshot.Disconnected -> {
+                if (state.desiredRelayUrl == null) {
+                    activeUrl = null
+                    attemptCount = 0
+                    lastFailure = null
+                }
+            }
+
+            is ConnectionSnapshot.Disconnecting -> Unit
+            is ConnectionSnapshot.Failed -> Unit
+        }
+        publishTelemetry(snapshot)
+    }
+
+    private fun refreshTelemetry(snapshot: ConnectionSnapshot = connectionSnapshotState.value) {
+        publishTelemetry(snapshot)
+    }
+
+    private fun publishTelemetry(snapshot: ConnectionSnapshot) {
+        connectionSnapshotState.value = snapshot
+        telemetryState.value = ConnectionTelemetry(
+            snapshot = snapshot,
+            attempt = attemptCount,
+            isRetrying = attemptCount > 1,
+            lastFailure = lastFailure
+        )
     }
 
     private suspend fun closeConnection(code: Int?, reason: String?) {

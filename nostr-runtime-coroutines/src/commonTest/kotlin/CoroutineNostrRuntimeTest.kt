@@ -21,6 +21,8 @@ import nostr.core.relay.RelayConnectionListener
 import nostr.core.relay.RelaySendResult
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -85,11 +87,55 @@ class CoroutineNostrRuntimeTest {
         runtime.connect("wss://relay")
         advanceUntilIdle()
         assertTrue(runtime.states.value.connection is ConnectionSnapshot.Connected)
+        assertTrue(runtime.connectionSnapshots.value is ConnectionSnapshot.Connected)
 
         runtime.disconnect()
         advanceUntilIdle()
 
         assertTrue(runtime.states.value.connection is ConnectionSnapshot.Disconnected)
+        assertTrue(runtime.connectionSnapshots.value is ConnectionSnapshot.Disconnected)
+
+        runtime.shutdown()
+    }
+
+    @Test
+    fun telemetryTracksFailuresAndAttempts() = runTest {
+        val connection = FakeRelayConnection("wss://relay")
+        var attempts = 0
+        val runtime = CoroutineNostrRuntime(
+            scope = this,
+            connectionFactory = RelayConnectionFactory {
+                attempts += 1
+                if (attempts == 1) {
+                    error("boom")
+                }
+                connection
+            },
+            wireEncoder = codec,
+            wireDecoder = codec
+        )
+
+        runtime.connect("wss://relay")
+        advanceUntilIdle()
+
+        val failed = runtime.connectionTelemetry.value
+        val failureSnapshot = failed.snapshot
+        assertIs<ConnectionSnapshot.Failed>(failureSnapshot)
+        assertEquals(1, failed.attempt)
+        val lastFailure = failed.lastFailure
+        assertNotNull(lastFailure)
+        assertEquals("wss://relay", lastFailure.url)
+        assertEquals(1, lastFailure.attempt)
+        assertTrue(failed.isRetrying.not())
+
+        runtime.connect("wss://relay")
+        advanceUntilIdle()
+
+        val recovered = runtime.connectionTelemetry.value
+        assertIs<ConnectionSnapshot.Connected>(recovered.snapshot)
+        assertEquals(2, recovered.attempt)
+        assertTrue(recovered.isRetrying)
+        assertNotNull(recovered.lastFailure)
 
         runtime.shutdown()
     }
