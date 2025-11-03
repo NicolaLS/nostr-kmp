@@ -30,4 +30,4 @@ include(":nostr-transport-ktor")
 include(":nostr-crypto")
 
 include("nips:nip44")
-include("nips:nip44")
+include("nips:nip04")
