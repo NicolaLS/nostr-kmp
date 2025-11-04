@@ -29,5 +29,8 @@ include(":nostr-transport-ktor")
 
 include(":nostr-crypto")
 
+include(":nostr-client")
+
 include("nips:nip44")
 include("nips:nip04")
+include("nips:nip42")

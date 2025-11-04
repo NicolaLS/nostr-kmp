@@ -135,6 +135,85 @@ class ReducerTest {
     }
 
     @Test
+    fun authenticateSendsAuthWhenConnected() {
+        val reducer = DefaultRelaySessionReducer()
+        val state = RelaySessionState(connection = ConnectionSnapshot.Connected("wss://relay"))
+        val event = authEvent(
+            idSeed = "aa",
+            relay = "wss://relay",
+            challenge = "challenge"
+        )
+
+        val transition = reducer.reduce(state, RelaySessionIntent.Authenticate(event))
+
+        val send = assertCommandExists<RelaySessionCommand.SendToRelay>(transition.commands) { it }
+        val authMessage = assertIs<ClientMessage.Auth>(send.message)
+        assertEquals(event, authMessage.event)
+
+        assertEquals("challenge", transition.state.auth.challenge)
+        val attempt = transition.state.auth.latestAttempt
+        assertNotNull(attempt)
+        assertEquals(event.id, attempt.eventId)
+        assertNull(attempt.accepted)
+    }
+
+    @Test
+    fun authenticateFailsWhenNotConnected() {
+        val reducer = DefaultRelaySessionReducer()
+        val state = RelaySessionState(connection = ConnectionSnapshot.Disconnected)
+        val event = authEvent(
+            idSeed = "bb",
+            relay = "wss://relay",
+            challenge = "challenge"
+        )
+
+        val transition = reducer.reduce(state, RelaySessionIntent.Authenticate(event))
+
+        val emit = assertCommandExists<RelaySessionCommand.EmitOutput>(transition.commands) { it }
+        val error = assertIs<RelaySessionOutput.Error>(emit.output)
+        assertIs<EngineError.OutboundFailure>(error.error)
+        assertEquals(error.error, transition.state.lastError)
+    }
+
+    @Test
+    fun authChallengeUpdatesStateAndEmitsOutput() {
+        val reducer = DefaultRelaySessionReducer()
+        val state = RelaySessionState(connection = ConnectionSnapshot.Connected("wss://relay"))
+
+        val transition = reducer.reduce(
+            state,
+            RelaySessionIntent.RelayEvent(RelayMessage.AuthChallenge("token"))
+        )
+
+        assertEquals("token", transition.state.auth.challenge)
+        val emit = assertCommandExists<RelaySessionCommand.EmitOutput>(transition.commands) { it }
+        val output = assertIs<RelaySessionOutput.AuthChallenge>(emit.output)
+        assertEquals("token", output.challenge)
+        assertEquals("wss://relay", output.relayUrl)
+    }
+
+    @Test
+    fun acknowledgementUpdatesAuthAttempt() {
+        val reducer = DefaultRelaySessionReducer()
+        val event = authEvent(idSeed = "cc", relay = "wss://relay", challenge = "challenge")
+        val initial = RelaySessionState(
+            connection = ConnectionSnapshot.Connected("wss://relay")
+        )
+        val authenticated = reducer.reduce(initial, RelaySessionIntent.Authenticate(event)).state
+
+        val okResult = PublishResult(event.id, accepted = true, message = "")
+        val transition = reducer.reduce(
+            authenticated,
+            RelaySessionIntent.RelayEvent(RelayMessage.Ok(okResult))
+        )
+
+        val attempt = transition.state.auth.latestAttempt
+        assertNotNull(attempt)
+        assertTrue(attempt.accepted == true)
+        assertEquals(event.id, attempt.eventId)
+    }
+
+    @Test
     fun receivedEventHistoryIsBounded() {
         val settings = RelaySessionSettings(maxEventReplayIds = 3)
         val reducer = DefaultRelaySessionReducer(settings)
@@ -338,5 +417,18 @@ class ReducerTest {
         tags = listOf(listOf("p", "peer")),
         content = "content",
         sig = "b".repeat(128)
+    )
+
+    private fun authEvent(idSeed: String, relay: String, challenge: String): Event = Event(
+        id = idSeed.repeat(32),
+        pubkey = "c".repeat(64),
+        createdAt = 1_700_000_500,
+        kind = 22242,
+        tags = listOf(
+            listOf("relay", relay),
+            listOf("challenge", challenge)
+        ),
+        content = "",
+        sig = "d".repeat(128)
     )
 }

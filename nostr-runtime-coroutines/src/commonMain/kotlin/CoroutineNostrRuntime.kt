@@ -87,6 +87,8 @@ class CoroutineNostrRuntime(
 
     suspend fun publish(event: Event) = dispatchIntent(RelaySessionIntent.Publish(event))
 
+    suspend fun authenticate(event: Event) = dispatchIntent(RelaySessionIntent.Authenticate(event))
+
     suspend fun dispatchIntent(intent: RelaySessionIntent) {
         intents.send(intent)
     }
