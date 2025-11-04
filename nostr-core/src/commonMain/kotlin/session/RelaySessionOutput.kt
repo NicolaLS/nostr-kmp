@@ -40,8 +40,13 @@ sealed interface RelaySessionOutput {
     /** Relay responded to an `EVENT` publish with an `OK` frame. */
     data class PublishAcknowledged(val result: PublishResult) : RelaySessionOutput
 
-    /** Relay requested NIP-42 authentication. */
-    data class AuthChallenge(val challenge: String) : RelaySessionOutput
+    /**
+     * Relay requested NIP-42 authentication.
+     *
+     * @param challenge string supplied by the `AUTH` frame.
+     * @param relayUrl relay URL associated with the active connection, when known.
+     */
+    data class AuthChallenge(val challenge: String, val relayUrl: String?) : RelaySessionOutput
 
     /** Relay responded to a `COUNT` request. */
     data class CountResult(val subscriptionId: SubscriptionId, val count: Int) : RelaySessionOutput

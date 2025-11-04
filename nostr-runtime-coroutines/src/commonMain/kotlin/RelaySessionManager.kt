@@ -109,7 +109,7 @@ class RelaySessionManager(
      * strongly-typed helpers without reaching into the underlying implementation.
      */
     class ManagedRelaySession internal constructor(
-        internal val url: String,
+        val url: String,
         internal val runtime: CoroutineNostrRuntime,
         private val scope: CoroutineScope,
         private val releaseAction: suspend (ManagedRelaySession) -> Unit
@@ -168,6 +168,9 @@ class RelaySessionManager(
 
         /** Publish an event through the managed runtime. */
         suspend fun publish(event: Event) = runtime.publish(event)
+
+        /** Respond to a NIP-42 authentication challenge. */
+        suspend fun authenticate(event: Event) = runtime.authenticate(event)
 
         /** Expose underlying state and output streams for observers. */
         val connectionSnapshots = runtime.connectionSnapshots

@@ -47,6 +47,7 @@ class DefaultRelaySessionReducer(
         is RelaySessionIntent.Subscribe -> handleSubscribe(state, intent)
         is RelaySessionIntent.Unsubscribe -> handleUnsubscribe(state, intent)
         is RelaySessionIntent.Publish -> handlePublish(state, intent)
+        is RelaySessionIntent.Authenticate -> handleAuthenticate(state, intent)
         is RelaySessionIntent.ConnectionEstablished -> handleConnectionOpened(state, intent)
         is RelaySessionIntent.ConnectionClosed -> handleConnectionClosed(state, intent)
         is RelaySessionIntent.ConnectionFailed -> handleConnectionFailed(state, intent)
@@ -73,14 +74,19 @@ class DefaultRelaySessionReducer(
         val connection = state.connection
         if (connection !is ConnectionSnapshot.Connected) {
             val snapshot = ConnectionSnapshot.Disconnected
-            val newState = state.copy(desiredRelayUrl = null, connection = snapshot)
+            val newState = state.copy(
+                desiredRelayUrl = null,
+                connection = snapshot,
+                auth = state.auth.reset()
+            )
             val commands = listOf(RelaySessionCommand.EmitOutput(RelaySessionOutput.ConnectionStateChanged(snapshot)))
             return EngineTransition(newState, commands)
         }
         val snapshot = ConnectionSnapshot.Disconnecting(connection.url, intent.code, intent.reason)
         val nextState = state.copy(
             desiredRelayUrl = null,
-            connection = snapshot
+            connection = snapshot,
+            auth = state.auth.reset()
         )
         val commands = listOf(
             RelaySessionCommand.CloseConnection(intent.code, intent.reason),
@@ -146,6 +152,47 @@ class DefaultRelaySessionReducer(
         return EngineTransition(nextState, commands)
     }
 
+    private fun handleAuthenticate(
+        state: RelaySessionState,
+        intent: RelaySessionIntent.Authenticate
+    ): EngineTransition {
+        val connection = state.connection
+        if (connection !is ConnectionSnapshot.Connected) {
+            return invalidAuthEvent(state, "Cannot authenticate: relay not connected")
+        }
+        val event = intent.event
+        if (event.kind != NIP42_AUTH_KIND) {
+            return invalidAuthEvent(state, "Authentication event must have kind $NIP42_AUTH_KIND")
+        }
+        val challenge = event.findTagValue(NIP42_TAG_CHALLENGE)
+            ?: return invalidAuthEvent(state, "Authentication event missing 'challenge' tag")
+        val relayUrl = event.findTagValue(NIP42_TAG_RELAY)
+            ?: return invalidAuthEvent(state, "Authentication event missing 'relay' tag")
+        val activeUrl = connection.url
+        if (!relayUrl.equals(activeUrl, ignoreCase = true)) {
+            return invalidAuthEvent(
+                state,
+                "Authentication relay '$relayUrl' does not match active connection '$activeUrl'"
+            )
+        }
+        val commands = listOf<RelaySessionCommand>(
+            RelaySessionCommand.SendToRelay(ClientMessage.Auth(event))
+        )
+        val attempt = Nip42AuthAttempt(
+            challenge = challenge,
+            eventId = event.id,
+            accepted = null,
+            message = null
+        )
+        val nextState = state.copy(
+            auth = state.auth.copy(
+                challenge = challenge,
+                latestAttempt = attempt
+            )
+        )
+        return EngineTransition(nextState, commands)
+    }
+
     private fun handleConnectionOpened(
         state: RelaySessionState,
         intent: RelaySessionIntent.ConnectionEstablished
@@ -182,7 +229,8 @@ class DefaultRelaySessionReducer(
             connection = ConnectionSnapshot.Connected(intent.url),
             subscriptions = cleanedSubscriptions,
             pendingPublishes = emptyList(),
-            lastError = null
+            lastError = null,
+            auth = state.auth.reset()
         )
         commands += RelaySessionCommand.EmitOutput(RelaySessionOutput.ConnectionStateChanged(nextState.connection))
         return EngineTransition(nextState, commands)
@@ -198,7 +246,8 @@ class DefaultRelaySessionReducer(
             }
         val nextState = state.copy(
             connection = ConnectionSnapshot.Disconnected,
-            subscriptions = resetSubscriptions
+            subscriptions = resetSubscriptions,
+            auth = state.auth.reset()
         )
         val commands =
             listOf(RelaySessionCommand.EmitOutput(RelaySessionOutput.ConnectionStateChanged(nextState.connection)))
@@ -227,7 +276,8 @@ class DefaultRelaySessionReducer(
                 closeReason = intent.closeReason,
                 cause = intent.cause
             ),
-            lastError = error
+            lastError = error,
+            auth = state.auth.reset()
         )
         val commands = listOf(RelaySessionCommand.EmitOutput(RelaySessionOutput.Error(error)))
         return EngineTransition(nextState, commands)
@@ -239,7 +289,7 @@ class DefaultRelaySessionReducer(
         is RelayMessage.EndOfStoredEvents -> handleEose(state, message)
         is RelayMessage.Closed -> handleClosed(state, message)
         is RelayMessage.Ok -> handleOk(state, message)
-        is RelayMessage.AuthChallenge -> emitOnly(state, RelaySessionOutput.AuthChallenge(message.challenge))
+        is RelayMessage.AuthChallenge -> handleAuthChallenge(state, message.challenge)
         is RelayMessage.Count -> emitOnly(state, RelaySessionOutput.CountResult(message.subscriptionId, message.count))
         is RelayMessage.Unknown -> handleUnknown(state, message)
     }
@@ -318,11 +368,24 @@ class DefaultRelaySessionReducer(
     }
 
     private fun handleOk(state: RelaySessionState, message: RelayMessage.Ok): EngineTransition {
-        val nextState = state.copy(
-            publishStatuses = state.publishStatuses.withLimitedStatus(
-                message.result.eventId,
-                PublishStatus.Acknowledged(message.result)
+        val updatedStatuses = state.publishStatuses.withLimitedStatus(
+            message.result.eventId,
+            PublishStatus.Acknowledged(message.result)
+        )
+        val attempt = state.auth.latestAttempt
+        val updatedAuth = if (attempt != null && attempt.eventId == message.result.eventId) {
+            state.auth.copy(
+                latestAttempt = attempt.withResult(
+                    accepted = message.result.accepted,
+                    message = message.result.message
+                )
             )
+        } else {
+            state.auth
+        }
+        val nextState = state.copy(
+            publishStatuses = updatedStatuses,
+            auth = updatedAuth
         )
         val commands = listOf(RelaySessionCommand.EmitOutput(RelaySessionOutput.PublishAcknowledged(message.result)))
         return EngineTransition(nextState, commands)
@@ -386,4 +449,34 @@ class DefaultRelaySessionReducer(
 
     private fun emitOnly(state: RelaySessionState, output: RelaySessionOutput): EngineTransition =
         EngineTransition(state, listOf(RelaySessionCommand.EmitOutput(output)))
+
+    private fun handleAuthChallenge(state: RelaySessionState, challenge: String): EngineTransition {
+        val relayUrl = (state.connection as? ConnectionSnapshot.Connected)?.url
+        val attempt = state.auth.latestAttempt
+        val retainedAttempt = if (attempt != null && attempt.challenge == challenge) attempt else null
+        val nextState = state.copy(
+            auth = state.auth.copy(
+                challenge = challenge,
+                latestAttempt = retainedAttempt
+            )
+        )
+        val output = RelaySessionOutput.AuthChallenge(challenge, relayUrl)
+        return EngineTransition(nextState, listOf(RelaySessionCommand.EmitOutput(output)))
+    }
+
+    private fun invalidAuthEvent(state: RelaySessionState, message: String): EngineTransition {
+        val error = EngineError.OutboundFailure(message)
+        val nextState = state.copy(lastError = error)
+        val commands = listOf(RelaySessionCommand.EmitOutput(RelaySessionOutput.Error(error)))
+        return EngineTransition(nextState, commands)
+    }
+
+    private fun Event.findTagValue(key: String): String? =
+        tags.firstOrNull { it.firstOrNull() == key }?.getOrNull(1)
+
+    private companion object {
+        const val NIP42_AUTH_KIND: Int = 22242
+        const val NIP42_TAG_CHALLENGE: String = "challenge"
+        const val NIP42_TAG_RELAY: String = "relay"
+    }
 }

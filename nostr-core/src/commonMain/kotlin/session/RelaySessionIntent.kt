@@ -26,6 +26,9 @@ sealed interface RelaySessionIntent {
     /** Enqueue or immediately send a signed [event]. */
     data class Publish(val event: Event) : RelaySessionIntent
 
+    /** Sends a signed NIP-42 authentication [event] to the relay. */
+    data class Authenticate(val event: Event) : RelaySessionIntent
+
     /** Indicates that the transport opened a WebSocket at [url]. */
     data class ConnectionEstablished(val url: String) : RelaySessionIntent
 

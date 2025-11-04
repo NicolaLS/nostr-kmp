@@ -22,6 +22,7 @@ val KNOWN_ACK_PREFIXES = setOf(
     "blocked",
     "rate-limited",
     "invalid",
+    "auth-required",
     "restricted",
     "mute",
     "error"
