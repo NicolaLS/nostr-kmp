@@ -73,7 +73,12 @@ internal class RelayConnectionAdapter(
     }
 
     override fun onMessage(message: String) {
-        messages.trySend(message)
+        val result = messages.trySend(message)
+        if (result.isFailure) {
+            val overflow = result.exceptionOrNull() ?: IllegalStateException("Inbound buffer overflow")
+            failure = overflow
+            messages.close(overflow)
+        }
     }
 
     override fun onClosed(code: Int, reason: String?) {

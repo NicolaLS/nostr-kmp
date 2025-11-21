@@ -65,7 +65,7 @@ object Nip01Canonical {
         sb.append(']')
     }
 
-    // Escape exactly: \n \" \\ \r \t \b \f ; everything else verbatim.
+    // Escape exactly: \n \" \\ \r \t \b \f ; everything else verbatim per NIP-01.
     private fun appendJsonString(sb: StringBuilder, s: String) {
         sb.append('"')
         for (ch in s) {

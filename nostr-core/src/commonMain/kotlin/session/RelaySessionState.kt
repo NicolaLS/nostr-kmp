@@ -37,6 +37,7 @@ data class SubscriptionState(
     val filters: List<Filter>,
     val status: SubscriptionStatus,
     val receivedEventIds: List<String> = emptyList(),
+    val receivedEventIdSet: Set<String> = emptySet(),
     val eoseReceived: Boolean = false
 )
 

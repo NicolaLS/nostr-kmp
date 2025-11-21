@@ -27,7 +27,7 @@ class CoroutineNostrRuntime(
     private val engine = RelaySessionEngine(settings, reducer, initialState)
     private val stateFlow = MutableStateFlow(engine.state)
     private val outputFlow = MutableSharedFlow<RelaySessionOutput>(replay = 0, extraBufferCapacity = 64)
-    private val intents = Channel<RelaySessionIntent>(Channel.UNLIMITED)
+    private val intents = Channel<RelaySessionIntent>(Channel.BUFFERED)
     private val connectionSnapshotState = MutableStateFlow(engine.state.connection)
     private val telemetryState = MutableStateFlow(
         ConnectionTelemetry(

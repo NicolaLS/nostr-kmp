@@ -79,14 +79,15 @@ class KotlinxSerializationWireCodec(
             if (array.isEmpty()) {
                 return RelayMessage.Unknown(raw, "Relay frame cannot be empty")
             }
-            when (val token = array[0].jsonPrimitive.content.uppercase()) {
-                "EVENT" -> parseRelayEvent(array, raw)
-                "NOTICE" -> parseNotice(array, raw)
-                "EOSE" -> parseEose(array, raw)
-                "OK" -> parseOk(array, raw)
-                "CLOSED" -> parseClosed(array, raw)
-                "AUTH" -> parseAuth(array, raw)
-                "COUNT" -> parseCount(array, raw)
+            val token = array[0].jsonPrimitive.content
+            when {
+                token.equals("EVENT", ignoreCase = true) -> parseRelayEvent(array, raw)
+                token.equals("NOTICE", ignoreCase = true) -> parseNotice(array, raw)
+                token.equals("EOSE", ignoreCase = true) -> parseEose(array, raw)
+                token.equals("OK", ignoreCase = true) -> parseOk(array, raw)
+                token.equals("CLOSED", ignoreCase = true) -> parseClosed(array, raw)
+                token.equals("AUTH", ignoreCase = true) -> parseAuth(array, raw)
+                token.equals("COUNT", ignoreCase = true) -> parseCount(array, raw)
                 else -> RelayMessage.Unknown(raw, "Unsupported relay message type '$token'", null)
             }
         } catch (failure: Throwable) {
@@ -103,21 +104,21 @@ class KotlinxSerializationWireCodec(
             val array = json.parseToJsonElement(raw).jsonArray
             if (array.isEmpty()) throw WireDecodingException("Client message array cannot be empty")
             val kind = array[0].jsonPrimitive.content
-            return when (kind.uppercase()) {
-                "EVENT" -> ClientMessage.Event(parseEvent(array.getOrThrow(1)))
-                "REQ" -> {
+            return when {
+                kind.equals("EVENT", ignoreCase = true) -> ClientMessage.Event(parseEvent(array.getOrThrow(1)))
+                kind.equals("REQ", ignoreCase = true) -> {
                     val subscriptionRaw = array.getOrThrow(1).jsonPrimitive.content
                     val parsedId = subscriptionRaw.toSubscriptionIdOrThrow()
                     val filters = array.drop(2).map { parseFilter(it) }
                     ClientMessage.Req(parsedId, filters)
                 }
 
-                "CLOSE" -> {
+                kind.equals("CLOSE", ignoreCase = true) -> {
                     val subscriptionRaw = array.getOrThrow(1).jsonPrimitive.content
                     val parsedId = subscriptionRaw.toSubscriptionIdOrThrow()
                     ClientMessage.Close(parsedId)
                 }
-                "AUTH" -> ClientMessage.Auth(parseEvent(array.getOrThrow(1)))
+                kind.equals("AUTH", ignoreCase = true) -> ClientMessage.Auth(parseEvent(array.getOrThrow(1)))
                 else -> throw WireDecodingException("Unsupported client message type: $kind")
             }
         } catch (failure: WireDecodingException) {

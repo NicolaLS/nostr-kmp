@@ -215,7 +215,8 @@ class DefaultRelaySessionReducer(
                     val refreshed = subscription.copy(
                         status = SubscriptionStatus.Active,
                         eoseReceived = false,
-                        receivedEventIds = emptyList()
+                        receivedEventIds = emptyList(),
+                        receivedEventIdSet = emptySet()
                     )
                     cleanedSubscriptions[id] = refreshed
                     commands += RelaySessionCommand.SendToRelay(
@@ -309,11 +310,16 @@ class DefaultRelaySessionReducer(
             val error = EngineError.ProtocolViolation("Event ${message.event.id} has non-canonical id")
             return emitOnly(state, RelaySessionOutput.Error(error))
         }
-        if (settings.maxEventReplayIds > 0 && subscription.receivedEventIds.contains(message.event.id)) {
+        if (settings.maxEventReplayIds > 0 && subscription.receivedEventIdSet.contains(message.event.id)) {
             return EngineTransition(state, emptyList())
         }
+        val (updatedIds, updatedSet) = subscription.receivedEventIds.appendEventId(
+            subscription.receivedEventIdSet,
+            message.event.id
+        )
         val updatedSubscription = subscription.copy(
-            receivedEventIds = subscription.receivedEventIds.appendEventId(message.event.id),
+            receivedEventIds = updatedIds,
+            receivedEventIdSet = updatedSet,
             status = SubscriptionStatus.Active
         )
         val updatedSubscriptions: Map<SubscriptionId, SubscriptionState> =
@@ -405,20 +411,30 @@ class DefaultRelaySessionReducer(
      * Adds [eventId] to the end of the subscription history while enforcing the configured
      * replay window. The helper keeps the list ordered (oldest → newest), removes any previous
      * occurrence of the same id, and drops the oldest entries when the limit is exceeded.
+     * Returns both the updated ordered list and a membership set for O(1) lookups.
      */
-    private fun List<String>.appendEventId(eventId: String): List<String> {
+    private fun List<String>.appendEventId(
+        currentSet: Set<String>,
+        eventId: String
+    ): Pair<List<String>, Set<String>> {
         val limit = settings.maxEventReplayIds
-        if (limit == 0) return emptyList()
-        if (limit == 1) return listOf(eventId)
+        if (limit == 0) return emptyList<String>() to emptySet()
+        if (limit == 1) return listOf(eventId) to setOf(eventId)
         val queue = ArrayDeque<String>(size + 1)
+        val set = LinkedHashSet<String>(minOf(limit, currentSet.size + 1))
         for (existing in this) {
-            if (existing != eventId) queue.addLast(existing)
+            if (existing != eventId) {
+                queue.addLast(existing)
+                set.add(existing)
+            }
         }
         queue.addLast(eventId)
+        set.add(eventId)
         while (limit > 0 && queue.size > limit) {
-            queue.removeFirst()
+            val removed = queue.removeFirst()
+            set.remove(removed)
         }
-        return queue.toList()
+        return queue.toList() to set
     }
 
     /**
