@@ -3,6 +3,11 @@ package nostr.runtime.coroutines
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.selects.onTimeout
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import nostr.core.codec.WireDecoder
 import nostr.core.codec.WireEncoder
 import nostr.core.model.ClientMessage
@@ -12,18 +17,26 @@ import nostr.core.model.RelayMessage
 import nostr.core.model.SubscriptionId
 import nostr.core.session.*
 import nostr.core.relay.RelayConnectionFactory
+import nostr.core.relay.HandshakeTimeoutException
+import nostr.core.relay.IdleTimeoutException
 import kotlin.coroutines.cancellation.CancellationException
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class CoroutineNostrRuntime(
     private val scope: CoroutineScope,
     private val connectionFactory: RelayConnectionFactory,
     private val wireEncoder: WireEncoder,
     private val wireDecoder: WireDecoder,
+    private val connectTimeoutMillis: Long = DEFAULT_CONNECT_TIMEOUT_MILLIS,
+    private val readTimeoutMillis: Long = DEFAULT_READ_TIMEOUT_MILLIS,
+    private val reconnectionPolicy: ReconnectionPolicy = NoReconnectionPolicy,
     settings: RelaySessionSettings = RelaySessionSettings(),
     reducer: RelaySessionReducer = DefaultRelaySessionReducer(),
     initialState: RelaySessionState = RelaySessionState(),
     interceptors: List<CoroutineRuntimeInterceptor> = emptyList()
 ) {
+    private val runtimeJob: Job = SupervisorJob(scope.coroutineContext[Job])
+    private val runtimeScope: CoroutineScope = scope + runtimeJob
     private val engine = RelaySessionEngine(settings, reducer, initialState)
     private val stateFlow = MutableStateFlow(engine.state)
     private val outputFlow = MutableSharedFlow<RelaySessionOutput>(replay = 0, extraBufferCapacity = 64)
@@ -39,6 +52,8 @@ class CoroutineNostrRuntime(
     )
     private var connection: RelayConnectionAdapter? = null
     private var connectionJob: Job? = null
+    private var reconnectJob: Job? = null
+    private var connectAttemptToken: Long = 0
     private var activeUrl: String? = (engine.state.connection as? ConnectionSnapshot.Connected)?.url
     private var attemptCount: Int = 0
     private var lastFailure: ConnectionFailure? = null
@@ -51,7 +66,9 @@ class CoroutineNostrRuntime(
     val connectionTelemetry: StateFlow<ConnectionTelemetry> = telemetryState.asStateFlow()
 
     init {
-        processorJob = scope.launch {
+        require(connectTimeoutMillis > 0) { "connectTimeoutMillis must be positive" }
+        require(readTimeoutMillis >= 0) { "readTimeoutMillis cannot be negative" }
+        processorJob = runtimeScope.launch {
             processIntents()
         }
     }
@@ -96,6 +113,8 @@ class CoroutineNostrRuntime(
     suspend fun shutdown() {
         intents.close()
         processorJob.cancelAndJoin()
+        reconnectJob?.cancel()
+        reconnectJob = null
         connectionJob?.cancelAndJoin()
         val current = connection
         connection = null
@@ -105,6 +124,8 @@ class CoroutineNostrRuntime(
         } finally {
             current?.dispose()
         }
+        runtimeJob.cancel()
+        runtimeJob.join()
     }
 
     private suspend fun processIntents() {
@@ -116,6 +137,11 @@ class CoroutineNostrRuntime(
                     queue.removeFirst()
                 } else {
                     intents.receiveCatching().getOrNull() ?: break
+                }
+                // Cancel pending reconnection when user explicitly changes connection state
+                if (intent is RelaySessionIntent.Connect || intent is RelaySessionIntent.Disconnect) {
+                    reconnectJob?.cancel()
+                    reconnectJob = null
                 }
                 if (intent is RelaySessionIntent.ConnectionFailed) {
                     recordFailure(intent)
@@ -129,9 +155,47 @@ class CoroutineNostrRuntime(
                     outputs.forEach { outputFlow.emit(it) }
                     outputs.clear()
                 }
+                // Schedule reconnection if needed after processing connection failures or closes
+                maybeScheduleReconnect(transition.state, intent)
             }
         } catch (_: CancellationException) {
             // shutting down
+        }
+    }
+
+    private fun maybeScheduleReconnect(state: RelaySessionState, intent: RelaySessionIntent) {
+        // Only consider reconnection after failure or unexpected close
+        val shouldConsiderReconnect = when (intent) {
+            is RelaySessionIntent.ConnectionFailed -> true
+            is RelaySessionIntent.ConnectionClosed -> true
+            else -> false
+        }
+        if (!shouldConsiderReconnect) return
+
+        // Don't reconnect if user no longer wants a connection
+        val desiredUrl = state.desiredRelayUrl ?: return
+
+        // Don't reconnect if already connected or connecting
+        when (state.connection) {
+            is ConnectionSnapshot.Connected, is ConnectionSnapshot.Connecting -> return
+            else -> Unit
+        }
+
+        // Consult the reconnection policy
+        val delay = reconnectionPolicy.nextDelay(attemptCount, lastFailure) ?: return
+
+        // Cancel any existing reconnect job before scheduling a new one
+        reconnectJob?.cancel()
+        reconnectJob = runtimeScope.launch {
+            delay(delay)
+            // Re-check that we still want to reconnect after the delay
+            val currentState = stateFlow.value
+            if (currentState.desiredRelayUrl == desiredUrl &&
+                currentState.connection !is ConnectionSnapshot.Connected &&
+                currentState.connection !is ConnectionSnapshot.Connecting
+            ) {
+                intents.send(RelaySessionIntent.Connect(desiredUrl))
+            }
         }
     }
 
@@ -151,13 +215,18 @@ class CoroutineNostrRuntime(
     }
 
     private suspend fun openConnection(url: String, queue: ArrayDeque<RelaySessionIntent>) {
-        if (connection?.url == url) return
+        // Note: We intentionally don't guard against reconnecting to the same URL here.
+        // The reducer already prevents duplicate connections when already Connected.
+        // The connectAttemptToken mechanism handles stale connection results.
+        // Removing this guard fixes the bug where connection field was stale after failure.
         if (activeUrl != url) {
             activeUrl = url
             attemptCount = 0
             lastFailure = null
         }
         attemptCount += 1
+        connectAttemptToken += 1
+        val attemptToken = connectAttemptToken
         refreshTelemetry(stateFlow.value.connection)
         val previous = connection
         connection = null
@@ -170,7 +239,7 @@ class CoroutineNostrRuntime(
         }
         notifyInterceptors { it.onConnectionOpening(url) }
         val created = try {
-            RelayConnectionAdapter(connectionFactory.create(url))
+            RelayConnectionAdapter(delegate = connectionFactory.create(url))
         } catch (failure: Throwable) {
             queue.addLast(
                 RelaySessionIntent.ConnectionFailed(
@@ -183,57 +252,125 @@ class CoroutineNostrRuntime(
             return
         }
         connection = created
-        val openResult = kotlin.runCatching { created.open() }
+        connectionJob = runtimeScope.launch { runConnectionAttempt(created, url, attemptToken) }
+    }
+
+    private suspend fun runConnectionAttempt(adapter: RelayConnectionAdapter, url: String, attemptToken: Long) {
+        val openResult = raceHandshake(adapter, url)
+        if (attemptToken != connectAttemptToken) {
+            adapter.dispose()
+            return
+        }
         if (openResult.isFailure) {
             connection = null
-            created.dispose()
-            queue.addLast(
+            adapter.dispose()
+            val failure = openResult.exceptionOrNull()
+            intents.send(
                 RelaySessionIntent.ConnectionFailed(
                     url = url,
                     reason = ConnectionFailureReason.OpenHandshake,
-                    message = openResult.exceptionOrNull()
-                        ?.describeMessage("Failed to open connection")
-                        ?: "Failed to open connection",
-                    cause = openResult.exceptionOrNull()?.describeCause()
+                    message = failure?.describeMessage("Failed to open connection") ?: "Failed to open connection",
+                    cause = failure?.describeCause()
                 )
             )
             return
         }
         notifyInterceptors { it.onConnectionEstablished(url) }
-        connectionJob = scope.launch {
-            try {
-                created.incoming.collect { frame ->
-                    val relayMessage = wireDecoder.relayMessage(frame)
-                    notifyInterceptors { it.onMessageReceived(created.url, relayMessage) }
-                    intents.send(RelaySessionIntent.RelayEvent(relayMessage))
-                }
-                val closure = created.closeInfo()
-                notifyInterceptors {
-                    it.onConnectionClosed(created.url, closure?.code, closure?.reason)
-                }
+        intents.send(RelaySessionIntent.ConnectionEstablished(url))
+        val incomingResult = runConnected(adapter, url)
+        if (attemptToken != connectAttemptToken) {
+            adapter.dispose()
+            return
+        }
+        // Clear the connection reference now that the stream has ended.
+        // This is critical: without clearing, subsequent reconnect attempts
+        // would see a stale adapter and potentially misbehave.
+        if (connection === adapter) {
+            connection = null
+        }
+        when (incomingResult) {
+            is ConnectionOutcome.Closed -> {
+                notifyInterceptors { it.onConnectionClosed(url, incomingResult.code, incomingResult.reason) }
                 intents.send(
                     RelaySessionIntent.ConnectionClosed(
-                        created.url,
-                        closure?.code ?: 1000,
-                        closure?.reason ?: "EOF"
+                        url,
+                        incomingResult.code ?: 1000,
+                        incomingResult.reason ?: "EOF"
                     )
                 )
-            } catch (_: CancellationException) {
-                // moving away from this connection
-            } catch (failure: Throwable) {
-                val cause = created.failure() ?: failure
+            }
+
+            is ConnectionOutcome.Failed -> {
+                val failure = incomingResult.cause
                 intents.send(
                     RelaySessionIntent.ConnectionFailed(
-                        url = created.url,
-                        reason = ConnectionFailureReason.StreamFailure,
-                        message = cause.describeMessage("Incoming stream failed"),
-                        cause = cause.describeCause()
+                        url = url,
+                        reason = incomingResult.reason,
+                        message = failure.describeMessage("Incoming stream failed"),
+                        cause = failure.describeCause()
                     )
                 )
             }
         }
-        queue.addLast(RelaySessionIntent.ConnectionEstablished(url))
     }
+
+    private suspend fun raceHandshake(adapter: RelayConnectionAdapter, url: String): Result<Unit> =
+        coroutineScope {
+            val opener = async { runCatching { adapter.open() } }
+            val outcome = withTimeoutOrNull(connectTimeoutMillis) { opener.await() }
+            when {
+                outcome == null -> {
+                    opener.cancel()
+                    Result.failure(HandshakeTimeoutException(url, connectTimeoutMillis))
+                }
+
+                outcome.isFailure -> outcome
+                else -> Result.success(Unit)
+            }
+        }
+
+    private suspend fun runConnected(
+        adapter: RelayConnectionAdapter,
+        url: String
+    ): ConnectionOutcome = coroutineScope {
+        val channel = adapter.incoming.produceIn(this)
+        try {
+            while (true) {
+                val frame = select<String?> {
+                    channel.onReceiveCatching { it.getOrNull() }
+                    if (readTimeoutMillis > 0) {
+                        onTimeout(readTimeoutMillis) { throw IdleTimeoutException(url, readTimeoutMillis) }
+                    }
+                }
+                if (frame == null) break
+                val relayMessage = wireDecoder.relayMessage(frame)
+                notifyInterceptors { it.onMessageReceived(adapter.url, relayMessage) }
+                intents.send(RelaySessionIntent.RelayEvent(relayMessage))
+            }
+            // Check if the channel closed due to an underlying failure
+            val underlyingFailure = adapter.failure()
+            if (underlyingFailure != null) {
+                return@coroutineScope ConnectionOutcome.Failed(underlyingFailure, ConnectionFailureReason.StreamFailure)
+            }
+            val closure = adapter.closeInfo()
+            ConnectionOutcome.Closed(closure?.code, closure?.reason)
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (failure: Throwable) {
+            val cause = adapter.failure() ?: failure
+            ConnectionOutcome.Failed(cause, ConnectionFailureReason.StreamFailure)
+        } finally {
+            channel.cancel()
+            adapter.dispose()
+        }
+    }
+
+    private sealed interface ConnectionOutcome {
+        data class Closed(val code: Int?, val reason: String?) : ConnectionOutcome
+        data class Failed(val cause: Throwable, val reason: ConnectionFailureReason) : ConnectionOutcome
+    }
+
+    private fun isCurrentConnection(adapter: RelayConnectionAdapter): Boolean = connection === adapter
 
     private fun recordFailure(intent: RelaySessionIntent.ConnectionFailed) {
         val failureUrl = intent.url ?: activeUrl

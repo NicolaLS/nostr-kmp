@@ -59,6 +59,7 @@ class CoroutineRuntimeInterceptorTest {
             connectionFactory = RelayConnectionFactory { connection },
             wireEncoder = codec,
             wireDecoder = codec,
+            readTimeoutMillis = 0,
             interceptors = listOf(interceptor)
         )
 
@@ -82,6 +83,7 @@ class CoroutineRuntimeInterceptorTest {
         assertTrue(events.any { it.startsWith("closed:wss://relay") })
 
         runtime.shutdown()
+        advanceUntilIdle()
     }
 
     @Test
@@ -104,6 +106,7 @@ class CoroutineRuntimeInterceptorTest {
             connectionFactory = RelayConnectionFactory { connection },
             wireEncoder = codec,
             wireDecoder = codec,
+            readTimeoutMillis = 0,
             interceptors = listOf(failing, capturing)
         )
 
@@ -120,6 +123,7 @@ class CoroutineRuntimeInterceptorTest {
         assertTrue(events.contains("send:wss://relay"))
 
         runtime.shutdown()
+        advanceUntilIdle()
     }
 
     private fun sampleEvent(): Event {

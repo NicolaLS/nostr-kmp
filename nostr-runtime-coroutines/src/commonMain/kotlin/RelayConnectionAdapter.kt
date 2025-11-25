@@ -9,8 +9,12 @@ import nostr.core.relay.RelayConnectionListener
 import nostr.core.relay.RelaySendResult
 
 /**
- * Lightweight adapter that assumes single-threaded access; callers should confine instances to a
+ * Lightweight adapter that bridges callback-based [RelayConnection] to suspending coroutines.
+ *
+ * This adapter assumes single-threaded access; callers should confine instances to a
  * single coroutine context because state mutations are not synchronized.
+ *
+ * Timeout handling is the responsibility of the caller (typically [CoroutineNostrRuntime.raceHandshake]).
  */
 internal class RelayConnectionAdapter(
     private val delegate: RelayConnection
@@ -29,6 +33,10 @@ internal class RelayConnectionAdapter(
 
     val incoming: Flow<String> = messages.receiveAsFlow()
 
+    /**
+     * Initiates the connection and suspends until [onOpen] is called or an error occurs.
+     * Timeout handling should be done by the caller.
+     */
     suspend fun open() {
         if (!started) {
             started = true

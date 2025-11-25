@@ -32,7 +32,10 @@ class RelaySessionManager(
     private val wireDecoder: WireDecoder,
     private val sessionSettings: RelaySessionSettings = RelaySessionSettings(),
     private val sessionReducer: RelaySessionReducer = DefaultRelaySessionReducer(),
-    private val initialState: RelaySessionState = RelaySessionState()
+    private val initialState: RelaySessionState = RelaySessionState(),
+    private val connectTimeoutMillis: Long = DEFAULT_CONNECT_TIMEOUT_MILLIS,
+    private val readTimeoutMillis: Long = DEFAULT_READ_TIMEOUT_MILLIS,
+    private val reconnectionPolicy: ReconnectionPolicy = NoReconnectionPolicy
 ) {
 
     private val supervisorJob: Job = SupervisorJob(scope.coroutineContext[Job])
@@ -95,6 +98,9 @@ class RelaySessionManager(
             connectionFactory = connectionFactory,
             wireEncoder = wireEncoder,
             wireDecoder = wireDecoder,
+            connectTimeoutMillis = connectTimeoutMillis,
+            readTimeoutMillis = readTimeoutMillis,
+            reconnectionPolicy = reconnectionPolicy,
             settings = sessionSettings,
             reducer = sessionReducer,
             initialState = initialState

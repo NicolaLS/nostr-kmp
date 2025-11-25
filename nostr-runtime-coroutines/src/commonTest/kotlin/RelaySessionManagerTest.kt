@@ -50,15 +50,18 @@ class RelaySessionManagerTest {
             scope = this,
             connectionFactory = RelayConnectionFactory { connection },
             wireEncoder = codec,
-            wireDecoder = codec
+            wireDecoder = codec,
+            readTimeoutMillis = 0 // Disable idle timeout to simplify test
         )
 
         manager.use("wss://relay") {
             connect()
-            this@runTest.advanceUntilIdle()
+            advanceUntilIdle()
             disconnect()
+            advanceUntilIdle()
         }
-        assertTrue(connection.closeCalled)
+        advanceUntilIdle() // Allow release/shutdown processing
+        assertTrue(connection.closeCalled, "Expected close to be called but it was not")
 
         val next = manager.acquire("wss://relay")
         next.release()

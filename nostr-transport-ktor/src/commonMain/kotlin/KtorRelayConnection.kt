@@ -14,8 +14,12 @@ import nostr.core.relay.RelayConnectionListener
 import nostr.core.relay.RelaySendResult
 
 /**
- * WebSocket-backed connection that expects single-threaded use; state changes are unsynchronized
+ * WebSocket-backed [RelayConnection] implementation using Ktor.
+ *
+ * This class expects single-threaded use; state changes are unsynchronized
  * and must remain confined to the supplied [scope].
+ *
+ * Timeout handling is the responsibility of the caller (typically the runtime layer).
  */
 class KtorRelayConnection(
     override val url: String,
@@ -35,6 +39,9 @@ class KtorRelayConnection(
 
     private var closed: Boolean = false
 
+    // Ensures terminal callbacks (onClosed/onFailure) are delivered exactly once
+    private var terminalCallbackDelivered: Boolean = false
+
     override fun connect(listener: RelayConnectionListener) {
         check(this.listener == null) { "Connection already started" }
         this.listener = listener
@@ -42,7 +49,7 @@ class KtorRelayConnection(
             val created = try {
                 client.webSocketSession(urlString = url)
             } catch (failure: Throwable) {
-                notifyFailure(failure)
+                deliverFailure(failure)
                 return@launch
             }
             session = created
@@ -69,9 +76,7 @@ class KtorRelayConnection(
     override fun close(code: Int, reason: String?) {
         if (closed) return
         closed = true
-        if (!outbound.isClosedForSend) {
-            outbound.close()
-        }
+        closeOutbound()
         scope.launch {
             connectJob?.cancel()
             connectJob = null
@@ -81,11 +86,10 @@ class KtorRelayConnection(
                 try {
                     current.close(CloseReason(code.toShort(), reason ?: ""))
                 } catch (failure: Throwable) {
-                    notifyFailure(failure)
+                    deliverFailure(failure)
                 }
             } else {
-                listener?.onClosed(code, reason)
-                cleanup()
+                deliverClosed(code, reason)
             }
         }
     }
@@ -97,7 +101,7 @@ class KtorRelayConnection(
             }
         } catch (failure: Throwable) {
             if (failure !is CancellationException) {
-                notifyFailure(failure)
+                deliverFailure(failure)
             }
         }
     }
@@ -105,36 +109,60 @@ class KtorRelayConnection(
     private fun CoroutineScope.launchReader(session: WebSocketSession) = launch {
         try {
             for (frame in session.incoming) {
+                // Capture listener reference for safe access
+                val currentListener = listener ?: return@launch
                 when (frame) {
-                    is Frame.Text -> listener?.onMessage(frame.readText())
+                    is Frame.Text -> currentListener.onMessage(frame.readText())
                     is Frame.Close -> {
                         val reason = frame.readReason()
-                        listener?.onClosed(reason?.code?.toInt() ?: 1000, reason?.message)
+                        deliverClosed(reason?.code?.toInt() ?: 1000, reason?.message)
                         return@launch
                     }
 
                     else -> Unit
                 }
             }
-            listener?.onClosed(1000, "EOF")
+            deliverClosed(1000, "EOF")
         } catch (failure: Throwable) {
             if (failure !is CancellationException) {
-                notifyFailure(failure)
+                deliverFailure(failure)
             }
         } finally {
             cleanup()
         }
     }
 
-    private fun notifyFailure(cause: Throwable) {
+    /**
+     * Delivers onClosed callback exactly once, then cleans up.
+     */
+    private fun deliverClosed(code: Int, reason: String?) {
+        if (terminalCallbackDelivered) return
+        terminalCallbackDelivered = true
+        listener?.onClosed(code, reason)
+        cleanup()
+    }
+
+    /**
+     * Delivers onFailure callback exactly once, then cleans up.
+     */
+    private fun deliverFailure(cause: Throwable) {
+        if (terminalCallbackDelivered) return
+        terminalCallbackDelivered = true
         listener?.onFailure(cause)
         cleanup()
     }
 
-    private fun cleanup() {
+    private fun closeOutbound() {
         if (!outbound.isClosedForSend) {
             outbound.close()
         }
+    }
+
+    /**
+     * Idempotent cleanup of internal resources.
+     */
+    private fun cleanup() {
+        closeOutbound()
         writerJob?.cancel()
         writerJob = null
         readerJob?.cancel()
@@ -146,9 +174,19 @@ class KtorRelayConnection(
     }
 }
 
+/**
+ * Creates a [RelayConnectionFactory] that produces [KtorRelayConnection] instances.
+ *
+ * @param scope Coroutine scope for WebSocket operations.
+ * @param client Ktor HTTP client configured with WebSocket support.
+ */
 fun KtorRelayConnectionFactory(
     scope: CoroutineScope,
     client: HttpClient = HttpClient { install(WebSockets) }
 ): RelayConnectionFactory = RelayConnectionFactory { url ->
-    KtorRelayConnection(url = url, client = client, scope = scope)
+    KtorRelayConnection(
+        url = url,
+        client = client,
+        scope = scope
+    )
 }
