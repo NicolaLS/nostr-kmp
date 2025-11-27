@@ -46,11 +46,11 @@ Replace `<version>` with the published SDK version (for example `0.1.0` or `0.1.
 
 # Publishing
 
-The build is configured to use a single set of coordinates defined in `gradle.properties`:
+The build is configured to use a single set of coordinates defined in `build.gradle.kts`:
 
 ```
-GROUP=io.github.nicolals
-VERSION_NAME=0.1.0-SNAPSHOT
+val groupId = "io.github.nicolals"
+val versionName = "0.1.0-alpha"
 ```
 
 ## Publish to Maven Local
@@ -65,7 +65,7 @@ Artifacts will appear under `~/.m2/repository/io/github/nicolals/…`. In your c
 
 ## Publish to Maven Central
 
-1. Update `VERSION_NAME` in `gradle.properties` (e.g. `0.1.0`).
+1. Update `versionName` in `build.gradle.kts` (e.g. `0.1.0`).
 2. Configure your Sonatype credentials and PGP signing keys (environment variables or `gradle.properties` entries such as `signing.keyId`, `signing.password`, `signing.secretKeyRingFile`, `mavenCentralUsername`, `mavenCentralPassword`).
 3. Run:
 
@@ -81,9 +81,9 @@ Artifacts will appear under `~/.m2/repository/io/github/nicolals/…`. In your c
 
 ## Versioning Strategy
 
-- Maintain a **single version** for the entire SDK (`VERSION_NAME`). Bump it whenever any module introduces a change.
+- Maintain a **single version** for the entire SDK (`versionName`). Bump it whenever any module introduces a change.
 - Use semantic versioning across the monorepo (MAJOR for breaking API changes, MINOR for backward-compatible features, PATCH for fixes).
 - For preview or unreleased builds, append classifiers such as `-SNAPSHOT` or `-alpha01`.
-- After a release, increment `VERSION_NAME` immediately to the next snapshot to keep local builds distinct (e.g. move from `0.1.0` to `0.1.1-SNAPSHOT`).
+- After a release, increment `versionName` immediately to the next snapshot to keep local builds distinct (e.g. move from `0.1.0` to `0.1.1-SNAPSHOT`).
 
 Because every module shares the same version, downstream consumers can mix and match components without worrying about mismatched APIs.
