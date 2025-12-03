@@ -36,7 +36,7 @@ class CoroutineNostrRuntime(
     interceptors: List<CoroutineRuntimeInterceptor> = emptyList()
 ) {
     private val runtimeJob: Job = SupervisorJob(scope.coroutineContext[Job])
-    private val runtimeScope: CoroutineScope = scope + runtimeJob
+    internal val runtimeScope: CoroutineScope = scope + runtimeJob
     private val engine = RelaySessionEngine(settings, reducer, initialState)
     private val stateFlow = MutableStateFlow(engine.state)
     private val outputFlow = MutableSharedFlow<RelaySessionOutput>(replay = 0, extraBufferCapacity = 64)
