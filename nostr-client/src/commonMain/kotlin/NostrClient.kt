@@ -17,6 +17,7 @@ import nostr.core.session.RelaySessionSettings
 import nostr.core.session.RelaySessionState
 import nostr.runtime.coroutines.RelaySessionManager
 import nostr.runtime.coroutines.RelaySessionManager.ManagedRelaySession
+import nostr.runtime.coroutines.SmartRelaySession
 
 class NostrClient constructor(
     private val scope: CoroutineScope,
@@ -130,6 +131,22 @@ class NostrClientSession internal constructor(
     suspend fun publish(event: Event) = delegate.publish(event)
 
     suspend fun authenticate(event: Event) = delegate.authenticate(event)
+
+    /**
+     * Access smart session features with automatic connection management.
+     *
+     * The [SmartRelaySession] provides higher-level operations like:
+     * - [SmartRelaySession.requestOne] - Request-response with auto-connect and retry
+     * - [SmartRelaySession.query] - Collect events until EOSE with retry
+     * - [SmartRelaySession.createSharedSubscription] - Efficient subscription reuse
+     *
+     * Example:
+     * ```kotlin
+     * val session = client.acquire("wss://relay.example.com")
+     * val result = session.smart.requestOne(requestEvent, responseFilter)
+     * ```
+     */
+    val smart: SmartRelaySession get() = delegate.smart
 
     suspend fun release() {
         val shouldRelease = releaseMutex.withLock {
