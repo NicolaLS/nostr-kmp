@@ -178,6 +178,24 @@ class RelaySessionManager(
         /** Respond to a NIP-42 authentication challenge. */
         suspend fun authenticate(event: Event) = runtime.authenticate(event)
 
+        /**
+         * Access smart session features with automatic connection management.
+         *
+         * The [SmartRelaySession] provides higher-level operations like:
+         * - [SmartRelaySession.requestOne] - Request-response with auto-connect and retry
+         * - [SmartRelaySession.query] - Collect events until EOSE with retry
+         * - [SmartRelaySession.createSharedSubscription] - Efficient subscription reuse
+         *
+         * Example:
+         * ```kotlin
+         * val session = manager.acquire("wss://relay.example.com")
+         * session.smart.requestOne(requestEvent, responseFilter)
+         * ```
+         */
+        val smart: SmartRelaySession by lazy {
+            SmartRelaySession(runtime, url, scope)
+        }
+
         /** Expose underlying state and output streams for observers. */
         val connectionSnapshots = runtime.connectionSnapshots
         val connectionTelemetry = runtime.connectionTelemetry
