@@ -36,13 +36,26 @@ data class EagerRetryConfig(
      * This is separate from the operation timeout and prevents blocking indefinitely
      * on connection attempts.
      */
-    val eagerConnectTimeoutMillis: Long = 5000
+    val eagerConnectTimeoutMillis: Long = 5000,
+
+    /**
+     * Maximum time to wait for write confirmation (milliseconds), or null to skip confirmation.
+     *
+     * When set, the SDK awaits confirmation that frames are actually written to the socket,
+     * enabling fast detection of dead connections. If the write times out or fails,
+     * the operation returns [RequestResult.ConnectionFailed] immediately.
+     *
+     * Set to null for fire-and-forget semantics (background apps).
+     * Set to a short value (e.g., 3000ms) for fail-fast semantics (foreground apps).
+     */
+    val writeTimeoutMillis: Long? = null
 ) {
     init {
         require(maxRetries >= 0) { "maxRetries must be non-negative" }
         require(minRetryBudgetMillis > 0) { "minRetryBudgetMillis must be positive" }
         require(staleTimeoutThreshold >= 1) { "staleTimeoutThreshold must be at least 1" }
         require(eagerConnectTimeoutMillis > 0) { "eagerConnectTimeoutMillis must be positive" }
+        require(writeTimeoutMillis == null || writeTimeoutMillis > 0) { "writeTimeoutMillis must be null or positive" }
     }
 
     companion object {
@@ -64,13 +77,15 @@ data class EagerRetryConfig(
         )
 
         /**
-         * Aggressive retry configuration for critical operations.
+         * Aggressive retry configuration for critical foreground operations.
          * - 3 retries (4 total attempts)
          * - Single timeout triggers reconnect (aggressive stale detection)
+         * - Write confirmation with 3 second timeout (fail-fast on dead connections)
          */
         val Aggressive = EagerRetryConfig(
             maxRetries = 3,
-            staleTimeoutThreshold = 1
+            staleTimeoutThreshold = 1,
+            writeTimeoutMillis = 3000
         )
 
         /**

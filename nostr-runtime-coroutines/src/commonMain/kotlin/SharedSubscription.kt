@@ -74,16 +74,22 @@ class SharedSubscription internal constructor(
      * CRITICAL: This method ensures the expectation is registered BEFORE publishing,
      * preventing race conditions where a fast relay responds before we're listening.
      *
+     * If [writeTimeoutMillis] is non-null, the write confirmation is awaited before waiting
+     * for the response. If the write times out or fails, returns null immediately (no point
+     * waiting for a response if we couldn't even send the request).
+     *
      * @param correlationId Unique ID to match against incoming event tags
-     * @param publish Action that publishes the request (called after expectation is registered)
+     * @param publish Action that publishes the request and returns write confirmation
      * @param timeoutMillis Maximum time to wait for response
-     * @return The matching event, or null if timeout/closed/publish failed
+     * @param writeTimeoutMillis Optional timeout for write confirmation (null = don't wait for confirmation)
+     * @return The matching event, or null if timeout/closed/write failed
      * @throws IllegalStateException if correlationId is already registered
      */
     suspend fun expectAndPublish(
         correlationId: String,
-        publish: suspend () -> Unit,
-        timeoutMillis: Long
+        publish: suspend () -> Deferred<WriteOutcome>,
+        timeoutMillis: Long,
+        writeTimeoutMillis: Long? = null
     ): Event? {
         val deferred = CompletableDeferred<Event>()
 
@@ -100,7 +106,17 @@ class SharedSubscription internal constructor(
 
         return try {
             // Now publish - any response will be caught
-            publish()
+            val writeConfirmation = publish()
+
+            // Optionally await write confirmation
+            if (writeTimeoutMillis != null) {
+                val writeOutcome = withTimeoutOrNull(writeTimeoutMillis) { writeConfirmation.await() }
+                    ?: WriteOutcome.Timeout
+                if (!writeOutcome.isSuccess()) {
+                    // Write failed or timed out - connection is likely dead
+                    return null
+                }
+            }
 
             // Wait for the response
             withTimeoutOrNull(timeoutMillis) { deferred.await() }

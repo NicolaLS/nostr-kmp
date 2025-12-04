@@ -1,5 +1,6 @@
 package nostr.runtime.coroutines
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -238,7 +239,7 @@ class RequestResponseTest {
             // Try registering again - should throw immediately
             subscription.expectAndPublish(
                 correlationId = "same-id",
-                publish = { /* no-op */ },
+                publish = { CompletableDeferred(WriteOutcome.Success) },
                 timeoutMillis = 1000
             )
         } catch (e: IllegalStateException) {

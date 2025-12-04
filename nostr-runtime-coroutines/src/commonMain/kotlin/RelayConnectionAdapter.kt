@@ -1,6 +1,7 @@
 package nostr.runtime.coroutines
 
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -51,12 +52,45 @@ internal class RelayConnectionAdapter(
         openSignal.await()
     }
 
-    suspend fun send(frame: String) {
-        when (val result = delegate.send(frame)) {
-            RelaySendResult.Accepted -> return
-            RelaySendResult.NotConnected -> throw IllegalStateException("Relay connection not open")
-            is RelaySendResult.Failed -> throw result.cause
+    /**
+     * Sends a frame and returns a [Deferred] that completes when the write is confirmed.
+     *
+     * The returned [Deferred] resolves to [WriteOutcome.Success] when the frame is actually
+     * written to the socket, [WriteOutcome.Failed] if the write fails, or can be used with
+     * a timeout to detect stale connections.
+     *
+     * @param frame the frame to send
+     * @return a Deferred that completes when the write is confirmed (or fails)
+     * @throws IllegalStateException if the connection is not open
+     */
+    fun send(frame: String): Deferred<WriteOutcome> {
+        val confirmation = CompletableDeferred<WriteOutcome>()
+
+        val result = delegate.sendWithConfirmation(frame) { success, cause ->
+            if (success) {
+                confirmation.complete(WriteOutcome.Success)
+            } else {
+                confirmation.complete(WriteOutcome.Failed(cause ?: IllegalStateException("Write failed")))
+            }
         }
+
+        // If the send was rejected synchronously, the callback was already invoked
+        // but we should also throw for callers who don't check the Deferred
+        when (result) {
+            RelaySendResult.Accepted -> { /* Confirmation will come from callback */ }
+            RelaySendResult.NotConnected -> {
+                if (!confirmation.isCompleted) {
+                    confirmation.complete(WriteOutcome.Failed(IllegalStateException("Relay connection not open")))
+                }
+            }
+            is RelaySendResult.Failed -> {
+                if (!confirmation.isCompleted) {
+                    confirmation.complete(WriteOutcome.Failed(result.cause))
+                }
+            }
+        }
+
+        return confirmation
     }
 
     suspend fun close(code: Int, reason: String?) {
