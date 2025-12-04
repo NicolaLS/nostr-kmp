@@ -60,6 +60,9 @@ class CoroutineNostrRuntime(
     private val interceptors = interceptors.toList()
     private val processorJob: Job
 
+    // Pending write confirmations keyed by event ID
+    private val pendingWriteConfirmations = mutableMapOf<String, CompletableDeferred<WriteOutcome>>()
+
     val states: StateFlow<RelaySessionState> = stateFlow.asStateFlow()
     val outputs: SharedFlow<RelaySessionOutput> = outputFlow.asSharedFlow()
     val connectionSnapshots: StateFlow<ConnectionSnapshot> = connectionSnapshotState.asStateFlow()
@@ -102,7 +105,30 @@ class CoroutineNostrRuntime(
     suspend fun unsubscribe(subscriptionId: SubscriptionId) =
         dispatchIntent(RelaySessionIntent.Unsubscribe(subscriptionId))
 
-    suspend fun publish(event: Event) = dispatchIntent(RelaySessionIntent.Publish(event))
+    /**
+     * Publishes an event to the relay and returns a [Deferred] for write confirmation.
+     *
+     * The returned [Deferred] completes with:
+     * - [WriteOutcome.Success] when the frame is actually written to the socket
+     * - [WriteOutcome.Failed] if the write fails (connection dead, encoding error, etc.)
+     *
+     * Users can:
+     * - Ignore the result for fire-and-forget semantics (background apps)
+     * - Await with timeout for fail-fast semantics (foreground apps):
+     *   ```
+     *   val outcome = withTimeoutOrNull(3000) { publish(event).await() }
+     *       ?: WriteOutcome.Timeout
+     *   ```
+     *
+     * @param event the event to publish
+     * @return a Deferred that completes when the write is confirmed
+     */
+    suspend fun publish(event: Event): Deferred<WriteOutcome> {
+        val confirmation = CompletableDeferred<WriteOutcome>()
+        pendingWriteConfirmations[event.id] = confirmation
+        dispatchIntent(RelaySessionIntent.Publish(event))
+        return confirmation
+    }
 
     suspend fun authenticate(event: Event) = dispatchIntent(RelaySessionIntent.Authenticate(event))
 
@@ -459,29 +485,50 @@ class CoroutineNostrRuntime(
 
     private suspend fun sendFrame(command: RelaySessionCommand.SendToRelay, queue: ArrayDeque<RelaySessionIntent>) {
         val current = connection
+
+        // Extract event ID if this is a publish command (for write confirmation)
+        val eventId = (command.message as? ClientMessage.Event)?.event?.id
+
         if (current == null) {
             queue.addLast(RelaySessionIntent.OutboundFailure(command, "Connection not available"))
+            eventId?.let { completeWriteConfirmation(it, WriteOutcome.Failed(IllegalStateException("Connection not available"))) }
             return
         }
+
         notifyInterceptors { it.onSend(current.url, command.message) }
+
         val payload = kotlin.runCatching { wireEncoder.clientMessage(command.message) }
         if (payload.isFailure) {
+            val error = payload.exceptionOrNull()
             queue.addLast(
                 RelaySessionIntent.OutboundFailure(
                     command,
-                    payload.exceptionOrNull()?.message ?: "Failed to encode client message"
+                    error?.message ?: "Failed to encode client message"
                 )
             )
+            eventId?.let { completeWriteConfirmation(it, WriteOutcome.Failed(error ?: IllegalStateException("Encoding failed"))) }
             return
         }
-        val result = kotlin.runCatching { current.send(payload.getOrThrow()) }
-        if (result.isFailure) {
-            queue.addLast(
-                RelaySessionIntent.OutboundFailure(
-                    command,
-                    result.exceptionOrNull()?.message ?: "Failed to send frame"
-                )
-            )
+
+        // Send returns a Deferred<WriteOutcome> that completes when write is confirmed
+        val writeConfirmation = current.send(payload.getOrThrow())
+
+        // If this is a publish, forward the write confirmation to the pending deferred
+        if (eventId != null) {
+            runtimeScope.launch {
+                val outcome = writeConfirmation.await()
+                completeWriteConfirmation(eventId, outcome)
+                if (outcome is WriteOutcome.Failed) {
+                    // Also report as outbound failure for state tracking
+                    intents.trySend(
+                        RelaySessionIntent.OutboundFailure(command, outcome.cause.message ?: "Write failed")
+                    )
+                }
+            }
         }
+    }
+
+    private fun completeWriteConfirmation(eventId: String, outcome: WriteOutcome) {
+        pendingWriteConfirmations.remove(eventId)?.complete(outcome)
     }
 }

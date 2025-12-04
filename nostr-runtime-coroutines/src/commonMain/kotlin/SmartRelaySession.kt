@@ -106,8 +106,25 @@ class SmartRelaySession(
     suspend fun unsubscribe(subscriptionId: String) =
         runtime.unsubscribe(subscriptionId)
 
-    /** Publish an event to the relay. */
-    suspend fun publish(event: Event) = runtime.publish(event)
+    /**
+     * Publish an event to the relay.
+     *
+     * Returns a [Deferred] that completes when the write is confirmed at the transport level.
+     * This enables detection of stale/dead connections:
+     *
+     * ```kotlin
+     * // Fire-and-forget (background apps)
+     * session.publish(event)
+     *
+     * // Await confirmation with timeout (foreground apps)
+     * val outcome = withTimeoutOrNull(3000) { session.publish(event).await() }
+     *     ?: WriteOutcome.Timeout
+     * if (!outcome.isSuccess()) {
+     *     // Connection is dead, handle error
+     * }
+     * ```
+     */
+    suspend fun publish(event: Event): Deferred<WriteOutcome> = runtime.publish(event)
 
     /** Respond to a NIP-42 authentication challenge. */
     suspend fun authenticate(event: Event) = runtime.authenticate(event)
@@ -257,11 +274,26 @@ class SmartRelaySession(
             val response = subscription.expectAndPublish(
                 correlationId = correlationId,
                 publish = { publish(requestEvent) },
-                timeoutMillis = remaining
+                timeoutMillis = remaining,
+                writeTimeoutMillis = retryConfig.writeTimeoutMillis
             )
 
             if (response != null) {
                 return RequestResult.Success(response)
+            }
+
+            // If writeTimeoutMillis is set and we got null, it could be a write failure
+            // indicating a dead connection. The expectAndPublish already handles this by
+            // returning null immediately on write failure.
+            if (retryConfig.writeTimeoutMillis != null) {
+                // With write confirmation enabled, a null response likely means write failed
+                // (dead connection) rather than a genuine timeout waiting for relay response
+                if (canRetry) {
+                    lastError = "Write confirmation failed or timed out"
+                    reconnectImmediate()
+                    continue
+                }
+                return RequestResult.ConnectionFailed(attempts, "Write failed - connection appears dead")
             }
 
             consecutiveTimeouts++

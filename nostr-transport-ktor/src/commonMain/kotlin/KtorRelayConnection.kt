@@ -12,6 +12,7 @@ import nostr.core.relay.RelayConnection
 import nostr.core.relay.RelayConnectionFactory
 import nostr.core.relay.RelayConnectionListener
 import nostr.core.relay.RelaySendResult
+import nostr.core.relay.WriteConfirmationCallback
 
 /**
  * WebSocket-backed [RelayConnection] implementation using Ktor.
@@ -20,6 +21,10 @@ import nostr.core.relay.RelaySendResult
  * and must remain confined to the supplied [scope].
  *
  * Timeout handling is the responsibility of the caller (typically the runtime layer).
+ *
+ * Supports true write confirmation via [sendWithConfirmation] - the callback is invoked
+ * only after the frame is actually written to the WebSocket, enabling detection of
+ * stale/dead connections.
  */
 class KtorRelayConnection(
     override val url: String,
@@ -27,7 +32,15 @@ class KtorRelayConnection(
     private val scope: CoroutineScope
 ) : RelayConnection {
 
-    private val outbound = Channel<String>(Channel.BUFFERED)
+    /**
+     * Queued frame with optional write confirmation callback.
+     */
+    private data class QueuedFrame(
+        val payload: String,
+        val onWritten: WriteConfirmationCallback?
+    )
+
+    private val outbound = Channel<QueuedFrame>(Channel.BUFFERED)
 
     private var connectJob: Job? = null
     private var readerJob: Job? = null
@@ -63,13 +76,35 @@ class KtorRelayConnection(
         if (session == null || outbound.isClosedForSend) {
             return RelaySendResult.NotConnected
         }
-        val result = outbound.trySend(frame)
+        val queued = QueuedFrame(frame, onWritten = null)
+        val result = outbound.trySend(queued)
         return when {
             result.isSuccess -> RelaySendResult.Accepted
             result.isClosed -> RelaySendResult.NotConnected
             else -> RelaySendResult.Failed(
                 result.exceptionOrNull() ?: IllegalStateException("Outbound queue rejected frame")
             )
+        }
+    }
+
+    override fun sendWithConfirmation(frame: String, onWritten: WriteConfirmationCallback): RelaySendResult {
+        if (session == null || outbound.isClosedForSend) {
+            onWritten(false, IllegalStateException("Not connected"))
+            return RelaySendResult.NotConnected
+        }
+        val queued = QueuedFrame(frame, onWritten)
+        val result = outbound.trySend(queued)
+        return when {
+            result.isSuccess -> RelaySendResult.Accepted
+            result.isClosed -> {
+                onWritten(false, IllegalStateException("Connection closed"))
+                RelaySendResult.NotConnected
+            }
+            else -> {
+                val cause = result.exceptionOrNull() ?: IllegalStateException("Outbound queue rejected frame")
+                onWritten(false, cause)
+                RelaySendResult.Failed(cause)
+            }
         }
     }
 
@@ -96,13 +131,33 @@ class KtorRelayConnection(
 
     private fun CoroutineScope.launchWriter(session: WebSocketSession) = launch {
         try {
-            for (payload in outbound) {
-                session.send(Frame.Text(payload))
+            for (queued in outbound) {
+                try {
+                    session.send(Frame.Text(queued.payload))
+                    // Write succeeded - invoke callback
+                    queued.onWritten?.invoke(true, null)
+                } catch (writeFailure: Throwable) {
+                    // Write failed - invoke callback with error
+                    queued.onWritten?.invoke(false, writeFailure)
+                    throw writeFailure  // Re-throw to fail the writer
+                }
             }
         } catch (failure: Throwable) {
             if (failure !is CancellationException) {
+                // Fail any remaining queued frames
+                failPendingWrites(failure)
                 deliverFailure(failure)
             }
+        }
+    }
+
+    /**
+     * Fails all pending writes in the queue when the writer encounters an error.
+     */
+    private fun failPendingWrites(cause: Throwable) {
+        while (true) {
+            val queued = outbound.tryReceive().getOrNull() ?: break
+            queued.onWritten?.invoke(false, cause)
         }
     }
 
