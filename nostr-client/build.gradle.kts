@@ -24,7 +24,10 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation(project(":nostr-core"))
+                implementation(project(":nostr-crypto"))
                 implementation(project(":nostr-runtime-coroutines"))
+                implementation(project(":nostr-codec-kotlinx-serialization"))
+                implementation(project(":nostr-transport-ktor"))
                 implementation(project(":nips:nip42"))
                 implementation(libs.kotlinx.coroutines.core)
             }
