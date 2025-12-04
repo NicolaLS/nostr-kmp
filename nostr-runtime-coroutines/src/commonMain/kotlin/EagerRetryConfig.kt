@@ -48,7 +48,21 @@ data class EagerRetryConfig(
      * Set to null for fire-and-forget semantics (background apps).
      * Set to a short value (e.g., 3000ms) for fail-fast semantics (foreground apps).
      */
-    val writeTimeoutMillis: Long? = null
+    val writeTimeoutMillis: Long? = null,
+
+    /**
+     * Whether to check network availability before making requests.
+     *
+     * When true, the SDK checks if the device has network connectivity before attempting
+     * to send requests. If no network is available, returns [RequestResult.ConnectionFailed]
+     * immediately without waiting for timeout.
+     *
+     * This is useful for foreground apps that want instant feedback when offline,
+     * but may add slight overhead from the platform-specific connectivity check.
+     *
+     * Default is false for backwards compatibility.
+     */
+    val checkNetworkBeforeRequest: Boolean = false
 ) {
     init {
         require(maxRetries >= 0) { "maxRetries must be non-negative" }
@@ -81,11 +95,13 @@ data class EagerRetryConfig(
          * - 3 retries (4 total attempts)
          * - Single timeout triggers reconnect (aggressive stale detection)
          * - Write confirmation with 3 second timeout (fail-fast on dead connections)
+         * - Network availability check before requests (instant offline detection)
          */
         val Aggressive = EagerRetryConfig(
             maxRetries = 3,
             staleTimeoutThreshold = 1,
-            writeTimeoutMillis = 3000
+            writeTimeoutMillis = 3000,
+            checkNetworkBeforeRequest = true
         )
 
         /**

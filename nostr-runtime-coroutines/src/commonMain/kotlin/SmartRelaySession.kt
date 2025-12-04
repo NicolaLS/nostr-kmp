@@ -252,6 +252,11 @@ class SmartRelaySession(
                 return RequestResult.Timeout(elapsed)
             }
 
+            // Check network availability before attempting request (if enabled)
+            if (retryConfig.checkNetworkBeforeRequest && !isNetworkAvailable()) {
+                return RequestResult.ConnectionFailed(attempts, "No network connection available")
+            }
+
             val canRetry = attempts <= retryConfig.maxRetries + 1 &&
                 remaining >= retryConfig.minRetryBudgetMillis
 
