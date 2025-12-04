@@ -19,6 +19,14 @@ class SubscriptionRejectedException(
 ) : Exception("Subscription rejected: $reason (code=$code)")
 
 /**
+ * Exception thrown when a network operation cannot proceed because
+ * the device has no network connectivity.
+ */
+class NetworkUnavailableException(
+    message: String = "No network connection available"
+) : Exception(message)
+
+/**
  * A long-lived subscription that routes incoming events to waiting callers
  * based on correlation IDs. Enables efficient request-response patterns
  * without creating a new subscription per request.

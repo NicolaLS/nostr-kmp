@@ -398,13 +398,21 @@ class SmartRelaySession(
      *
      * @param filters Filters for the subscription
      * @param subscriptionId Optional custom subscription ID
+     * @param checkNetwork If true, checks network availability before creating the subscription
+     *                     and throws [NetworkUnavailableException] if no network is available.
+     *                     This enables fast-fail behavior for subscription setup.
      * @param correlationExtractor Optional custom function to extract correlation IDs from events
+     * @throws NetworkUnavailableException if [checkNetwork] is true and no network is available
      */
     suspend fun createSharedSubscription(
         filters: List<Filter>,
         subscriptionId: SubscriptionId = SharedSubscription.generateId(),
+        checkNetwork: Boolean = false,
         correlationExtractor: ((Event) -> String?)? = null
     ): SharedSubscription {
+        if (checkNetwork && !isNetworkAvailable()) {
+            throw NetworkUnavailableException()
+        }
         val subscription = if (correlationExtractor != null) {
             SharedSubscription(subscriptionId, filters, runtime, scope, correlationExtractor)
         } else {
