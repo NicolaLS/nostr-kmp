@@ -2,6 +2,7 @@ package nostr.runtime.coroutines
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeoutOrNull
@@ -133,7 +134,12 @@ class CoroutineNostrRuntime(
     suspend fun authenticate(event: Event) = dispatchIntent(RelaySessionIntent.Authenticate(event))
 
     suspend fun dispatchIntent(intent: RelaySessionIntent) {
-        intents.send(intent)
+        if (intents.isClosedForSend) return
+        try {
+            intents.send(intent)
+        } catch (closed: ClosedSendChannelException) {
+            // Runtime is shutting down; drop intent instead of crashing
+        }
     }
 
     suspend fun shutdown() {
