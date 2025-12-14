@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
 
 val groupId = "io.github.nicolals"
-val versionName = "0.1.1-SNAPSHOT"
+val versionName = "0.2.0-SNAPSHOT"
 
 plugins {
     alias(libs.plugins.androidLibrary) apply false

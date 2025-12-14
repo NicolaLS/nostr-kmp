@@ -102,6 +102,7 @@ internal class RelayConnectionAdapter(
     fun failure(): Throwable? = failure
 
     fun dispose() {
+        runCatching { delegate.close() }
         messages.close()
         if (!openSignal.isCompleted) {
             openSignal.cancel()

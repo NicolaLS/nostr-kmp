@@ -186,6 +186,7 @@ class CoroutineNostrRuntimeTest {
         val failedSnapshot = assertIs<ConnectionSnapshot.Failed>(runtime.connectionSnapshots.value)
         assertEquals(ConnectionFailureReason.OpenHandshake, failedSnapshot.reason)
         assertTrue(failedSnapshot.message.lowercase().contains("timeout"))
+        assertEquals(1, connection.closeCalls)
 
         runtime.shutdown()
         advanceUntilIdle()
@@ -215,6 +216,7 @@ class CoroutineNostrRuntimeTest {
         assertEquals(ConnectionFailureReason.StreamFailure, failedSnapshot.reason)
         assertTrue(failedSnapshot.message.lowercase().contains("timeout") || failedSnapshot.message.lowercase()
             .contains("idle"))
+        assertEquals(1, connection.closeCalls)
 
         runtime.shutdown()
         advanceUntilIdle()
@@ -500,6 +502,8 @@ class CoroutineNostrRuntimeTest {
 
     private class HangingRelayConnection(override val url: String) : RelayConnection {
         private var listener: RelayConnectionListener? = null
+        var closeCalls = 0
+            private set
 
         override fun connect(listener: RelayConnectionListener) {
             this.listener = listener
@@ -509,6 +513,7 @@ class CoroutineNostrRuntimeTest {
         override fun send(frame: String): RelaySendResult = RelaySendResult.NotConnected
 
         override fun close(code: Int, reason: String?) {
+            closeCalls += 1
             listener?.onClosed(code, reason)
             listener = null
         }
@@ -516,6 +521,8 @@ class CoroutineNostrRuntimeTest {
 
     private class SilentRelayConnection(override val url: String) : RelayConnection {
         private var listener: RelayConnectionListener? = null
+        var closeCalls = 0
+            private set
 
         override fun connect(listener: RelayConnectionListener) {
             this.listener = listener
@@ -526,6 +533,7 @@ class CoroutineNostrRuntimeTest {
         override fun send(frame: String): RelaySendResult = RelaySendResult.Accepted
 
         override fun close(code: Int, reason: String?) {
+            closeCalls += 1
             listener?.onClosed(code, reason)
             listener = null
         }
