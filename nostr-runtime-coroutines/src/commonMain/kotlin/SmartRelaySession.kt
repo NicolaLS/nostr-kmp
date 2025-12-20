@@ -187,7 +187,8 @@ class SmartRelaySession(
                 requestEvent = requestEvent,
                 responseFilter = responseFilter,
                 correlationId = correlationId,
-                timeoutMillis = remaining
+                timeoutMillis = remaining,
+                writeTimeoutMillis = retryConfig.writeTimeoutMillis
             )
 
             when (result) {
@@ -460,9 +461,13 @@ class SmartRelaySession(
     /**
      * Trigger immediate reconnection, bypassing normal backoff.
      */
-    private suspend fun reconnectImmediate() {
+    suspend fun invalidate(reason: String = "Invalidated") {
+        reconnectImmediate(reason)
+    }
+
+    private suspend fun reconnectImmediate(reason: String = "Reconnecting") {
         reconnectMutex.withLock {
-            runtime.disconnect(1000, "Reconnecting")
+            runtime.disconnect(1000, reason)
             // Small delay to ensure disconnect is processed
             delay(50)
             connect()
@@ -477,17 +482,18 @@ class SmartRelaySession(
         requestEvent: Event,
         responseFilter: Filter,
         correlationId: String,
-        timeoutMillis: Long
+        timeoutMillis: Long,
+        writeTimeoutMillis: Long?
     ): TryResult {
         if (!isConnected()) {
             return TryResult.ConnectionFailed("Not connected")
         }
 
+        if (timeoutMillis <= 0) return TryResult.Timeout()
         val subscriptionId = SharedSubscription.generateId("req")
 
         return try {
             coroutineScope {
-                val events = mutableListOf<Event>()
                 val resultDeferred = CompletableDeferred<TryResult>()
 
                 // Start collecting BEFORE subscribing
@@ -507,17 +513,29 @@ class SmartRelaySession(
                         }
                 }
 
-                subscribe(subscriptionId, listOf(responseFilter))
-                publish(requestEvent)
+                try {
+                    val result = withTimeoutOrNull(timeoutMillis) {
+                        subscribe(subscriptionId, listOf(responseFilter))
+                        val writeConfirmation = publish(requestEvent)
 
-                val result = withTimeoutOrNull(timeoutMillis) {
-                    resultDeferred.await()
+                        if (writeTimeoutMillis != null) {
+                            val writeOutcome = withTimeoutOrNull(writeTimeoutMillis) { writeConfirmation.await() }
+                                ?: WriteOutcome.Timeout
+                            if (!writeOutcome.isSuccess()) {
+                                return@withTimeoutOrNull TryResult.ConnectionFailed(
+                                    "Write confirmation failed or timed out"
+                                )
+                            }
+                        }
+
+                        resultDeferred.await()
+                    }
+
+                    result ?: TryResult.Timeout()
+                } finally {
+                    collectorJob.cancelAndJoin()
+                    unsubscribe(subscriptionId)
                 }
-
-                collectorJob.cancelAndJoin()
-                unsubscribe(subscriptionId)
-
-                result ?: TryResult.Timeout(events)
             }
         } catch (e: CancellationException) {
             throw e

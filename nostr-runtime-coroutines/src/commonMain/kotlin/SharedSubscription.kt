@@ -88,7 +88,7 @@ class SharedSubscription internal constructor(
      *
      * @param correlationId Unique ID to match against incoming event tags
      * @param publish Action that publishes the request and returns write confirmation
-     * @param timeoutMillis Maximum time to wait for response
+     * @param timeoutMillis Total time budget for the operation (write + response)
      * @param writeTimeoutMillis Optional timeout for write confirmation (null = don't wait for confirmation)
      * @return The matching event, or null if timeout/closed/write failed
      * @throws IllegalStateException if correlationId is already registered
@@ -99,6 +99,7 @@ class SharedSubscription internal constructor(
         timeoutMillis: Long,
         writeTimeoutMillis: Long? = null
     ): Event? {
+        if (timeoutMillis <= 0) return null
         val deferred = CompletableDeferred<Event>()
 
         // Register expectation FIRST
@@ -113,21 +114,19 @@ class SharedSubscription internal constructor(
         }
 
         return try {
-            // Now publish - any response will be caught
-            val writeConfirmation = publish()
+            withTimeoutOrNull(timeoutMillis) {
+                val writeConfirmation = publish()
 
-            // Optionally await write confirmation
-            if (writeTimeoutMillis != null) {
-                val writeOutcome = withTimeoutOrNull(writeTimeoutMillis) { writeConfirmation.await() }
-                    ?: WriteOutcome.Timeout
-                if (!writeOutcome.isSuccess()) {
-                    // Write failed or timed out - connection is likely dead
-                    return null
+                if (writeTimeoutMillis != null) {
+                    val writeOutcome = withTimeoutOrNull(writeTimeoutMillis) { writeConfirmation.await() }
+                        ?: WriteOutcome.Timeout
+                    if (!writeOutcome.isSuccess()) {
+                        return@withTimeoutOrNull null
+                    }
                 }
-            }
 
-            // Wait for the response
-            withTimeoutOrNull(timeoutMillis) { deferred.await() }
+                deferred.await()
+            }
         } finally {
             mutex.withLock { pending.remove(correlationId) }
         }

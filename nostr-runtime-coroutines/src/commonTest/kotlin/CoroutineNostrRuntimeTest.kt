@@ -25,6 +25,7 @@ import nostr.core.relay.RelayConnection
 import nostr.core.relay.RelayConnectionFactory
 import nostr.core.relay.RelayConnectionListener
 import nostr.core.relay.RelaySendResult
+import nostr.core.relay.WriteConfirmationCallback
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -456,6 +457,58 @@ class CoroutineNostrRuntimeTest {
         advanceUntilIdle()
     }
 
+    @Test
+    fun disconnectDoesNotHangWhenRelayNeverCloses() = runTest {
+        val connection = SilentCloseRelayConnection("wss://relay")
+        val runtime = CoroutineNostrRuntime(
+            scope = this,
+            connectionFactory = RelayConnectionFactory { connection },
+            wireEncoder = codec,
+            wireDecoder = codec,
+            readTimeoutMillis = 0
+        )
+
+        runtime.connect("wss://relay")
+        advanceUntilIdle()
+        assertIs<ConnectionSnapshot.Connected>(runtime.connectionSnapshots.value)
+
+        runtime.disconnect()
+        advanceUntilIdle()
+        assertIs<ConnectionSnapshot.Disconnected>(runtime.connectionSnapshots.value)
+
+        runtime.connect("wss://relay")
+        advanceUntilIdle()
+        assertIs<ConnectionSnapshot.Connected>(runtime.connectionSnapshots.value)
+
+        runtime.shutdown()
+        advanceUntilIdle()
+    }
+
+    @Test
+    fun publish_writeConfirmationMissing_timesOut() = runTest {
+        val connection = NonConfirmingRelayConnection("wss://relay")
+        val runtime = CoroutineNostrRuntime(
+            scope = this,
+            connectionFactory = RelayConnectionFactory { connection },
+            wireEncoder = codec,
+            wireDecoder = codec,
+            readTimeoutMillis = 0,
+            writeConfirmationTimeoutMillis = 1_000
+        )
+
+        runtime.connect("wss://relay")
+        advanceUntilIdle()
+        assertIs<ConnectionSnapshot.Connected>(runtime.connectionSnapshots.value)
+
+        val write = runtime.publish(sampleEvent())
+        advanceTimeBy(1_100)
+        advanceUntilIdle()
+        assertEquals(WriteOutcome.Timeout, write.await())
+
+        runtime.shutdown()
+        advanceUntilIdle()
+    }
+
     private fun sampleEvent(): Event {
         val unsigned = UnsignedEvent(
             pubkey = "1".repeat(64),
@@ -579,6 +632,42 @@ class CoroutineNostrRuntimeTest {
 
         fun emit(frame: String) {
             listener?.onMessage(frame)
+        }
+    }
+
+    private class SilentCloseRelayConnection(override val url: String) : RelayConnection {
+        private var listener: RelayConnectionListener? = null
+
+        override fun connect(listener: RelayConnectionListener) {
+            this.listener = listener
+            listener.onOpen(this)
+        }
+
+        override fun send(frame: String): RelaySendResult = RelaySendResult.Accepted
+
+        override fun close(code: Int, reason: String?) {
+            // Intentionally never call onClosed/onFailure to simulate a half-open socket on iOS.
+        }
+    }
+
+    private class NonConfirmingRelayConnection(override val url: String) : RelayConnection {
+        private var listener: RelayConnectionListener? = null
+
+        override fun connect(listener: RelayConnectionListener) {
+            this.listener = listener
+            listener.onOpen(this)
+        }
+
+        override fun send(frame: String): RelaySendResult = RelaySendResult.Accepted
+
+        override fun sendWithConfirmation(frame: String, onWritten: WriteConfirmationCallback): RelaySendResult {
+            // Accept the frame but never confirm the write.
+            return RelaySendResult.Accepted
+        }
+
+        override fun close(code: Int, reason: String?) {
+            listener?.onClosed(code, reason)
+            listener = null
         }
     }
 }

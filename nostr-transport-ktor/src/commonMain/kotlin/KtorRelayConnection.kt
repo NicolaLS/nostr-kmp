@@ -7,7 +7,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import nostr.core.relay.RelayConnection
 import nostr.core.relay.RelayConnectionFactory
 import nostr.core.relay.RelayConnectionListener
@@ -20,8 +23,6 @@ import nostr.core.relay.WriteConfirmationCallback
  * This class expects single-threaded use; state changes are unsynchronized
  * and must remain confined to the supplied [scope].
  *
- * Timeout handling is the responsibility of the caller (typically the runtime layer).
- *
  * Supports true write confirmation via [sendWithConfirmation] - the callback is invoked
  * only after the frame is actually written to the WebSocket, enabling detection of
  * stale/dead connections.
@@ -29,22 +30,27 @@ import nostr.core.relay.WriteConfirmationCallback
 class KtorRelayConnection(
     override val url: String,
     private val client: HttpClient,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val frameWriteTimeoutMillis: Long = DEFAULT_FRAME_WRITE_TIMEOUT_MILLIS,
+    private val pingIntervalMillis: Long = DEFAULT_PING_INTERVAL_MILLIS,
+    private val pongTimeoutMillis: Long = DEFAULT_PONG_TIMEOUT_MILLIS
 ) : RelayConnection {
 
     /**
      * Queued frame with optional write confirmation callback.
      */
     private data class QueuedFrame(
-        val payload: String,
+        val frame: Frame,
         val onWritten: WriteConfirmationCallback?
     )
 
     private val outbound = Channel<QueuedFrame>(Channel.BUFFERED)
+    private val pongSignals = Channel<Unit>(Channel.CONFLATED)
 
     private var connectJob: Job? = null
     private var readerJob: Job? = null
     private var writerJob: Job? = null
+    private var heartbeatJob: Job? = null
 
     private var session: WebSocketSession? = null
 
@@ -57,6 +63,9 @@ class KtorRelayConnection(
 
     override fun connect(listener: RelayConnectionListener) {
         check(this.listener == null) { "Connection already started" }
+        require(frameWriteTimeoutMillis > 0) { "frameWriteTimeoutMillis must be positive" }
+        require(pingIntervalMillis >= 0) { "pingIntervalMillis cannot be negative" }
+        require(pongTimeoutMillis > 0) { "pongTimeoutMillis must be positive" }
         this.listener = listener
         connectJob = scope.launch {
             val created = try {
@@ -69,14 +78,17 @@ class KtorRelayConnection(
             listener.onOpen(this@KtorRelayConnection)
             writerJob = launchWriter(created)
             readerJob = launchReader(created)
+            if (pingIntervalMillis > 0) {
+                heartbeatJob = launchHeartbeat()
+            }
         }
     }
 
     override fun send(frame: String): RelaySendResult {
-        if (session == null || outbound.isClosedForSend) {
+        if (session == null || closed) {
             return RelaySendResult.NotConnected
         }
-        val queued = QueuedFrame(frame, onWritten = null)
+        val queued = QueuedFrame(Frame.Text(frame), onWritten = null)
         val result = outbound.trySend(queued)
         return when {
             result.isSuccess -> RelaySendResult.Accepted
@@ -88,11 +100,11 @@ class KtorRelayConnection(
     }
 
     override fun sendWithConfirmation(frame: String, onWritten: WriteConfirmationCallback): RelaySendResult {
-        if (session == null || outbound.isClosedForSend) {
+        if (session == null || closed) {
             onWritten(false, IllegalStateException("Not connected"))
             return RelaySendResult.NotConnected
         }
-        val queued = QueuedFrame(frame, onWritten)
+        val queued = QueuedFrame(Frame.Text(frame), onWritten)
         val result = outbound.trySend(queued)
         return when {
             result.isSuccess -> RelaySendResult.Accepted
@@ -112,52 +124,48 @@ class KtorRelayConnection(
         if (closed) return
         closed = true
         closeOutbound()
+        val current = session
+        session = null
         scope.launch {
-            connectJob?.cancel()
-            connectJob = null
-            val current = session
-            session = null
-            if (current != null) {
-                try {
-                    current.close(CloseReason(code.toShort(), reason ?: ""))
-                } catch (failure: Throwable) {
-                    deliverFailure(failure)
-                }
-            } else {
-                deliverClosed(code, reason)
-            }
+            runCatching { current?.close(CloseReason(code.toShort(), reason ?: "")) }
         }
+        deliverClosed(code, reason)
     }
 
     private fun CoroutineScope.launchWriter(session: WebSocketSession) = launch {
+        var inFlight: QueuedFrame? = null
         try {
             for (queued in outbound) {
                 try {
-                    session.send(Frame.Text(queued.payload))
-                    // Write succeeded - invoke callback
+                    inFlight = queued
+                    sendFrameWithTimeout(session, queued.frame)
+                    inFlight = null
                     queued.onWritten?.invoke(true, null)
                 } catch (writeFailure: Throwable) {
-                    // Write failed - invoke callback with error
+                    inFlight = null
                     queued.onWritten?.invoke(false, writeFailure)
                     throw writeFailure  // Re-throw to fail the writer
                 }
             }
         } catch (failure: Throwable) {
+            val pending = inFlight
+            if (pending != null) {
+                pending.onWritten?.invoke(false, failure)
+                inFlight = null
+            }
             if (failure !is CancellationException) {
-                // Fail any remaining queued frames
-                failPendingWrites(failure)
                 deliverFailure(failure)
             }
         }
     }
 
-    /**
-     * Fails all pending writes in the queue when the writer encounters an error.
-     */
-    private fun failPendingWrites(cause: Throwable) {
-        while (true) {
-            val queued = outbound.tryReceive().getOrNull() ?: break
-            queued.onWritten?.invoke(false, cause)
+    private suspend fun sendFrameWithTimeout(session: WebSocketSession, frame: Frame) {
+        try {
+            withTimeout(frameWriteTimeoutMillis) {
+                session.send(frame)
+            }
+        } catch (timeout: kotlinx.coroutines.TimeoutCancellationException) {
+            throw RelayWriteTimeoutException(url, frameWriteTimeoutMillis, timeout)
         }
     }
 
@@ -168,6 +176,7 @@ class KtorRelayConnection(
                 val currentListener = listener ?: return@launch
                 when (frame) {
                     is Frame.Text -> currentListener.onMessage(frame.readText())
+                    is Frame.Pong -> pongSignals.trySend(Unit)
                     is Frame.Close -> {
                         val reason = frame.readReason()
                         deliverClosed(reason?.code?.toInt() ?: 1000, reason?.message)
@@ -182,8 +191,50 @@ class KtorRelayConnection(
             if (failure !is CancellationException) {
                 deliverFailure(failure)
             }
-        } finally {
-            cleanup()
+        }
+    }
+
+    private fun CoroutineScope.launchHeartbeat() = launch {
+        try {
+            while (true) {
+                delay(pingIntervalMillis)
+                if (session == null) return@launch
+                drainPongs()
+                val writeConfirmed = withTimeoutOrNull(frameWriteTimeoutMillis) {
+                    val deferred = kotlinx.coroutines.CompletableDeferred<Unit>()
+                    val queued = QueuedFrame(Frame.Ping(ByteArray(0))) { success, cause ->
+                        if (success) {
+                            deferred.complete(Unit)
+                        } else {
+                            deferred.completeExceptionally(cause ?: IllegalStateException("Ping write failed"))
+                        }
+                    }
+                    val result = outbound.trySend(queued)
+                    if (!result.isSuccess) {
+                        deferred.completeExceptionally(
+                            result.exceptionOrNull() ?: IllegalStateException("Failed to enqueue ping")
+                        )
+                    }
+                    deferred.await()
+                }
+                if (writeConfirmed == null) {
+                    throw RelayWriteTimeoutException(url, frameWriteTimeoutMillis)
+                }
+                val pongReceived = withTimeoutOrNull(pongTimeoutMillis) { pongSignals.receive() } != null
+                if (!pongReceived) {
+                    throw RelayHeartbeatTimeoutException(url, pongTimeoutMillis)
+                }
+            }
+        } catch (failure: Throwable) {
+            if (failure !is CancellationException) {
+                deliverFailure(failure)
+            }
+        }
+    }
+
+    private fun drainPongs() {
+        while (pongSignals.tryReceive().getOrNull() != null) {
+            // Drain stale pongs before waiting for a fresh one.
         }
     }
 
@@ -194,7 +245,7 @@ class KtorRelayConnection(
         if (terminalCallbackDelivered) return
         terminalCallbackDelivered = true
         listener?.onClosed(code, reason)
-        cleanup()
+        cleanup(IllegalStateException("Connection closed ($code)"))
     }
 
     /**
@@ -204,28 +255,43 @@ class KtorRelayConnection(
         if (terminalCallbackDelivered) return
         terminalCallbackDelivered = true
         listener?.onFailure(cause)
-        cleanup()
+        cleanup(cause)
     }
 
     private fun closeOutbound() {
-        if (!outbound.isClosedForSend) {
-            outbound.close()
-        }
+        outbound.close()
     }
 
     /**
      * Idempotent cleanup of internal resources.
      */
-    private fun cleanup() {
+    private fun cleanup(cause: Throwable) {
         closeOutbound()
+        failPendingWrites(cause)
         writerJob?.cancel()
         writerJob = null
         readerJob?.cancel()
         readerJob = null
+        heartbeatJob?.cancel()
+        heartbeatJob = null
+        val job = connectJob
         connectJob = null
+        job?.cancel()
+        val current = session
         session = null
+        pongSignals.close()
         listener = null
         closed = true
+        scope.launch {
+            runCatching { current?.close(CloseReason(1000, "")) }
+        }
+    }
+
+    private fun failPendingWrites(cause: Throwable) {
+        while (true) {
+            val queued = outbound.tryReceive().getOrNull() ?: break
+            queued.onWritten?.invoke(false, cause)
+        }
     }
 }
 
@@ -237,11 +303,32 @@ class KtorRelayConnection(
  */
 fun KtorRelayConnectionFactory(
     scope: CoroutineScope,
-    client: HttpClient = HttpClient { install(WebSockets) }
+    client: HttpClient = HttpClient { install(WebSockets) },
+    frameWriteTimeoutMillis: Long = DEFAULT_FRAME_WRITE_TIMEOUT_MILLIS,
+    pingIntervalMillis: Long = DEFAULT_PING_INTERVAL_MILLIS,
+    pongTimeoutMillis: Long = DEFAULT_PONG_TIMEOUT_MILLIS
 ): RelayConnectionFactory = RelayConnectionFactory { url ->
     KtorRelayConnection(
         url = url,
         client = client,
-        scope = scope
+        scope = scope,
+        frameWriteTimeoutMillis = frameWriteTimeoutMillis,
+        pingIntervalMillis = pingIntervalMillis,
+        pongTimeoutMillis = pongTimeoutMillis
     )
 }
+
+private const val DEFAULT_FRAME_WRITE_TIMEOUT_MILLIS: Long = 10_000
+private const val DEFAULT_PING_INTERVAL_MILLIS: Long = 30_000
+private const val DEFAULT_PONG_TIMEOUT_MILLIS: Long = 10_000
+
+class RelayWriteTimeoutException(
+    val relayUrl: String,
+    val timeoutMillis: Long,
+    cause: Throwable? = null
+) : Exception("Write timed out after ${timeoutMillis}ms for $relayUrl", cause)
+
+class RelayHeartbeatTimeoutException(
+    val relayUrl: String,
+    val timeoutMillis: Long
+) : Exception("Heartbeat pong timeout after ${timeoutMillis}ms for $relayUrl")

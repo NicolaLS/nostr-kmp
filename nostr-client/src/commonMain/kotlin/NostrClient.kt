@@ -169,6 +169,24 @@ class NostrClient private constructor(
         handle?.let { cleanupHandle(it) }
     }
 
+    /**
+     * Force a relay transport reconnection.
+     *
+     * Useful on iOS lifecycle/network transitions where WebSocket sessions can become half-open without
+     * surfacing a clean close/error.
+     */
+    suspend fun invalidateRelay(url: String, code: Int? = 1000, reason: String? = "Invalidated") {
+        val normalizedUrl = normalizeUrl(url)
+        manager.invalidate(normalizedUrl, code = code, reason = reason)
+    }
+
+    /**
+     * Force transport reconnection for all known relay sessions.
+     */
+    suspend fun invalidateAllRelays(code: Int? = 1000, reason: String? = "Invalidated") {
+        manager.invalidateAll(code = code, reason = reason)
+    }
+
     // ==========================================================================
     // Public API - Query
     // ==========================================================================

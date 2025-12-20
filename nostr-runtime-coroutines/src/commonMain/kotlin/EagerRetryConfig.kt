@@ -78,8 +78,9 @@ data class EagerRetryConfig(
          * - 2 retries (3 total attempts)
          * - 2 consecutive timeouts before assuming stale connection
          * - 5 second connection timeout per attempt
+         * - 5 second write confirmation timeout (fail-fast on stale connections)
          */
-        val Default = EagerRetryConfig()
+        val Default = EagerRetryConfig(writeTimeoutMillis = 5000)
 
         /**
          * No retry behavior - fail immediately on first error.

@@ -34,7 +34,9 @@ class CoroutineNostrRuntime(
     settings: RelaySessionSettings = RelaySessionSettings(),
     reducer: RelaySessionReducer = DefaultRelaySessionReducer(),
     initialState: RelaySessionState = RelaySessionState(),
-    interceptors: List<CoroutineRuntimeInterceptor> = emptyList()
+    interceptors: List<CoroutineRuntimeInterceptor> = emptyList(),
+    private val closeTimeoutMillis: Long = DEFAULT_CLOSE_TIMEOUT_MILLIS,
+    private val writeConfirmationTimeoutMillis: Long = DEFAULT_WRITE_CONFIRMATION_TIMEOUT_MILLIS
 ) {
     private val runtimeJob: Job = SupervisorJob(scope.coroutineContext[Job])
     internal val runtimeScope: CoroutineScope = scope + runtimeJob
@@ -72,6 +74,8 @@ class CoroutineNostrRuntime(
     init {
         require(connectTimeoutMillis > 0) { "connectTimeoutMillis must be positive" }
         require(readTimeoutMillis >= 0) { "readTimeoutMillis cannot be negative" }
+        require(closeTimeoutMillis > 0) { "closeTimeoutMillis must be positive" }
+        require(writeConfirmationTimeoutMillis >= 0) { "writeConfirmationTimeoutMillis cannot be negative" }
         processorJob = runtimeScope.launch {
             processIntents()
         }
@@ -147,7 +151,12 @@ class CoroutineNostrRuntime(
         processorJob.cancelAndJoin()
         reconnectJob?.cancel()
         reconnectJob = null
-        connectionJob?.cancelAndJoin()
+        val activeJob = connectionJob
+        connectionJob = null
+        activeJob?.cancel()
+        if (activeJob != null) {
+            withTimeoutOrNull(closeTimeoutMillis) { activeJob.join() }
+        }
         val current = connection
         connection = null
         try {
@@ -156,6 +165,7 @@ class CoroutineNostrRuntime(
         } finally {
             current?.dispose()
         }
+        failPendingWriteConfirmations(CancellationException("Runtime shutting down"))
         runtimeJob.cancel()
         runtimeJob.join()
     }
@@ -239,7 +249,7 @@ class CoroutineNostrRuntime(
         for (command in commands) {
             when (command) {
                 is RelaySessionCommand.OpenConnection -> openConnection(command.url, queue)
-                is RelaySessionCommand.CloseConnection -> closeConnection(command.code, command.reason)
+                is RelaySessionCommand.CloseConnection -> closeConnection(command.code, command.reason, queue)
                 is RelaySessionCommand.SendToRelay -> sendFrame(command, queue)
                 is RelaySessionCommand.EmitOutput -> outputs += command.output
             }
@@ -261,13 +271,18 @@ class CoroutineNostrRuntime(
         val attemptToken = connectAttemptToken
         refreshTelemetry(stateFlow.value.connection)
         val previous = connection
+        val previousJob = connectionJob
         connection = null
-        connectionJob?.cancelAndJoin()
+        connectionJob = null
+        previousJob?.cancel()
         try {
             previous?.close(code = 1000, reason = null)
         } catch (_: Throwable) {
         } finally {
             previous?.dispose()
+        }
+        if (previousJob != null) {
+            withTimeoutOrNull(closeTimeoutMillis) { previousJob.join() }
         }
         notifyInterceptors { it.onConnectionOpening(url) }
         val created = try {
@@ -473,20 +488,38 @@ class CoroutineNostrRuntime(
     private fun Throwable.describeCause(): String? =
         this::class.qualifiedName ?: this::class.simpleName
 
-    private suspend fun closeConnection(code: Int?, reason: String?) {
+    private suspend fun closeConnection(code: Int?, reason: String?, queue: ArrayDeque<RelaySessionIntent>) {
         val current = connection ?: return
         val job = connectionJob
         connection = null
         connectionJob = null
-        val closeResult = kotlin.runCatching { current.close(code ?: 1000, reason) }
-        if (job != null) {
-            if (closeResult.isFailure) {
-                job.cancelAndJoin()
-            } else {
+
+        kotlin.runCatching { current.close(code ?: 1000, reason) }
+        kotlin.runCatching { current.dispose() }
+        failPendingWriteConfirmations(CancellationException("Connection closed"))
+
+        val joined = if (job != null) {
+            withTimeoutOrNull(closeTimeoutMillis) {
                 job.join()
-            }
+                true
+            } ?: false
+        } else {
+            true
         }
-        current.dispose()
+
+        if (!joined) {
+            job?.cancel()
+            if (job != null) {
+                withTimeoutOrNull(closeTimeoutMillis) { job.join() }
+            }
+            queue.addLast(
+                RelaySessionIntent.ConnectionClosed(
+                    url = current.url,
+                    code = code ?: 1000,
+                    reason = reason
+                )
+            )
+        }
     }
 
     private suspend fun sendFrame(command: RelaySessionCommand.SendToRelay, queue: ArrayDeque<RelaySessionIntent>) {
@@ -522,13 +555,23 @@ class CoroutineNostrRuntime(
         // If this is a publish, forward the write confirmation to the pending deferred
         if (eventId != null) {
             runtimeScope.launch {
-                val outcome = writeConfirmation.await()
+                val outcome = if (writeConfirmationTimeoutMillis > 0) {
+                    withTimeoutOrNull(writeConfirmationTimeoutMillis) { writeConfirmation.await() } ?: WriteOutcome.Timeout
+                } else {
+                    writeConfirmation.await()
+                }
                 completeWriteConfirmation(eventId, outcome)
-                if (outcome is WriteOutcome.Failed) {
-                    // Also report as outbound failure for state tracking
-                    intents.trySend(
-                        RelaySessionIntent.OutboundFailure(command, outcome.cause.message ?: "Write failed")
-                    )
+                when (outcome) {
+                    WriteOutcome.Success -> Unit
+                    WriteOutcome.Timeout -> {
+                        intents.trySend(RelaySessionIntent.OutboundFailure(command, "Write timed out"))
+                    }
+                    is WriteOutcome.Failed -> {
+                        // Also report as outbound failure for state tracking
+                        intents.trySend(
+                            RelaySessionIntent.OutboundFailure(command, outcome.cause.message ?: "Write failed")
+                        )
+                    }
                 }
             }
         }
@@ -536,5 +579,14 @@ class CoroutineNostrRuntime(
 
     private fun completeWriteConfirmation(eventId: String, outcome: WriteOutcome) {
         pendingWriteConfirmations.remove(eventId)?.complete(outcome)
+    }
+
+    private fun failPendingWriteConfirmations(cause: Throwable) {
+        if (pendingWriteConfirmations.isEmpty()) return
+        val outcome = WriteOutcome.Failed(cause)
+        pendingWriteConfirmations.values.forEach { deferred ->
+            deferred.complete(outcome)
+        }
+        pendingWriteConfirmations.clear()
     }
 }

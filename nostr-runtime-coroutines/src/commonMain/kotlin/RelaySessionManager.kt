@@ -68,6 +68,32 @@ class RelaySessionManager(
     }
 
     /**
+     * Forces a relay session to reconnect, recreating the underlying WebSocket transport.
+     *
+     * Intended for iOS lifecycle/network transitions where sockets can become half-open
+     * without surfacing a clean close/error.
+     *
+     * This does not drop the cached session instance; it just triggers a disconnect+connect
+     * cycle so subscriptions are replayed on the fresh connection.
+     */
+    suspend fun invalidate(url: String, code: Int? = 1000, reason: String? = "Invalidated") {
+        val session = mutex.withLock { sessions[url] } ?: return
+        session.runtime.disconnect(code, reason)
+        session.runtime.connect(url)
+    }
+
+    /**
+     * Forces all managed sessions to reconnect.
+     */
+    suspend fun invalidateAll(code: Int? = 1000, reason: String? = "Invalidated") {
+        val active = mutex.withLock { sessions.values.toList() }
+        active.forEach { session ->
+            session.runtime.disconnect(code, reason)
+            session.runtime.connect(session.url)
+        }
+    }
+
+    /**
      * Collapse all managed sessions and cancel the supervisor scope. Intended for application shutdown or tests;
      * acquiring sessions after invoking this function requires a new manager instance.
      */
@@ -159,6 +185,12 @@ class RelaySessionManager(
 
         /** Disconnect from the relay with an optional websocket close code and reason. */
         suspend fun disconnect(code: Int? = 1000, reason: String? = null) = runtime.disconnect(code, reason)
+
+        /** Force a disconnect + reconnect cycle to recreate the underlying transport connection. */
+        suspend fun invalidate(code: Int? = 1000, reason: String? = "Invalidated") {
+            runtime.disconnect(code, reason)
+            runtime.connect(url)
+        }
 
         /** Subscribe to filters using either generated or explicit subscription identifiers. */
         suspend fun subscribe(subscriptionId: SubscriptionId, filters: List<Filter>) =
