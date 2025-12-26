@@ -1,0 +1,2648 @@
+[
+  {
+    "content": "pG9MjdOY9Uxjo5skFK99KY2OEMVZECRvJ4YIZ8Nkn1AR+yOiO8oVsiSFZ0MVppGb+/jVcxtzorH7cUHPj00N4YEWxVYSjuz3neHTySSUfEr8xb5e2gjlz3nYAySe+sh75SHtG+qYpjwzf6tqM28LnG/e7qmrOKOSYOcZT7WJgFYA+nT5sfOzzKahjqnCR5pgjq1VOimItxL1ISbKpj/ZzATDdINV5RlEOZy18h7ARiVV3NeIPxjzqWw9kw/iWrc18gnMvZ3Xh1qw4vg6ZSXai7ukvWNGqwUw/F/b3jTyJUhdE+kobJFcvkKrpABRosgDmwEXL8DPpuWmOSGExYOsFfgME+JpMsqrqM0YzMkPURlZU+E6YFF0LXEyZUKwngbSXXrZRMMnT1E72zLr4dos/i+3Grb40lQm4Fnvo8EG8DpQ0hTu0APtYl7xgQsZiwvIImEXDf4JKfb3gy8D3DLbD8TnkP6rlWNgTzEoIxos4ZtBohTbRErNO8czIQQf6ai6h2TyDikRwJkOnOxHkP/rJKYa8JKT0a8Uc6oeejUFVKjvxmK4fvbraNz8D4pHhrPJwZvnU0G4UxuMlEcVOTGT/W9HdvHmDeWJRQKSfacOAjoySy0xtAUghrxZ040D6eELIPCy9IC0iq8JOJ+9gROwbD6H6zrcvb/VMqOwP0bE9oxRvUHQpk7UO4F7ueZKly6FDZ9h5Q18fS6z/nhz64usD0ja23DnS9IX92L9fHpo96Rz0xhpJ8mNIT2gye4G0AOqGHc6dndHgC2bFW+LvG9iwOc0a+x2vT0eVtgbfLfNZJPQG55fHKWLtWpT9Bfc09yU+pjx4/3LYhwfaZYI/mp0/BXh9pHzWL3LBowBgm9iIQrYTskSKHr30Ni+x7z+YMmloiwId9hTYEOFm88P3U0iSvmxYdaNE0iQwEAuzl2Mt9pyfA73417a1GpysHLIIAkUm0C8SJspNoFQkYfGbVirejvluzBxMmOfU1m2qksCSnzUJ8IG0aC9rE+Ry6gZ3elwOhAUf1lOawFUTBM6W/+enEyVdzMo/MP3jgDdtvozoj/1ozMJuRNANDEUywhmvPqW8MmtUMhlFGKB0Nc=",
+    "created_at": 1766674305,
+    "id": "3be17b259f2e12b9ecc360633638deae885b56e6ae7d9540767b6d7457f590f5",
+    "kind": 1,
+    "pubkey": "66ba9baa13a016557e93c93550b82e4c41592401e050744fa90de1875b0138b7",
+    "sig": "abaf156113f601873b9e21feba96de617e396d23300264dc90996287eadb701f84f7a2d9d44cc46013d61c9c7afdb9241ef215b3344f47a4eb0bc1289d9c2106",
+    "tags": []
+  },
+  {
+    "content": "5m1MjdOY9Uxjo5sknPJ5SFSfDAN3ITQyb0Lvsqxw9g00r9cro8RyVTX0deHN6lyGt+Eb6epSEfo/f+f0HmNJEQ7VgEBbkKcSrSOjeYreBauVGyPPiSCeu/j3qJmxAkiOuck/7HA4/k1oxIFkiaPlHxo7oWjNLF5uvSXNyouL/kaonQmYr8DUfXyHXz56xg==",
+    "created_at": 1766674305,
+    "id": "18e8353ff172e99eb6265c0cdb650757f03ccb7c6f8e8d9eb686bf5fc75d08c1",
+    "kind": 1,
+    "pubkey": "66ba9baa13a016557e93c93550b82e4c41592401e050744fa90de1875b0138b7",
+    "sig": "1b1ac4b790c33bdfe29987d8dc5522ca2f3df4c4c0ac1a27cdfc1e0e622048ca88553c3f335e8492f00f216b560bc0dccce3647e5cf02c737fb6751ed6d62cb2",
+    "tags": []
+  },
+  {
+    "content": "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",
+    "created_at": 1766674305,
+    "id": "0193cbd76c6847e3edcba6eac2707b76a734ac966283cf722bd009c6e168a5a7",
+    "kind": 1,
+    "pubkey": "66ba9baa13a016557e93c93550b82e4c41592401e050744fa90de1875b0138b7",
+    "sig": "2951392bac2284af81efb83e0316b23d4682064b1f8423f51b81600bb2261ad44d406a203fe45febaa58e58b8b131a23072f3f0806cdd0dd427147aa30ba6af2",
+    "tags": []
+  },
+  {
+    "content": "[]() (windows-latest, stable) Failed!",
+    "created_at": 1766674304,
+    "id": "00000bc6b0f88f738d03b5b94779983e9a7bf773a2e0a97de12ba470ef2fdf38",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "c6d37689f5a364d7ac8a58b0cb7eeb0b41e3a701fb93c0aa128172a3206a7c04e27507e56ebfbadca049509bf70f743967d9dee94519a5aafb6c5cf42b98dcd8",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674304"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "93145",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[]() (windows-latest, stable) Failed!",
+    "created_at": 1766674303,
+    "id": "0000f9e8f9082f8af1958381fa2910eccbe93ecbcb67832f2fb109bb76fdea5b",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "0b2f0003649a1d0d6ea150eb935428c434ece857c9cbb7eb3d33839614ad4c0c0995df395370e65226eb18b5f89aeba55e6594fd23b39e448a7a6fab24900889",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674303"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "199552",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "I hope my wife likes what I got her \n\n\nhttps://blossom.primal.net/79e16c8385d45310b7d51f37dd81365cfbccc0d52300f8ad028ae369e9a434ef.jpg",
+    "created_at": 1766674301,
+    "id": "faa9c9eabe9a54edc2a81f08a667fdbec13b67d62529aa7f46690d830ac83775",
+    "kind": 1,
+    "pubkey": "3b7fc823611f1aeaea63ee3bf69b25b8aa16ec6e81d1afc39026808fe194354f",
+    "sig": "b38058066127577b1770984f9bc0f3431f03b770cbb2cb9da4da8b16983d1e60b6ea81855aa9b56b3ec3689451048b489c4fb5f374fd4acc07a53226db736c18",
+    "tags": []
+  },
+  {
+    "content": "\u8033\u304c\u304a\u304b\u3057\u3044\u306e\u3067\u4e00\u77ac\u30d0\u30a4\u30ca\u30ea\u306b\u805e\u3053\u3048\u3066\u4f55\u8a00\u3063\u3066\u3093\u3060\u2026\uff1f\u3068\u601d\u3063\u3066\u305f",
+    "created_at": 1766674298,
+    "id": "fe8d3f3343c60f71c5b0ce0f4fb7fb28fdcb9223437d46762604d05ac7634e32",
+    "kind": 1,
+    "pubkey": "ca55de60561aacee9c31f57c95bdac016b5b534a52823358c6d18bea2ce66257",
+    "sig": "458c77a572730ba6358fa6fdfaea7175556d5132b1229be25e4381bd4e83882e73c380fc709a67fdfc3e4d4f89fbb68e7b8e1ac365b7cc2032f374260cef406b",
+    "tags": []
+  },
+  {
+    "content": "Merry Christmas.",
+    "created_at": 1766674294,
+    "id": "22fd43d18920a1cc416e72281584c78d75e3cb77b5af412be56fab265f273798",
+    "kind": 1,
+    "pubkey": "d996ace530c16e4d43c419ae2b1e0f01e3a620470e21a0347a055f340ee1cfdf",
+    "sig": "d5f161f37ca032d9f93a02c6d5b3720f2e0fbfb54799ac7082be425b2ba9dd9743f8d9f3be4ee6ba19d621e1327928a1ca0d4be04a7298051bb89813b7562753",
+    "tags": [
+      [
+        "p",
+        "ff2e412319f01788687a63de3248c2e9fac3f2ad15e3d621e2b42275cacb9ecd",
+        "",
+        "mention"
+      ],
+      [
+        "e",
+        "0aec3594df7d97330c0442a3a59360e6c209e9c4090aa55988dda3e32890ec46",
+        "",
+        "root"
+      ]
+    ]
+  },
+  {
+    "content": "Block 929437\n\n1 - high priority\n1 - medium priority\n1 - low priority\n1 - no priority\n1 - purging\n\n#bitcoinfees #mempool",
+    "created_at": 1766674292,
+    "id": "6aafbe7f900cd890b09e6bb288c8427098f2c1685698eb616898598dea517fbc",
+    "kind": 1,
+    "pubkey": "f03df3d4134230420cdf7acbb35f96a2542424246ab052ba24c6fec6a4d4f676",
+    "sig": "69c59a165a7532351dedb4769f22f52caaa6e51650f9c683e2d8f0f55415c101eb6c5c6b07cf7581373bb1a6c082fff1c3cfd16e83e7fffd1544d6027b779d97",
+    "tags": []
+  },
+  {
+    "content": "[]() (ubuntu-latest, nightly) Failed!",
+    "created_at": 1766674292,
+    "id": "0000ffb19ced1693f19947fce0fa9adefd7b10d1413835dff63f7048ea8d1843",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "fa8111e306cc0d060b746f84dd8d78c9522433f8959e4e507a4c578e95cc0c6486835e7e82dbf388beaa1fbee1be154bc95946d5c7aa84737093edadf86c3065",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674292"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "3741",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "\u7f72\u540d\u3068\u8a00\u3048\u3070\u4e71\u6570\u751f\u6210\u306e\u5fc5\u8981\u304c\u3042\u308b\u3051\u3069\u5927\u4e08\u592b\u306a\u306e\u304b\u6c17\u306b\u306a\u308b",
+    "created_at": 1766674290,
+    "id": "af98f51eab839751d3e28432e7f52a7a4877e64138803a3ca03d03caca61ccae",
+    "kind": 1,
+    "pubkey": "a6f1f450080b65ba75da8ac7328f91c94f8314b2cc4aa719c516852a29388f0b",
+    "sig": "13929bca2fa4e791187915c8d08a819705b2f8d9816edf71767ff595ea9ec2a17578fc1ca43402cc7ad428f891197e7a6b4ad19c5514b7206b7ccab644c58093",
+    "tags": []
+  },
+  {
+    "content": " A world rebuilt on energy, truth, and math. #Bitcoin  http://res.cloudinary.com/dgiwhknxf/image/upload/v1760582748/l6vl0z1ugri0cgv6rmka.jpg",
+    "created_at": 1766674280,
+    "id": "104f6f767ac935bc4d9c784313fcdac660fc950f3696c411ca242af798ce2d47",
+    "kind": 1,
+    "pubkey": "3b90a8348d688f79312d40fb1e5fdb02091153943ade9ae3ce240259096a5679",
+    "sig": "351028f316bfb2b5d5cc4d7efd6d4e97fe1d324b560066a1b8d32ab81e345c8d40316cadb8ae6bdad580b0dc9cb097a7c0dbb59f0eb381b9e4eb9eab0d11a5ab",
+    "tags": []
+  },
+  {
+    "content": "[]() (ubuntu-latest, nightly) Failed!",
+    "created_at": 1766674277,
+    "id": "000045e5f75c54a17cfd3fa8f8978e60eb4320fdf9a5030bcfbdd8c2aeb87f47",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "6fd833af0e5b4d300aec4bbe599ab53d080ae83c6d8f61a0c27b3fb6f28d7301cb2775be0de5882fd83616347f57f74638d457a92e1af99858c24e6647205ccf",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674276"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "179162",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas.",
+    "created_at": 1766674275,
+    "id": "55a35e48d713eadb02422d669b068f07d66677534720c4e85d53baa157e0f268",
+    "kind": 1,
+    "pubkey": "d996ace530c16e4d43c419ae2b1e0f01e3a620470e21a0347a055f340ee1cfdf",
+    "sig": "d6091f4d71ac0fe4c0c1703b1258cb9fc0adada1421eb8e6fc73f4679ee4ec3e01da253dbbea599a50c5573fd692ddef2074181f1f5c895cc5109daf5fe397f8",
+    "tags": [
+      [
+        "p",
+        "1afe0c74e3d7784eba93a5e3fa554a6eeb01928d12739ae8ba4832786808e36d",
+        "",
+        "mention"
+      ],
+      [
+        "e",
+        "102fb1c9771ee56c8d52066434a3a7b97fc87bb33ea3b74b72b070299fa3d55f",
+        "",
+        "root"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas everyone \ud83c\udf85",
+    "created_at": 1766674275,
+    "id": "b360991bfa9eb610a08f08a255be9966d92a7b63640909b1c8c843b006990b85",
+    "kind": 1,
+    "pubkey": "bf193598a94e622aa3373e88d06d057f71a8ba21cb8ef4e3f93f6246ce46def6",
+    "sig": "95f4c7c254f2b9f4ee2a90c6864b8344695dcc3612d770304fc187305d6360243579e5dc8d9de65011026fa7205daaec1b7ebfc5f6c0e3780675ef4a11933bd0",
+    "tags": []
+  },
+  {
+    "content": "Ich kann mich noch an die Zeiten erinnern als die EU der gr\u00f6\u00dfte Wirtschaftsraum der Welt war. Lange ist es her\u2026",
+    "created_at": 1766674275,
+    "id": "017c5292c972b0c788b4e03d525048e63013f1b5b44b7ac673c9788a9666dce8",
+    "kind": 1,
+    "pubkey": "1964e2361f34444c54977ea7454bbb3d2d977f317a935c6ae4b8100630dc8bbf",
+    "sig": "88201d6cff65cf62362051492bcb5f6ea9b9c31c78e62311f47839cc5a077d6c6fa1f32931c438803d436d584f3ceaae75f1ae3c4fdf0b7a074d319f22c4da0d",
+    "tags": [
+      [
+        "e",
+        "38b4919fbc0ae20f5b8fe6667ba52a2ba73b4d6c08bb939cbcd9c20326a41a52",
+        "wss://relay.primal.net",
+        "root"
+      ],
+      [
+        "p",
+        "f240be2b684f85cc81566f2081386af81d7427ea86250c8bde6b7a8500c761ba",
+        "",
+        "mention"
+      ]
+    ]
+  },
+  {
+    "content": "gnostr-org 1900/929437 #992939040",
+    "created_at": 1766674267,
+    "id": "0000af65e56f06c96256c66153d5c5afc396f68de4859a3e23f58ee9a02bb8d9",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "91c2dd1ae3122880392e0d5e7f450697a1182c1423c06e882909ff42dd490203e61e2e5ffd5014d5af90ac935d065d61b8fe5d22e4473ceeba381c2db27ee34f",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "1c64dcac8c8ac79ddc528544eda66a01a65b808e"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/master"
+      ],
+      [
+        "refs/heads/master"
+      ],
+      [
+        "20506659696"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674266"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "macOS"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929437"
+      ],
+      [
+        "743967"
+      ],
+      [
+        "nonce",
+        "13569",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "\u307e\u3041L\u30c1\u30ab\u3060\u3051\u3068\u8a00\u308f\u305a\u3001Pin \u306b\u4fe1\u53f7\u304c\u6d41\u308c\u308b\u306e\u3067\u300c\u3042\uff5e\u3093\u2665\u300d\u3092\u518d\u751f\u3059\u308b\u30c7\u30d0\u30a4\u30b9\u3068\u9023\u643a\u3059\u308b\u3068\u304b\u3059\u308c\u3070\u8272\u3005...",
+    "created_at": 1766674255,
+    "id": "cec586f3de120c05dce9d65a59af455d940d3229421753b86dcc9d55b389cd96",
+    "kind": 1,
+    "pubkey": "2c7cc62a697ea3a7826521f3fd34f0cb273693cbe5e9310f35449f43622a5cdc",
+    "sig": "8ae69bc6bc6f8ce39059cba7ccea92fe5e749ee228c9b26c2fa69c070aa9bd1c040804bd96734983c072f41afd2b07561769bccf0b2d3f353f79ef0f93a6437d",
+    "tags": []
+  },
+  {
+    "content": "Block 929437\n\n1 - high priority\n1 - medium priority\n1 - low priority\n1 - no priority\n1 - purging\n\n#bitcoinfees #mempool",
+    "created_at": 1766674253,
+    "id": "fb026a9267a23a401b98effdbd7b04299786aed278eb29f02379f6cf75706239",
+    "kind": 1,
+    "pubkey": "e7bf8dad360828f0289b7b4bea1a1bd28eb6d4d6522fa17f957e0dfb839ef3db",
+    "sig": "5ec96c839f872dab18771fe46a2b96789ef0647087ccad4aedb65ac610df4f536490e9b21fa978bc46f4812f8cb10dcbdcc9fcc2598ce93b2a5667a8fc0058ce",
+    "tags": []
+  },
+  {
+    "content": "\u3053\u3046\u3084\u3063\u3066\u66f8\u3051\u308b\u306a\u3089\u7f72\u540d\u306e\u51e6\u7406\u3055\u305b\u308b\u304f\u3089\u3044\u306f\u3044\u3051\u305d\u3046\u3084\u306d",
+    "created_at": 1766674252,
+    "id": "985af5de7ee359e63e9c5ee81a2af4f812e0636db185ce11a648183c1d667855",
+    "kind": 1,
+    "pubkey": "a6f1f450080b65ba75da8ac7328f91c94f8314b2cc4aa719c516852a29388f0b",
+    "sig": "a527f2a9aaefb84ed27abfa8067de7e867ac0936912e42b0175bf21df67c5932b4b5f08e16182922dc7eead0b87e413db2a180e10cd279b39d05cfdc7b3ee8dc",
+    "tags": []
+  },
+  {
+    "content": "Merry Christmas everyone!! \nhttps://blossom.primal.net/86ede73e5c94bff5a873020c7d1c20ae7af8b2a276ee9f5451c30ee2bb78a562.gif",
+    "created_at": 1766674249,
+    "id": "02c3f06b0be394c6d74e06d86b7187cf4714f898a088a27e39b042bb2eea8f58",
+    "kind": 1,
+    "pubkey": "b9e76546ba06456ed301d9e52bc49fa48e70a6bf2282be7a1ae72947612023dc",
+    "sig": "9d456dd92f57189b18bba058399c1aa35bb128c6c66ed149a3002bbf368001d3b59037a8c550a1aa0fdb0a9053e99b7516b1ac025d35c830a6921d8c9a0f1e30",
+    "tags": []
+  },
+  {
+    "content": "Isso s\u00e3o as taxas da rede Spark, n\u00e3o as taxas que a carteira pode cobrar:\nhttps://npub1vxd0dfst8ljvwva2egrpc53ve8ru78v8aaxfpravchkexmfmmu3sqnrs50.blossom.band/6fbcc239318a30d34e1f39cac887c6d1b8bfe1664a8874bb6c8bd826df8541f4.png",
+    "created_at": 1766674242,
+    "id": "3bf54969cb5ddaacec6dcd1fbc9ebe3c1618cb988657f9e5d2255c3a99333b54",
+    "kind": 1,
+    "pubkey": "619af6a60b3fe4c733aaca061c522cc9c7cf1d87ef4c908facc5ed936d3bdf23",
+    "sig": "d14f1456a9fdf8c30b32869b7b44898e80ff2623c36a4302a1ad9f72d66b55b9eb134e00379ab1162a369b9eb49a3edc1ad5e86ebf3cbf7089456238fb595100",
+    "tags": [
+      [
+        "imeta",
+        "url https://image.nostr.build/6fbcc239318a30d34e1f39cac887c6d1b8bfe1664a8874bb6c8bd826df8541f4.png",
+        "ox 6fbcc239318a30d34e1f39cac887c6d1b8bfe1664a8874bb6c8bd826df8541f4",
+        "x 6fbcc239318a30d34e1f39cac887c6d1b8bfe1664a8874bb6c8bd826df8541f4",
+        "m image/png",
+        "dim 1472x1347",
+        "bh L03IYK-;Rjxv-;xuWBRjt7%Mj@IU",
+        "blurhash L03IYK-;Rjxv-;xuWBRjt7%Mj@IU",
+        "thumb https://image.nostr.build/thumb/6fbcc239318a30d34e1f39cac887c6d1b8bfe1664a8874bb6c8bd826df8541f4.png",
+        "size 121048"
+      ],
+      [
+        "e",
+        "19fd046845f84a6e00bcfce9d3f9ba5389fe2625fa2fdccca4d5bcd8f1a97d6d",
+        "wss://nos.lol/",
+        "root",
+        "2a21695720449121ba4ea0afc28dad98c09050b0fee89ed3a5c0f932bb6a07c8"
+      ],
+      [
+        "e",
+        "c8840689b36943ff45e0cad568a7de8135b385939a5aa0e723298691af7c54ce",
+        "wss://relay.damus.io/",
+        "reply",
+        "619af6a60b3fe4c733aaca061c522cc9c7cf1d87ef4c908facc5ed936d3bdf23"
+      ],
+      [
+        "p",
+        "2a21695720449121ba4ea0afc28dad98c09050b0fee89ed3a5c0f932bb6a07c8"
+      ],
+      [
+        "p",
+        "c6e230a25ead3c497013637bf377bced81c7cdb60d881a63edb138b08aa68083"
+      ],
+      [
+        "p",
+        "d1da05d307e663c91c93fd9ffbbbbf987dc244bf609255ede571237599db7780"
+      ],
+      [
+        "client",
+        "jumble"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas.",
+    "created_at": 1766674239,
+    "id": "d2865254c408ccee41c56b42831815c814465f18b3a8853849dedab03ea4319c",
+    "kind": 1,
+    "pubkey": "d996ace530c16e4d43c419ae2b1e0f01e3a620470e21a0347a055f340ee1cfdf",
+    "sig": "e33c61fd16e3e6b3076a824d54ad21d079465404f6b2d7083b8ec9cf2885d3b0dd8180137bc5c8ea4876b585e78466ce29f9056fdbdae77e4e79e16164be70e8",
+    "tags": [
+      [
+        "p",
+        "b6abe91cb18f996d3a0bccd8b97f2c2d50a9a4f80630e68e8881a943cb927092",
+        "",
+        "mention"
+      ],
+      [
+        "e",
+        "5e2ad565c9964b4443504a4217c690988e2ca0125da6a3abaf203151bba112e0",
+        "",
+        "root"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Xmas  Ryan \ud83d\udc9c",
+    "created_at": 1766674237,
+    "id": "639d9945384e4c41458f7945e656652317fe2b7673892eb716e1bf5300def4d5",
+    "kind": 1,
+    "pubkey": "ff2f4cd786e42b4323749c91517ec7baf22dfd035b7a101bea83b6e2bcbacd15",
+    "sig": "432f2dad54f628a33efa3095232e2617da50f80188aee4d56689a320d5b528bfe48a00a898c4370e36be7b04d35e5bc7f8caea5db084917935e1141bc391206c",
+    "tags": [
+      [
+        "e",
+        "ae55021b380a7e45e7ea726e50a9f6ee070015e50be59919df448b3bf587e9b3",
+        "wss://nostr.oxtr.dev",
+        "root"
+      ],
+      [
+        "p",
+        "ee8d9ea4742fe98cdcc7e285663d535de59f8705b4dd0b41c1aea77973ae568e",
+        "",
+        "mention"
+      ]
+    ]
+  },
+  {
+    "content": "Be sure to delete all traces of the roast by tonight :) \n\n",
+    "created_at": 1766674232,
+    "id": "bce003aa34fcd452d83c90718f19d2c6569b6bafe9b56b3f4c1c2b0afb299a96",
+    "kind": 1,
+    "pubkey": "f8b6c2184cdf8aeec2a6e0fd8c44f1d20dee815616f254998817d2023840b700",
+    "sig": "696309cec581c16156412cddea14c86e2717a63439d664453a969b9eaede6b337a19c5cf8b23c5966061f77e568e79487af5efa62be06539389ff223f8a077aa",
+    "tags": [
+      [
+        "p",
+        "3b7fc823611f1aeaea63ee3bf69b25b8aa16ec6e81d1afc39026808fe194354f",
+        "wss://relay.nostrcheck.me"
+      ],
+      [
+        "e",
+        "f39c4ce9d8ded666050b15b1492ca0b415eaddee3627653eb1474d06cf2c03bb",
+        "wss://relay.nostrcheck.me",
+        "root",
+        "3b7fc823611f1aeaea63ee3bf69b25b8aa16ec6e81d1afc39026808fe194354f"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas everyone ",
+    "created_at": 1766674230,
+    "id": "8fe7305ae8883a8d1c0924984ccc35f4bd5a2f863339e0df024d73565b2aa367",
+    "kind": 1,
+    "pubkey": "64bd0fc1a8c67e92fa4182c71359b483f0f329366c27649f7d66c18e0b880f8b",
+    "sig": "2c0a4a173e7b5850e85070aac8ef677558a568ef9927ffb162b55e5cfa477715100d64ea3105e5018bd452bf126073387be3572796e6273b5b5a459c2095a98d",
+    "tags": []
+  },
+  {
+    "content": "Merry x mas fam!",
+    "created_at": 1766674230,
+    "id": "43c12cb5afea4a5f2b83e47ef4c2cfe318adf34cd01f511711773f92f1f5f281",
+    "kind": 1,
+    "pubkey": "e096a89eeb90820895a6dfd7f369ec313654e5762e042d59ad06937659351479",
+    "sig": "f13ce760a0d15784761af17902875071877402dd61c8239c92ca0c3b1e142ce69a9451bf0de356fdea506e60bfe254d7c992dcc07ac0d49d3b29fe1aa2a8df05",
+    "tags": [
+      [
+        "e",
+        "efadb6a6a4ecbd4fac1dc96da535b1f7ae24459126ba85501f176226428fec67",
+        "",
+        "root"
+      ],
+      [
+        "p",
+        "ee85604f8ec6e4e24f8eaf2a624d042ebd431dae448fe11779adcfb6bb78575e"
+      ]
+    ]
+  },
+  {
+    "content": "[]() (ubuntu-latest, stable) Failed!",
+    "created_at": 1766674228,
+    "id": "00008daa860122566161191eec4de154c44e4b5fc959b9f617e6f9cdedfeca7f",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "b87802abd081e9f2db051356598094ad000e7b7f13eacda690902fa3f5cb5a193b8394eda7ae05a267b54ecfe1122c50e786c8b3a55b5af1a5e314fc058e0ae9",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674228"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "44538",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[]() (macos-latest, nightly) Failed!",
+    "created_at": 1766674221,
+    "id": "00002513b8adc8a743c6bee284025426174af76c64d3d2687125ee9791fb35d7",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "1948680b83a2b59b4d33ffa486faada777f74fac549eef3921f0eb725b6f10732bc794cb5d7bf9078135fd4ddb1935c16adafea7e233c35918895c2d25431007",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674221"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "2072",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "\u771f\u7684\u662f\u4e00\u898b\u9762\u5c31\u804a\u500b\u4e0d\u505c\ud83e\udd2d",
+    "created_at": 1766674221,
+    "id": "f1c974f455f0149de07be0d578acaa78fb849079555961a2e7cc8337e4316539",
+    "kind": 1,
+    "pubkey": "09cc2fbe6d69d68b276e00cca70753eede91ff1dc01dd116097d912fde5a3627",
+    "sig": "64e19b69863f14f9ccac558c6099b36d0c13e1a2a10cdca6b386bd6906d2cb4bf1860927324ce8da7e96f2d5515ade52aa227c9a3f74168bf8b0066a4bee8468",
+    "tags": [
+      [
+        "e",
+        "4db9917c6b7fa03520d47de15b02a53771379894ff54861d39980ae518b6517f",
+        "",
+        "root"
+      ],
+      [
+        "p",
+        "a659b14427c9cac7bf48320f85fffa9b218aa988af4f9a8f2292d962004e6894"
+      ]
+    ]
+  },
+  {
+    "content": "Success my people \ud83d\udcaf\ud83d\udc4a\ud83e\udee1 \n\n",
+    "created_at": 1766674215,
+    "id": "be00dc25dad3bb3b679697b509093e75cccf90af1a8c9d397176df1d9934a684",
+    "kind": 1,
+    "pubkey": "ba6773af498b0437f0cdda1e891588a348155b9c46f0b719b7124e94e258daf3",
+    "sig": "ba83353af67ed747d73684efaef6ef5077f8f790807d716017e4fd1b570965b270731f7b28af443af3d1c76c0ce0fd7c5a7795865b580e8f3261c47a10b14daa",
+    "tags": [
+      [
+        "p",
+        "ae4c17620c9b3a0413fd019fd7e983da43b2081e7169abecb7764c333a9bfff1",
+        "wss://nostr21.com",
+        "mention"
+      ],
+      [
+        "p",
+        "22050dd3659b568c5cb352b0e81958fb986bd941031a90c74ba7f6d2480c11ea",
+        "ws://xsh7noezevr4y2hpfcquz53lovcr7c5bnaz2u4tloqao6ytq24ldhqyd.onion",
+        "mention"
+      ],
+      [
+        "p",
+        "e5237023a5c0929e7ae0e5128d41a8213138400ec110dbe9d8a29278f22b7c13",
+        "wss://premium.primal.net",
+        "mention"
+      ],
+      [
+        "p",
+        "0000000032239af4237ae431911168556d92db9dbc215f2fc77f0705d218cfba",
+        "wss://nos.lol/",
+        "mention"
+      ],
+      [
+        "p",
+        "22359794c50e2945aa768ee500ffb2ddb388696ad078a350ae570152ff002c18",
+        "wss://brb.io",
+        "mention"
+      ],
+      [
+        "p",
+        "b819d50fad4201f5f6479f9800c8a1b35b8f7d3ac6e1cc5f71686b61d1502641",
+        "wss://eden.nostr.land",
+        "mention"
+      ],
+      [
+        "p",
+        "06f4638e1640e01a8789575e8f2985727ca1e3227aa518dc4291ca39b6704e26",
+        "wss://no.str.cr",
+        "mention"
+      ],
+      [
+        "p",
+        "a538d852b25af207886a89fb1fd551fa5c6029556f43ecc79033f380d252a042",
+        "wss://bucket.coracle.social",
+        "mention"
+      ],
+      [
+        "p",
+        "61854976ba1a538b9dfed1b1df9b42e57602790e9354c59891be7b3713db637c",
+        "wss://lightningrelay.com/",
+        "mention"
+      ],
+      [
+        "p",
+        "bea135f01ee6182b8618acaaa5eefd5271f22d5c8b2827413fe894a720051c36",
+        "wss://nostr.wine",
+        "mention"
+      ],
+      [
+        "p",
+        "04885655eda7cfb9b53ed1f5d13c987d024c8de7ace848657b5587beeb0fd031",
+        "wss://lnbits.btconsulting.nl/nostrrelay/nostr",
+        "mention"
+      ],
+      [
+        "p",
+        "cb7b118ed5aae40c840e577393c730ce2ca16fb9cf523636b927cceee1374c9c",
+        "wss://frjosh.nostr1.com",
+        "mention"
+      ],
+      [
+        "p",
+        "805b34f708837dfb3e7f05815ac5760564628b58d5a0ce839ccbb6ef3620fac3",
+        "wss://nos.lol",
+        "mention"
+      ],
+      [
+        "p",
+        "f8e6c64342f1e052480630e27e1016dce35fc3a614e60434fef4aa2503328ca9",
+        "wss://nos.lol",
+        "mention"
+      ],
+      [
+        "p",
+        "3e80b9a2068389801c9d161d374b5edd9c34087dec889448c5770ffc0fbcc5f4",
+        "wss://nostr-dev.zbd.gg",
+        "mention"
+      ],
+      [
+        "p",
+        "66fd9c5c022bbe5b883b86e8a550c7d9c90d28fa244754c4f732e6dfe91fcb58",
+        "wss://140.f7z.io",
+        "mention"
+      ],
+      [
+        "p",
+        "6d5f85c4be85fabb803716cc002f46c88ad5d44dae8098f057482640a3f7e400",
+        "ws://umbrel.local:4848",
+        "mention"
+      ],
+      [
+        "p",
+        "ba6773af498b0437f0cdda1e891588a348155b9c46f0b719b7124e94e258daf3",
+        "wss://relay.primal.net"
+      ],
+      [
+        "e",
+        "bfd98646f8e357b89ea9a0ab150cda6d195eb05490695ae954f29ea0f1f22d23",
+        "wss://relay.primal.net",
+        "root",
+        "ba6773af498b0437f0cdda1e891588a348155b9c46f0b719b7124e94e258daf3"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas \ud83c\udf84\nhttps://blossom.primal.net/e20fb34d14da17dc255f25c81168edf90c90d1e7eb57d7411fef94a5bf0fe771.jpg",
+    "created_at": 1766674214,
+    "id": "6b86a2b40d54971988a65988c95743afa32fd159f285ae9d5078cffb9985713b",
+    "kind": 1,
+    "pubkey": "741c115d320ba758d520c88dc3de26f138f6f0c8b5744bacb38988469d5624ce",
+    "sig": "266ae02f210d6607c209c1e25ac2bd799f5370bca111bcf6ae5f2ccbb0512ff0d241bebd18a8ad0e278b01752152234cc04139dfc08f502002a48c96fe36b65e",
+    "tags": []
+  },
+  {
+    "content": "I made a fool of myself https://tenor.com/it/view/che-figura-di-merda-che-figura-di-emilio-fede-gif-15201877\n ",
+    "created_at": 1766674212,
+    "id": "73bb0902251d9641da48a274ba33c5a76d6b679365d23f1a83cca9f98757ac70",
+    "kind": 1,
+    "pubkey": "592295cf2b09a7f9555f43adb734cbee8a84ee892ed3f9336e6a09b6413a0db9",
+    "sig": "8f085f3ad55a8fe7a3709ec5e1e6dbe136fd894403c8a18cc59462ca93d279d55dc472042c8d200419684994fb2c262bac43d03cfacfaa16f58cb606e9f4514b",
+    "tags": [
+      [
+        "e",
+        "8f57c7e6139b19e1c9cf14fcb555adef3a749854c53021074beaff5d9d294ec1",
+        "",
+        "root"
+      ],
+      [
+        "e",
+        "c91854683fa442d0525aca1a724d3ba6400d1c031a344e4dbf66847809fbe51d",
+        "",
+        "reply"
+      ],
+      [
+        "p",
+        "775954f7314112489a4a29ec692b72386fd60bcceb0308d423101ea979c57a80",
+        ""
+      ],
+      [
+        "p",
+        "dab6c6065c439b9bafb0b0f1ff5a0c68273bce5c1959a4158ad6a70851f507b6",
+        ""
+      ],
+      [
+        "p",
+        "592295cf2b09a7f9555f43adb734cbee8a84ee892ed3f9336e6a09b6413a0db9",
+        ""
+      ]
+    ]
+  },
+  {
+    "content": "\u7f72\u540d\u306f\u601d\u3044\u306e\u5916\u91cd\u3044",
+    "created_at": 1766674210,
+    "id": "84916c505f34a334f51b6e778ec361e61c8633f657ab9cdd3ad0d6688e48cf99",
+    "kind": 1,
+    "pubkey": "f40832e26b1d12f8a27717b606996baef68bc4b6b86c4a35ca827f6fbcbf511e",
+    "sig": "a9623f419444f102c84826c327fb740b30796e5d433b54d28ec07747b29ce2b38af5193b7a493f3f066979f510aa2e66e5eca60ef4c2064f63f19fa1a33cc764",
+    "tags": []
+  },
+  {
+    "content": "Bitcoin price: $87595, Sats per USD: 1142",
+    "created_at": 1766674206,
+    "id": "51f5e398ec935d701a7db5c6af3e0db7a321bb7ab4fd4e5975b2df108e966edd",
+    "kind": 1,
+    "pubkey": "aa4fc8665f5696e33db7e1a572e3b0f5b3d615837b0f362dcb1c8068b098c7b4",
+    "sig": "e8d6246ad765941fb4cf50488d036a17bbc94cfc9b55bf1c172f0e3ab11e2479e2efd2bef61fc0c8ff06f6dac43373c8175ecc24bb618f94088a8499e2100a1d",
+    "tags": []
+  },
+  {
+    "content": "Thu - Dec 25 - 06:50 AM - PST\n\n// bit.site\n\u2639\ufe0f Error connecting to node-1.ipfs.bit.site 4001 - [Errno -2] Name or service not known\n\n// pinnable.xyz\n\u2705 Connection successful: 167.71.172.216 4001\n\u2705 Connection successful: 188.166.180.196 4001\n\u2705 Connection successful: 143.198.18.166 4001\n\n// 4everland.io\n\u2705 Connection successful: node-1.ipfs.4everland.net 4001\n",
+    "created_at": 1766674206,
+    "id": "080b48d66510955875ae586a973eac49db17fe95e07ccb8d0b722382b0d38546",
+    "kind": 1,
+    "pubkey": "3493b0c2376fe2a91dc804985ffd681f50210611597a2003f724c6744ce7120f",
+    "sig": "d23770ccc76202e7d9aa280a76ee0ea97f73fd6692b74086ca8181f3fd14f9ee06581250592f8f34e3f0f8f79581faa5ff4e30ca854a193aa8eb8003936db7d4",
+    "tags": []
+  },
+  {
+    "content": "\ud83d\udcca **Bitcoin-Update**\n- \ud83d\udcb0 Price: $87477\n- \ud83d\udce6 Blockheight: 929437\n- \u231b Mempool: 507048 TXs\n- \ud83d\udcb8 Fees: 1 sats/vByte",
+    "created_at": 1766674204,
+    "id": "3449829f6bddf689c12b86ce0853fcab43ec8d807205cc9cbd905cad0c4481e4",
+    "kind": 1,
+    "pubkey": "e2b8ba3e6f7d63ab44559f25a6863d1d9ba1a2cd751391a69e261ad027400d81",
+    "sig": "57ff43173850bb3ce0d6f592b79f355e456dda4a32d51e47c45726ba9e1bad403c88e32a9828116a5c3093edbf7741da1ea53e3b9e6c43fe4b7fe28c6478cdf4",
+    "tags": []
+  },
+  {
+    "content": "[]() (macos-latest, nightly) Failed!",
+    "created_at": 1766674203,
+    "id": "000019ecbd8c8554919238dcc45ba3eab362b6ec1f35d38eb4067e2d737b314d",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "ce0f592684e66c2dd82d9f41ac741eefbe8fa0bac7fac4e25f1d03637e1a217725415491374a1742d90f039f68a3b95c9f2f2d57683da7c89c12af98ea1973ed",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674203"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "46294",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "GM \u2615\u26a1\ud83e\udde1 \n\n",
+    "created_at": 1766674202,
+    "id": "69e6e95e55a38c21eeb3e5bb60f0832d8de2e080ddf1399b06b5bea50ea38de8",
+    "kind": 1,
+    "pubkey": "c39349acd392612dd2d7e8b6853c45c41349008c565770da8ff4dc663bb64167",
+    "sig": "0d5f7f1e80cb7246772717f47c3022f510757601ed5143152c7ad5909b947c6e82127fcdb961e4d5be9c4acd2252edcc781d18b0c38b991b8054dfe501cc4d5f",
+    "tags": []
+  },
+  {
+    "content": "3993e04ed71dc7bf38dc3b475408ef3a05c7c4746f455b1b0dd6adb3b1590a36\nhttps://image.nostr.build/ee557089139e44163a1dd18506b046d2c80a7d31fb8033bcd71093db0a1e3f16.png",
+    "created_at": 1766674201,
+    "id": "acb11d4597e3ceb0ce10478f9214ada69257ad8cd56e4ab12336c9ea80ee5cc4",
+    "kind": 1,
+    "pubkey": "4e313f03e74b4617d67c2c2ada3fa8283a774948ce96f8872d95a9e909185e15",
+    "sig": "8f111c5f04f62ce62fc2fa0a5c174df750e86db63137bf69138228b3ca2c04e47ed04a87ffece7c874c589c1faba6c98396a0c0f627956e35fd400882875a7d6",
+    "tags": []
+  },
+  {
+    "content": "I like a good brunette ",
+    "created_at": 1766674201,
+    "id": "61339b8eb7c69c6931c0ff909454ce4708b6989d7e0172c67ab844ccaa1e25c4",
+    "kind": 1,
+    "pubkey": "cdecc31c6d9406e9a7d6b0067412aa661d9d31c8035c3fd65c06301d1cac3b92",
+    "sig": "8630a8c3f4b0965591b1c067c965ebd3b484bd7a295546a3b563ed6ab5f753ff48703be82bef46cf012375ebaa377149e8e6d1dd042703ed2a9acd17aa0768bf",
+    "tags": [
+      [
+        "alt",
+        "A short note: I like a good brunette "
+      ],
+      [
+        "e",
+        "5989370e971fbb067e73770c48509869de2cff9222498dd4ccc20805c7f61869",
+        "wss://relay.primal.net/",
+        "root",
+        "30a15a4f512df576ad66bcc24cabf84e5adfae3c51be7161827fbe5e10eb485a"
+      ],
+      [
+        "p",
+        "30a15a4f512df576ad66bcc24cabf84e5adfae3c51be7161827fbe5e10eb485a",
+        "wss://nostr.wine/"
+      ]
+    ]
+  },
+  {
+    "content": "TY WBT... your nostr signal is greatly appreciated.  My future will be bright... and occasional storm clouds are just part of life... cheers.",
+    "created_at": 1766674200,
+    "id": "bd040de420dd227a58d8c1a64686f7104c16747537bd98c94e99935d0f0d3fc6",
+    "kind": 1,
+    "pubkey": "3663a0e0adb2b3b173e673d613917f5dc2b21de321caea0dd1b28e96905df846",
+    "sig": "e334d43fe1abd1f299a04ed56236c93fdc36aadb05ba1ea96309329d20246f9a040f4cb00b8d1d85f8d48667ec97d54a406d034304bcaf3ae66350ca4ef5e81d",
+    "tags": [
+      [
+        "e",
+        "99a3f69368ffe6a1f3901dd5786288ae3e7a45bace921c1a623ebfbe23e63d64",
+        "wss://relay.primal.net",
+        "root",
+        "3663a0e0adb2b3b173e673d613917f5dc2b21de321caea0dd1b28e96905df846"
+      ],
+      [
+        "e",
+        "89306218379125f1182c0816c9a5b5b952859dada005973f9df0c0c923948cb6",
+        "wss://relay.primal.net",
+        "reply"
+      ],
+      [
+        "p",
+        "3663a0e0adb2b3b173e673d613917f5dc2b21de321caea0dd1b28e96905df846",
+        "wss://nostr.bitcoiner.social/"
+      ],
+      [
+        "p",
+        "3b8f17fb8a9f0c769b5819cf3caea3922a6844d4f7f7684aed9f6571bb26be46"
+      ],
+      [
+        "r",
+        "wss://relay.damus.io/",
+        "write"
+      ],
+      [
+        "r",
+        "wss://nos.lol/",
+        "write"
+      ],
+      [
+        "r",
+        "wss://nostr.bitcoiner.social/",
+        "write"
+      ],
+      [
+        "r",
+        "wss://nostr.wine/",
+        "read"
+      ],
+      [
+        "r",
+        "wss://nostr.mom/",
+        "write"
+      ],
+      [
+        "r",
+        "wss://nostr.oxtr.dev/",
+        "write"
+      ],
+      [
+        "r",
+        "wss://relay.noswhere.com/",
+        "read"
+      ]
+    ]
+  },
+  {
+    "content": "\u2704------------ 23:50 ------------\u2704",
+    "created_at": 1766674200,
+    "id": "efbb34cd38be97b4972751510e1fca2f570e5cf1db7e27e8aaeba97ef4172fe1",
+    "kind": 1,
+    "pubkey": "b1b4105a564aaddc8ae440a1b03a8ca0f36e0592aec502e84515948919aa52d5",
+    "sig": "d4be84bebfe7e8a4978afd6ab747aca6cd622c83bdac80960faa1bfc90900beee99b69e1867d7d28c7760c699c03970d4f73f983721c5e17cab835adb9b0efa7",
+    "tags": []
+  },
+  {
+    "content": "2h2M0ciHfkRjo5snoTkz88Dzc5iWlgJbg0gifdxPTtlzgTaD+tsOwGniekxZa+VumMFIIMR8OmbXaWAI7eb8U2PW6UavDySder+owvqINIAXkOqUFV5Y8UH3gmH6Txl9n3KkfUbety8J34M1OlhG/hhGbmMbaR/6/PDIikPZLGVyepSlFO2FUjjWPLZEuoDNxcYqAqn1UVV7dHg/Z1ASD02fEaYqcfS9lHGnloeeV2Q3bf23xEfTy4eKhi4cDXN4SG0cnnnl4Hvdv1AS7eY2WhEHczYawzi/fx9AieMio8WIo+NVAS/FeTMRfg4JXTzix0TBBGQJ/1+NWvEl64FLumepdBy/u+esHfu20iN60tsjLZxal77WM9EysIC5kGA6w2aW9QYw5kU8LByGwRnUBSLdcznEDI5TWjqiCj8w9Qq5LjhN33URWH19pU0w6KolUUXD6jfc1yPjw3jxNpqFC/xpFcaZeJYufc0KegeaN1oepZ/6RVaPDi/kmvO/GM9KPVqtyolwxQzuqkw2nxHpIZ8IT8EJlZk3JzQqWW3t9V63dBZGzB6Hg2kMrcdgYOVEVoZjpRafaY2jAxNJ6KgDiABAA+Or2K5bd50pgkgOR3Pks9waX9K+W0RRpQxHl5MpHn9YYatga+rgW42bG3aEDLSfhLeb0ATEIpbq0J2Tbc8XCtr0UNehHBoTWXB+GuOu7yKM4nJGGscmZeYkijqFIQekglg3hd/xUJ5neR5quIkAYmJHIBcgRusrQaI1+41SQK0cVBzpIQch1aFK/0D/iSAWflEfUHU3jxhTEJU4tTIwsi22mf8huSRGoKcLgS9jlijVrCVByt5aOHk8kyPMBCZWVTWjF6NLtZMmQJ9GOw/Pb92frUn7FpWUt5XwgStd0DdLddFTwaHytMfsI98M0EisTadtwh65FuEn3RhMAj7CyYuEEgGMfLLjfugkbEEqfXywcvtx1SCTLGohYKDu5E+k3xjsl1XJonDffhZoFKaZGFsVI8kLyRADYiLuQLqurbUi5H13WAZJGBkEBNRBRJk65xaOEpLnJTcWI+xXKa1oXip0BM/cygbnnSkaMzWHiw8TcEgKqdhW3ppYE3fH",
+    "created_at": 1766674197,
+    "id": "28b907d203df909bc159fde263b366c7399a751160238c8199ad5a1f8e6f933c",
+    "kind": 1,
+    "pubkey": "80e2c93ceefc7e8abb25db4d5c1ab8d6c46d5ab3ade4748eb6a53401d3a2735a",
+    "sig": "59f5123c5127518657ebc46ab7d685c34d82a0128332e903367e2725b65be16cd501640f6e7b27c18184f72b6b54518c0f23a58536b13ff5a056b2bd5925e755",
+    "tags": []
+  },
+  {
+    "content": "fxiqxAawMiCZKTy1/ZFWUEk1FEOmmoSkCeusmHnQuKYOrxq8GuitBwWJXcTDv7tpOIXMDSOJjGab3vzJCNz6XkT4f1oyH87dLHcX3wUv8jXEe5c4BymSekT816uLPcrZsv9hWAqcd7bt6rYkuH1vF1ZZF7KG+LbDOyJow/7SJhaMm4YOwHnIPh0si3Mgya68GzHtNSuHaONVSfeH",
+    "created_at": 1766674197,
+    "id": "dab5c6651a4c8eb08a929f0d11f84f2c6b7389219f033dc5d09393779c00176a",
+    "kind": 1,
+    "pubkey": "80e2c93ceefc7e8abb25db4d5c1ab8d6c46d5ab3ade4748eb6a53401d3a2735a",
+    "sig": "91b80c5246dc014a9890fa02eb34a39edf1c4798af994be0ecc325d67d632f064f0fb1593651768ee83f15b3cb496194496e22b07e1e1256b604a2d0ef7de268",
+    "tags": []
+  },
+  {
+    "content": "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",
+    "created_at": 1766674197,
+    "id": "a728a279e0092affc286b0b8b703f85a940606370e9e48c53c112c39df087047",
+    "kind": 1,
+    "pubkey": "80e2c93ceefc7e8abb25db4d5c1ab8d6c46d5ab3ade4748eb6a53401d3a2735a",
+    "sig": "86aa1de26dd57fe350d087760957b8c6e9878bf17720134dfb2db4d95b73f41ff6615050e2efd0c820b2eb0ae019b7da24adc3ace78cee866ed07e6ff6a0e968",
+    "tags": []
+  },
+  {
+    "content": "Merry Christmas.",
+    "created_at": 1766674194,
+    "id": "b0fb81ffd08e472319633d1cafe4fed64af437f2132c916a1bc7fd762163fd49",
+    "kind": 1,
+    "pubkey": "d996ace530c16e4d43c419ae2b1e0f01e3a620470e21a0347a055f340ee1cfdf",
+    "sig": "a2c33ba27b109528ff671a764cfd28a4552e0fdb118e9bcb2b9123ac2e0dab743fbfc89aac0c2220c6b4a7fad317352cd3d296d4cac446d455dc0013b27260a2",
+    "tags": [
+      [
+        "p",
+        "ee8d9ea4742fe98cdcc7e285663d535de59f8705b4dd0b41c1aea77973ae568e",
+        "",
+        "mention"
+      ],
+      [
+        "e",
+        "ae55021b380a7e45e7ea726e50a9f6ee070015e50be59919df448b3bf587e9b3",
+        "",
+        "root"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (ubuntu-latest, nightly) Failed!",
+    "created_at": 1766674194,
+    "id": "00003baf680d16f17efcf5f7e6fdcce4b33207f6d71e6c131dece39913f47116",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "d4917dcbbae5772809f8b254526acf9e83b6708f94e1108db30f88f78de9f49f0d9802e0cf5d6594c5f5023dea6409629915fb8cc6eef1273a12f985957e1ad0",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "1c64dcac8c8ac79ddc528544eda66a01a65b808e"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/master"
+      ],
+      [
+        "refs/heads/master"
+      ],
+      [
+        "20506659696"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674193"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "Linux"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929437"
+      ],
+      [
+        "743894"
+      ],
+      [
+        "nonce",
+        "107551",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "\u2039 \u3010\u4eca\u671d\u7279\u520a|\u7406\u8bba\u4e89\u9e23\u3011\u751f\u4ea7\u52b3\u52a8\u4e0e\u975e\u751f\u4ea7\u52b3\u52a8\u2014\u2014\u56de\u5e94\u300a\u5217\u5b81\u9053\u8def\u300b\uff08\u4e09\uff09 \u2013 Telegraph \u203a\n\n\u2022 Source\n> https://telegra.ph/Jinzhao-special-Productive-and-Unproductive-Labor-A-Response-to-Lenins-Path-03-10\n \n\u2014\u2014\u2014\u2014\n\n\u2022 Ghostarchive\n> https://ghostarchive.org/archive2\n\n\u2022 Telegraph\n> https://telegra.ph/\u4eca\u671d\u7279\u520a\u7406\u8bba\u4e89\u9e23\u751f\u4ea7\u52b3\u52a8\u4e0e\u975e\u751f\u4ea7\u52b3\u52a8\u56de\u5e94\u5217\u5b81\u9053\u8def\u4e09--Telegraph-12-25\n\n\u2022 archive.today\n> archive.today is unavailable.\n\n\u2022 Internet Archive\n> https://web.archive.org/save/https://telegra.ph/Jinzhao-special-Productive-and-Unproductive-Labor-A-Response-to-Lenins-Path-03-10",
+    "created_at": 1766674193,
+    "id": "64bd73f236abba018da40abc96848da27e243681444401a2e932fe9b4e10fa4b",
+    "kind": 1,
+    "pubkey": "46ea6cf0eefaf5ded342ccf8bb3baf08653453a68430caaaad7998ca4bbf3185",
+    "sig": "61326aa9ce617c4a864e3a8046a1e137c40dae0abc0be125d4858579813f9d206da0e0fbe290a9cd25a5f6afaa1c42311c9a3d9c88e8153da4b2ccb3b5370bf7",
+    "tags": []
+  },
+  {
+    "content": "And a prosperous new year \ud83c\udf8a \n\nnostr:nevent1qqswltdk56jwe0204swujmd9xkcl0t3ygkgjdw592q03wc3xg287cecpzemhxue69uhhyetvv9ujuurjd9kkzmpwdejhgq3qa6zkqnuwcmjwynuw4u4xyngy9675x8dwgj87z9me4h8mdwmc2a0qxpqqqqqqzjn48fu",
+    "created_at": 1766674191,
+    "id": "8bb24bea1b237b069ac0b9f79c287f5d33cf88a07fed73d379eca2eab9ea7f11",
+    "kind": 1,
+    "pubkey": "ba6773af498b0437f0cdda1e891588a348155b9c46f0b719b7124e94e258daf3",
+    "sig": "ace5f9a29d29c16702ef0a82e9de18a2d6ae5360750c9cc23818ba4078a6dc2a7896f65b491541ad6bbca2c1b2801049751f57a971e47eb5550929e88545455b",
+    "tags": [
+      [
+        "e",
+        "efadb6a6a4ecbd4fac1dc96da535b1f7ae24459126ba85501f176226428fec67",
+        "wss://relay.primal.net",
+        "mention",
+        "ee85604f8ec6e4e24f8eaf2a624d042ebd431dae448fe11779adcfb6bb78575e"
+      ]
+    ]
+  },
+  {
+    "content": "Gm\n\nMerry Xmas \ud83d\udc9c",
+    "created_at": 1766674189,
+    "id": "eaccd4dac1de749acab5dbada723894bb93120f8fb912fa3d3467149b4495ecc",
+    "kind": 1,
+    "pubkey": "ff2f4cd786e42b4323749c91517ec7baf22dfd035b7a101bea83b6e2bcbacd15",
+    "sig": "8eaa069d7c5c9846707fe7580faeb1e89e8bcca46d0bb35dcacf348230a6840cfe758352e8244ac57504d2d07f1d8dc5cac124c3502955a255b4de027889b847",
+    "tags": [
+      [
+        "e",
+        "ee2fea5dc89fb567f95d7579ca290fba66a608ce6df6a17e19b72533b5debb27",
+        "wss://espelho.girino.org/",
+        "root"
+      ],
+      [
+        "p",
+        "8be2fd2cf7cce65a56f0820b022125e9ab4044c7dc5e444e2c0c0eab7501b0d7",
+        "",
+        "mention"
+      ]
+    ]
+  },
+  {
+    "content": "Go\u3067\u66f8\u3044\u3066ARM\u5411\u3051\u306b\u30d3\u30eb\u30c9\u3057\u3066\u305d\u308c\u3092\u66f8\u304d\u8fbc\u3081\u3070\u52d5\u304f\u2026\u3063\u3066\u611f\u3058\u3067\u3059\u304b\u306d\uff1f\n\nhttps://gist.github.com/mattn/d053af1c677dd8f8469149eb21a42c1e",
+    "created_at": 1766674188,
+    "id": "b11b20a34d3d56f4703de8be6ce69734e7f3527fd3533d8801e50dc422d2f957",
+    "kind": 1,
+    "pubkey": "a6f1f450080b65ba75da8ac7328f91c94f8314b2cc4aa719c516852a29388f0b",
+    "sig": "b680485ea2b4f7e585a05919462e4cb7c8360f73dca9c5db284f19589a4e56d61077c98acb82f8977e3422d9904d99b8bd4d64fca82f27555db63dfea357635c",
+    "tags": []
+  },
+  {
+    "content": "\u54c7 \u90fd\u662f\u597d\u6599\uff01",
+    "created_at": 1766674187,
+    "id": "64f6cb058bdce68ef177ab3488c99454d0e7afef5c8fbcfe0e86182eba651e05",
+    "kind": 1,
+    "pubkey": "09cc2fbe6d69d68b276e00cca70753eede91ff1dc01dd116097d912fde5a3627",
+    "sig": "31b7c30743988096994710420d9c1e59a8ba212bbbb4a217af6bebf8bc98e9783d917a8908853462cabb3f3d9cb28de10d142538c554a41a96e7d3de07765236",
+    "tags": [
+      [
+        "e",
+        "81ce7e1f2227e0e419a91badafe1d06ef890f6dcdb1766f704714fb4bd7b18f7",
+        "",
+        "root"
+      ],
+      [
+        "p",
+        "7017a03192e8233966d5b99472154169d9d87c931d59610f608bbd5ad4537846"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas \u2603\ufe0f\ud83c\udf84\ud83c\udf81\nA todos los que celebran lejos del lugar al que llaman hogar, que el amor que han sembrado alli, les siga dando fuerza; que los recuerdos bellos les abracen con nostalgia dulce; y que la esperanza de reencuentros les ilumine el a\u00f1o venidero. \nNo estan solos. Son parte de un c\u00edrculo que la distancia no rompe, solo estira moment\u00e1neamente.\nRecuerden que lo importante no es el lugar d\u00f3nde estamos, sino el amor que llevamos dentro y compartimos. Y ese amor, contigo, ha cruzado fronteras y oc\u00e9anos para decirte: \u00a1Feliz Navidad!!\nSe les extra\u00f1a, pero celebramos su valent\u00eda. \n\n",
+    "created_at": 1766674180,
+    "id": "33c0bba002a4837853e7c6e62a5c3c7cc8e7e5db5ab2064be2679fc06db46844",
+    "kind": 1,
+    "pubkey": "c39349acd392612dd2d7e8b6853c45c41349008c565770da8ff4dc663bb64167",
+    "sig": "c18a27fd21561592a1e87c8d89193f9f61faaa1580c52aaa4cd8ac3c4b1f3981ee7b5eab5bf65aea23f6e84718c35d2ffb6245de411e260eb07f23d070060125",
+    "tags": []
+  },
+  {
+    "content": "========================================\n#Bitcoin Block Mined < 929,437 >\n========================================\nTime: Dec 25, 2025 - 14:48 UTC\nLast Block: 10 minutes ago\n\nTransactions: 2,675 | Size: 1142.15 KB\nDifficulty: 148.258T | Weight: 3,043,901 WU\n\nFees: 0.02669444 BTC (2,669,444 sats)\nReward: 3.15169444 BTC (315,169,444 sats)\nMedian: 1.0 sat/vB | Range: 1.0 - 300.0 sat/vB\n\nPool: ViaBTC\nSegWit: 89.7% (2,399/2,675 txs)\n\nPrice: $87,575\n========================================https://mempool.space/block/0000000000000000000116a9bc6721f91700db42cc85456b3dfc0b8fac6645ac\n",
+    "created_at": 1766674170,
+    "id": "8555c7009ff4ba85a1366c46cb0a82c1a7718821e2b98c3d1cabf9d124caf7e4",
+    "kind": 1,
+    "pubkey": "4f316267ae02c36baa3ba1d167020521c504755c2b6252bcf2bdaeb9f25f40f8",
+    "sig": "1ef8875397812a72ddd695a134b452b2a344925c9a9d74e69686a6f6127ef07e8eda06b419c720aac13d567255cc5ab8b4387fc8bae78bf75838e17687346c56",
+    "tags": []
+  },
+  {
+    "content": "Olha isso: https://docs.spark.money/wallets/estimate-fees",
+    "created_at": 1766674170,
+    "id": "c8840689b36943ff45e0cad568a7de8135b385939a5aa0e723298691af7c54ce",
+    "kind": 1,
+    "pubkey": "619af6a60b3fe4c733aaca061c522cc9c7cf1d87ef4c908facc5ed936d3bdf23",
+    "sig": "b06634b566970e0bc2fa737f6f4a72da689e945f9511de0fb225108cde72011485c9f6022446043cc8ec6569ef2fea40b29a57ec736e45d3b941ebe6eb733ae8",
+    "tags": [
+      [
+        "e",
+        "19fd046845f84a6e00bcfce9d3f9ba5389fe2625fa2fdccca4d5bcd8f1a97d6d",
+        "wss://nos.lol/",
+        "root",
+        "2a21695720449121ba4ea0afc28dad98c09050b0fee89ed3a5c0f932bb6a07c8"
+      ],
+      [
+        "e",
+        "70ac885f25b7c47ffb81f1dd83483e4634b025a3900d8bf78caa137253b460d9",
+        "wss://relay.damus.io/",
+        "reply",
+        "619af6a60b3fe4c733aaca061c522cc9c7cf1d87ef4c908facc5ed936d3bdf23"
+      ],
+      [
+        "p",
+        "2a21695720449121ba4ea0afc28dad98c09050b0fee89ed3a5c0f932bb6a07c8"
+      ],
+      [
+        "p",
+        "c6e230a25ead3c497013637bf377bced81c7cdb60d881a63edb138b08aa68083"
+      ],
+      [
+        "p",
+        "d1da05d307e663c91c93fd9ffbbbbf987dc244bf609255ede571237599db7780"
+      ],
+      [
+        "client",
+        "jumble"
+      ]
+    ]
+  },
+  {
+    "content": "Potentially cheaper than crypton.sh or lnvpn.net however one thing to watch for is automatic reboots (default on graphene OS)\n\nBtw the mudi GL 750 router also has SMS to email forwarding built in (you provide the email creds)\n\n",
+    "created_at": 1766674169,
+    "id": "96725b099f2220c022d73d499c508ba73b5019a9cade3c10d065e0703ff72676",
+    "kind": 1,
+    "pubkey": "48dbb5e717a6221d64fd13ba12794bc28e5067ac1d7632ee9437d533772750df",
+    "sig": "ba71c731eee42ceedfcd35b0e27734158f19f693d99cc6f1841be79e87abac2e54fe3e4e192efdd6829bbd3a401bd53f25e76674b9e585ee6166ca3262ac2a63",
+    "tags": [
+      [
+        "alt",
+        "A short note: Potentially cheaper than crypton.sh or lnvpn.net h..."
+      ],
+      [
+        "e",
+        "886431502f50983701226609b57b1cc90b3680c3b6dd6c3453ef42b98848fd66",
+        "wss://nos.lol/",
+        "root",
+        "50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63"
+      ],
+      [
+        "p",
+        "50d94fc2d8580c682b071a542f8b1e31a200b0508bab95a33bef0855df281d63",
+        "wss://eden.nostr.land/"
+      ],
+      [
+        "r",
+        "https://crypton.sh/"
+      ],
+      [
+        "r",
+        "https://lnvpn.net/"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas.",
+    "created_at": 1766674166,
+    "id": "b6c419539c83d02922efb689b8aee794f6f9f4565983c6503f1f588b92a96f30",
+    "kind": 1,
+    "pubkey": "d996ace530c16e4d43c419ae2b1e0f01e3a620470e21a0347a055f340ee1cfdf",
+    "sig": "025c1b96a63c22935a6e7833a7d386e5af4d75579da4862e7053b84f20a043879e93361c99a47f5c95f3995fed5041defe5ea386ae4c9b4e6191c1f6a283964f",
+    "tags": [
+      [
+        "p",
+        "c2622c916d9b90e10a81b2ba67b19bdfc5d6be26c25756d1f990d3785ce1361b",
+        "",
+        "mention"
+      ],
+      [
+        "e",
+        "68a86a4e99e67a33bb69e3a8b991e737166b0232b54ad6b64c47be79d24915e8",
+        "",
+        "root"
+      ]
+    ]
+  },
+  {
+    "content": "NIP-47: Nostr Wallet Connect\nhttps://github.com/nostr-protocol/nips/blob/master/47.md",
+    "created_at": 1766674165,
+    "id": "6f86e9b333f604717bb9ee30e44a09e68fefa3ad80876a380a1a73827c8c7a37",
+    "kind": 1,
+    "pubkey": "f40901c9f844c9e92c3f951ed58b729a2a5819cf82f590403d186587a12b7fa0",
+    "sig": "a82c9b427cab7cb62e17372def726570a769275add9bece435c379d9d7d5fccf0312a1a810689f17610a6fd3ed0797b6112a4c5f0696452a9607eab23cde0aaf",
+    "tags": []
+  },
+  {
+    "content": "Gm \ud83e\udee1\ud83d\udc9c",
+    "created_at": 1766674164,
+    "id": "2ab86a8042afcd5c9b4870670a0a8b0bf700e4c96c08709b7e703c991b020465",
+    "kind": 1,
+    "pubkey": "ff2f4cd786e42b4323749c91517ec7baf22dfd035b7a101bea83b6e2bcbacd15",
+    "sig": "f9b134b59179cdcf35ac0a2748a1254094bd5a7caa84a3e9566ca2d70b2c169f7a8fea015e5d83546a4b6c4485b681e17b58f641acf663ba7df6fbab8901b84d",
+    "tags": [
+      [
+        "e",
+        "4d6399ca9572729d10b58083be2a219e1c9f1fd4668a41a1cc004f03ec4f978c",
+        "wss://search.nos.today",
+        "root"
+      ],
+      [
+        "p",
+        "9358c67695d9e78bde2bf3ce1eb0a5059553687632a177e7d25deeff9f2912fc",
+        "",
+        "mention"
+      ]
+    ]
+  },
+  {
+    "content": "How does this work? Uses Nostr?",
+    "created_at": 1766674163,
+    "id": "e307c695e50309d930b46704bc829aef5dc051d9ae34fd924facf99b909748f4",
+    "kind": 1,
+    "pubkey": "e1fc88f8e378784587c2337f4eb90a46c0c0622c42e77d75ec4a37521f30f622",
+    "sig": "880c0ab227b363d33260af139920eece13acae4f33677a28a8d76b9fab24f955cc089d03d07379fd928635ef58e42abd0dfe70eaf2653c6a0a8eb6223b2ebadf",
+    "tags": [
+      [
+        "e",
+        "f1ee804ac999a17da85c8b6532b6eed8e6e33096d8588677044f3367df0a7244",
+        "wss://relay.nostrcheck.me",
+        "root"
+      ],
+      [
+        "e",
+        "119bb5b06bbb79c8b0cd6fe914af0e48058d3f31d1a702cea15ee0fd67a1d37c",
+        "",
+        "reply"
+      ],
+      [
+        "p",
+        "ecf468164bd743b75683db3870ce01cb9a1d4b8ec203ed26de50f96255bbc75a"
+      ],
+      [
+        "p",
+        "1cb14a5ef813fae758506d86b469357f96153c2fb37ffb21ac09cee9015d5105"
+      ],
+      [
+        "p",
+        "45f195cffcb8c9724efc248f0507a2fb65b579dfabe7cd35398598163cab7627"
+      ],
+      [
+        "p",
+        "f9acb0b034c4c1177e985f14639f317ef0fedee7657c060b146ee790024317ec"
+      ]
+    ]
+  },
+  {
+    "content": "Christ is born!\nGlorify Him!  \n\n\n\nhttps://blossom.primal.net/6b9c56ba73b13962e60ee7ceff2a75865f02a431b269f697932546c9d34db6c3.jpg",
+    "created_at": 1766674161,
+    "id": "2663755d16f5cd6549a81713334284ba8f564bc79c6627184c195c44cd344984",
+    "kind": 1,
+    "pubkey": "3881beaeead2cce4df1e7f527e9ade0a5721e4a6f612ff9ac82aa6c92b014a17",
+    "sig": "cb50e1efd3a2f0402eec996214dd7d1500cfa5cdb80c0764bc10b1bd751ef65573a0f07bc5e3d303d0fd1fb3ae2e381460a5b92c4634bfb31e126a47a993f775",
+    "tags": [
+      [
+        "imeta",
+        "url https://blossom.primal.net/6b9c56ba73b13962e60ee7ceff2a75865f02a431b269f697932546c9d34db6c3.jpg",
+        "m image/jpeg",
+        "ox 6b9c56ba73b13962e60ee7ceff2a75865f02a431b269f697932546c9d34db6c3",
+        "dim 1206x1195"
+      ]
+    ]
+  },
+  {
+    "content": " The paper trail ends where #Bitcoin begins.  http://res.cloudinary.com/df3bvpu0s/image/upload/v1755736997/db3ehnp8yufjsl3ldh3f.jpg",
+    "created_at": 1766674160,
+    "id": "20d2d1e742c5976f6a2fe3caf811e202b45cbcd123d70575a97103580db94512",
+    "kind": 1,
+    "pubkey": "3b90a8348d688f79312d40fb1e5fdb02091153943ade9ae3ce240259096a5679",
+    "sig": "30f85d29ee18e23bd702dff30932b74cb0534dbf197fb038c97b5b52c582d67e781cb882ff4b6db42aa59d45ffa9f3f893bfc3158f77f151006597ed350c216a",
+    "tags": []
+  },
+  {
+    "content": "Merry Christmas",
+    "created_at": 1766674155,
+    "id": "0ae63cb27395620f7cb842629c4f07a5d718f3cc97847d3d48c5e0ca5e8fc1a7",
+    "kind": 1,
+    "pubkey": "b133bfc57bed61c391d4e8f953b906c7f1709c438d91c75fb6daf79449d5789d",
+    "sig": "4e94b68f769de6ce1440d4e42a516c002b0a0f73960d4ceebd263f5967601c50699f9371151ddc0923b231bd653f8296c374866504d7bbaed49ba8880f1204b2",
+    "tags": [
+      [
+        "e",
+        "360bb59940a47891a404a0404508ea83b885a830367530250bf78b707a3c5eb4",
+        "",
+        "root"
+      ],
+      [
+        "p",
+        "c7eda660a6bc8270530e82b4a7712acdea2e31dc0a56f8dc955ac009efd97c86"
+      ]
+    ]
+  },
+  {
+    "content": "\ud83d\udea8 Anomalies detected in transaction 755f46be2eaca3efb9b6074d8dbbb67d9c836869f108f66624ac05596e2faa26 \ud83d\udea8\n\n\ud83d\udcce Transaction Has Annex\nInput Index: 0\n\nhttps://benpool.space/tx/755f46be2eaca3efb9b6074d8dbbb67d9c836869f108f66624ac05596e2faa26",
+    "created_at": 1766674155,
+    "id": "0fc862d5b5b0602ce8395319f7cf25b6787d4806453d5f58593a91cd180a8451",
+    "kind": 1,
+    "pubkey": "273b61ada7d89eebac2599a2896dd9de76b86744a4ee33f09e12909ae3d740ff",
+    "sig": "d33d8d4d9ededc417c9a779a14c4c9c957f1bffd09d24188b3c42399dc873a56468770d9e49cdc786dc3ae622a57e8028eecb0669dcec0f79198b170e9dc3d30",
+    "tags": []
+  },
+  {
+    "content": "Merry Christmas to you and yours! ",
+    "created_at": 1766674154,
+    "id": "d9fb520e11fb97be76110a7caa51c2f0090cd512ec8d2ef4a09e07e9579bf12a",
+    "kind": 1,
+    "pubkey": "b7c7f5d30652fbe57aa4ffd373c5fa3912760842c71d260b0f5c498f020f5f03",
+    "sig": "023c44ea6562667dd6cdbf502ae4f486f7e6f9bcb2836acc2dc00146d059b013fdb88cf1d8a4da49d3ca6ac6b818815884bbedf8676f3a37c9b8cb54fa6d4fd2",
+    "tags": [
+      [
+        "alt",
+        "A short note: Merry Christmas to you and yours! "
+      ],
+      [
+        "e",
+        "d269f34607c0db1ea9b80501d8a92188079389b5992e0e331d26570c12c01dde",
+        "wss://relay.damus.io/",
+        "root",
+        "97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322"
+      ],
+      [
+        "p",
+        "97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322",
+        "wss://nos.lol/"
+      ]
+    ]
+  },
+  {
+    "content": "\ud83e\udde1\ud83e\udde1\ud83c\udf84",
+    "created_at": 1766674152,
+    "id": "8438a6b1fec0ffcf7db886acaa7e6025ec43d87206b08b7728ac28862dbbc362",
+    "kind": 1,
+    "pubkey": "3731e169d0b3816f4a4a9ac84c66aa423d4f4ea0f78b56a1df90609b85be0885",
+    "sig": "232c278454b7fcc2c241133c907cb29e39425192de5756252b672e7b4f5d39bb51944c1112670b92950216a17b65d4c6c2ed415e3c41fed6cb561fb29d9eda8c",
+    "tags": [
+      [
+        "e",
+        "360bb59940a47891a404a0404508ea83b885a830367530250bf78b707a3c5eb4",
+        "",
+        "root"
+      ],
+      [
+        "p",
+        "c7eda660a6bc8270530e82b4a7712acdea2e31dc0a56f8dc955ac009efd97c86"
+      ]
+    ]
+  },
+  {
+    "content": "11:44 @ 929,437",
+    "created_at": 1766674151,
+    "id": "7e8a7ec5d097238e086e5b66c381a8fb6d33539d458f4a92ec1c837290925200",
+    "kind": 1,
+    "pubkey": "7c5f24e1c95f6f1f75555498f0019be1259a65c75ae851c235f7b15c9f88e0ee",
+    "sig": "4dce1544fce38edb52e4cc6f8b52dadb1dd93f3eb37e1bdc7ad33764e7772e2563f971793cd3f44e4ec2a7cfa41783994cae707f65df7a369e59c2612e264675",
+    "tags": [
+      [
+        "t",
+        "bitcoin"
+      ],
+      [
+        "t",
+        "moscowtime"
+      ],
+      [
+        "t",
+        "nostr"
+      ]
+    ]
+  },
+  {
+    "content": "[]() (macos-latest, stable) Failed!",
+    "created_at": 1766674148,
+    "id": "000041318b3e43ee14fb46b5c632855da058f5703bf3ab2680524517850fbb02",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "601f6572ed2a28da409836d39a9423e1f340830fe00bbc7024dee442956b82fb5e8535945252f3f7a3e443120a052c0131f40ec19b8d2b866174372010d5ea6e",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674148"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "26945",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[]() (macos-latest, stable) Failed!",
+    "created_at": 1766674146,
+    "id": "0000c444a2d2f5ec19741ebf6a7b74b13a83f32183c7d606cba764023bee0812",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "eb288815aba44a391b85bd5057635e2537bdc9b01b01d8961be2ee98978cf4eb89829c815b222bfbffcc4df3d7796db20b8596fa9207be6f338a8584b57a9c18",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "1"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674146"
+      ],
+      [
+        ""
+      ],
+      [
+        "macOS"
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        ""
+      ],
+      [
+        "nonce",
+        "2046",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas",
+    "created_at": 1766674146,
+    "id": "732d9d66775a14103867fda3b9f910a439f9c775d974b5f9ed0139782e277db2",
+    "kind": 1,
+    "pubkey": "b133bfc57bed61c391d4e8f953b906c7f1709c438d91c75fb6daf79449d5789d",
+    "sig": "da6978afde05be22a8d3f32665e1e6427136f423bc6cebe7a7eb89a8dd2408a62729c57c0fc4a9a811c199bbd91d421d6297282be99d3b2a841c7715fd496798",
+    "tags": [
+      [
+        "e",
+        "efadb6a6a4ecbd4fac1dc96da535b1f7ae24459126ba85501f176226428fec67",
+        "",
+        "root"
+      ],
+      [
+        "p",
+        "ee85604f8ec6e4e24f8eaf2a624d042ebd431dae448fe11779adcfb6bb78575e"
+      ]
+    ]
+  },
+  {
+    "content": "Good morning. Merry Christmas.",
+    "created_at": 1766674142,
+    "id": "6228bb4bba14da5a2a0950320a35fdc73bd5968b62a5c63b3e52fa5fdc031764",
+    "kind": 1,
+    "pubkey": "d996ace530c16e4d43c419ae2b1e0f01e3a620470e21a0347a055f340ee1cfdf",
+    "sig": "c56aa724d966d67abd3c454fa34d3470cf2e4f113940e969821ddebf952edbb091f5d8fe31175ee55841cb9f430bdaf89c40f74f31ed059ee8a5dd06bacd7954",
+    "tags": [
+      [
+        "p",
+        "e5237023a5c0929e7ae0e5128d41a8213138400ec110dbe9d8a29278f22b7c13",
+        "",
+        "mention"
+      ],
+      [
+        "e",
+        "8bfa160b3205f3f95657f074ba92a9ce7367643ec4bd0e492b7759f1dee8a848",
+        "",
+        "root"
+      ]
+    ]
+  },
+  {
+    "content": "Glory to God in the highest, and on earth peace, goodwill toward men!\n\nMerry Christmas from the Murdocks!\nhttps://blossom.primal.net/c0357ad3142a6a601de6363f4f64e454f81b8fc557b86539ad875a7b956ab304.jpg",
+    "created_at": 1766674140,
+    "id": "7508d89f641bd74d9df9519fbf4c8f593bfe47c9429c392f5756f84c780a4e66",
+    "kind": 1,
+    "pubkey": "b4204b2471e73ca9f19e9059712a5ef3d312e9741f60f73f940df3df4dd9d53f",
+    "sig": "2d7530cc8e016bc9878a00d12294bcf6ca32a72f092906bc7802f721316e884b48e82d9feb77ce1aed4abbfd8089bebce6e7a61ac014cb1b2f87219849fe7dc6",
+    "tags": []
+  },
+  {
+    "content": "#Bitcoin Block Art by Blockstr!\nHeight: 929437\nWeight: 3043901\nhttps://thebitcoinblockclock.com/blockstr/0000000000000000000116a9bc6721f91700db42cc85456b3dfc0b8fac6645ac.png",
+    "created_at": 1766674139,
+    "id": "625f5ac797c1ca200bf6b5fccad7a5b521c77028b126c3578fe6b7b12b14ecae",
+    "kind": 1,
+    "pubkey": "3fdf8b43d2e6eb59fc399f7cb1b81923d1dff0215d45a11e1c1f279827eaaad8",
+    "sig": "07a59544a622ac6629eccfc8846d58efb19cdb03b6ec8b270b510279a0afef4a9213278d311c64140b24db8826d86ec1bac27ac2f5a0f972c0f60a61267a2101",
+    "tags": []
+  },
+  {
+    "content": "\ud83d\udc4b A new block was found on the #Bitcoin network. We're at block height 929437, current #bitcoin price is $87607.62 and there are 103299060190011 #sats left to mine.",
+    "created_at": 1766674137,
+    "id": "adefea8d862cf16d70563eaa5a46015212f60274c1dd976f712e8554db8980eb",
+    "kind": 1,
+    "pubkey": "fdfefa96f9591f7f90cf4a6c31630826532a1f0d195a05c9bec604953736b8f9",
+    "sig": "5eb9f36abca62e88cabc864589e383ab3e2ca0119faabacd7152526aef0939f6812cbc7829ec5160b3d46cd41de6260d66392b4cea8861675d14b87cb5126ad0",
+    "tags": []
+  },
+  {
+    "content": "#Bitcoin Block Update\nThu, Dec 25, 2025 20:18 IST\n\nBlock Number: 929437\nFee Rate: \u20b926\nTime to mine: 00:00",
+    "created_at": 1766674136,
+    "id": "0396f8131d78e640e10d96cb751d7080517cf25b999854682c3ce502348ef8ec",
+    "kind": 1,
+    "pubkey": "c4dd2587e2e7eafc295f1d44b3cf9e117231db8cb1b675a9e6fb83e99878d08d",
+    "sig": "fd45ac24a691ce69dd7a50d973c2a8bca17c79d752def4eb77f1a9104322050101e7312be635bdcb7b75eb15589fc3866dca0dac852ffb2dda8248fa22d815d4",
+    "tags": []
+  },
+  {
+    "content": "WORD5 #447 X/6\n\n\ud83d\udfe7\u2b1b\ud83d\udfe7\u2b1b\ud83d\udfe7\n\u2b1b\u2b1b\u2b1b\u2b1b\u2b1b\n\u2b1b\ud83d\udfe7\u2b1b\u2b1b\ud83d\udfe7\n\u2b1b\ud83d\udfea\ud83d\udfe7\u2b1b\u2b1b\n\ud83d\udfea\ud83d\udfea\ud83d\udfe7\u2b1b\u2b1b\n\ud83d\udfea\ud83d\udfea\u2b1b\u2b1b\u2b1b\n\nhttps://word5.otherstuff.ai",
+    "created_at": 1766674134,
+    "id": "d93940f547ac7bdbc172a2baa118eb54663dd80d477d1b25db9d1f20922ef1b2",
+    "kind": 1,
+    "pubkey": "934d39df026aea48c7a390cbbad98b8d0acb7dd050509554c15002f626e1d0ad",
+    "sig": "7c035b71d792348b2981e69091b4b39f880db294b5a0d208a7ae272a30224aeb334fb0fa71d33637642cdc89aeb25c933a84baba59ab87630b1f0b879a583f44",
+    "tags": [
+      [
+        "t",
+        "word5"
+      ],
+      [
+        "t",
+        "wordle"
+      ],
+      [
+        "game",
+        "word5"
+      ],
+      [
+        "puzzle",
+        "447"
+      ],
+      [
+        "result",
+        "X"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (macos-15-intel, stable) Cancelled!",
+    "created_at": 1766674125,
+    "id": "0000ba43738de391f153ee288a0bfd01a98b89d6aae4e91ab84021a03a5dfe98",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "e363935550cb50ec152482ca3a57ca91368b24dfd0c998c1bc947e06eda0bebe53c1fdf9192783aaf5af27c89758ed1a93d309baa51d522e08c5c49fac189dc9",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674117"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "macOS"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745717"
+      ],
+      [
+        "nonce",
+        "161589",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "PV!",
+    "created_at": 1766674123,
+    "id": "541dce303f2d433501fc7f163dc803569ea1e1b617bb698c38f8ec55e49b2596",
+    "kind": 1,
+    "pubkey": "6b42a3b227b086e850ff659a151863ce070eb60d32bae8a4618928655effc3f6",
+    "sig": "cd0fbfb2866187d297a69dbccd8c08ab8ac9f3002f67d9a481d89279d2313472e480eb0ab2965333eee00227f07280e7e7a9a7103289cea113676930f9246be3",
+    "tags": [
+      [
+        "e",
+        "c7dcaca9bc8e910aa7434a7cc1edacc933cf7f548a52cc599916ef7c60b26b80",
+        "wss://nostr.bitcoiner.social",
+        "root"
+      ],
+      [
+        "p",
+        "ee603283febc4c31b09903392408a2fff1daf69ac2244a5e4ad07eca3bc79dec",
+        "",
+        "mention"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (macos-15-intel, stable) Cancelled!",
+    "created_at": 1766674122,
+    "id": "000012eccf7508cd8ed3c50a5eeda6eac3bd094ac40caf0c3feead481ee1a756",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "48349400442f8db1cae94f8faf926e84176b54f6d46d86410b1cc57564b94a233adb15489020701d0a424ec489a80b8361063a1d6be930a87d53c7a2537a55e8",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674117"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "macOS"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745717"
+      ],
+      [
+        "nonce",
+        "133171",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (macos-latest, nightly) Cancelled!",
+    "created_at": 1766674122,
+    "id": "0000fa721afa6dfbccb31ea87f09de82a8ab9acf7d67efcc9d16731b2cf2a83f",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "f174ac04760ec43d24a58dfc5d799c3c5c54683edc49e014866832459442cacdc9e034686f2fc340e349a5aeedbc9fc4f998d52905ad172e85a06fdc8d6baa5e",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674117"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "macOS"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745717"
+      ],
+      [
+        "nonce",
+        "234595",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (macos-15-intel, nightly) Cancelled!",
+    "created_at": 1766674122,
+    "id": "0000539ee5a17f802b3d86a4430acf22e0f296d287a0715fbfa402750a66edef",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "5300b2fd57c91060e3957270fe236ce728e4a8ba43425e21210de1d03de9960233c07a3350d32de64e0b65ca2e51aaf0980ada3829234db0f7b63d10430b8a13",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674117"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "macOS"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745717"
+      ],
+      [
+        "nonce",
+        "63349",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "\u3075\u3063\u308d\u2668\ufe0f",
+    "created_at": 1766674121,
+    "id": "f15a7db33d571ec3da2629f1a9d790ccaff3e4eef33bc23c6d6614b6acbb6775",
+    "kind": 1,
+    "pubkey": "15b9f4a92b2f4b24b59621acdc1c996facbd37f1b5606045bbd1663ce87eef10",
+    "sig": "3457907384057a4ac94fd6e3d67a404a78c930cfdd8dace8dfbffeda17e4f1bd6b726a135c04eb46d770f061c006e2926707da4ddf044ca1bb92596d810c6403",
+    "tags": []
+  },
+  {
+    "content": "[992939040]() (ubuntu-latest, nightly) Cancelled!",
+    "created_at": 1766674119,
+    "id": "000026171a292d8310ba54aeae708e1d17f2a843438177adcafa58fe0d9f0e6d",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "9b56c3999175620c1269375d20d76a478184e69b3bbc27685e22500a6aaf1025eb5ef596b05f36108a89b47c4dfb0679048ddb218e91ac4979e7e7d77311e8d2",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674117"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "Linux"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745717"
+      ],
+      [
+        "nonce",
+        "98220",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (ubuntu-latest, stable) Cancelled!",
+    "created_at": 1766674118,
+    "id": "00004a3a14107e247064c46fe25ab5c2efa99c3fd2a579693296c043869c5695",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "7274f067bddd60b03bed141b2e1105ad7805a21b43bd484cd6cd403bc017022d1bcf1126f63751c0de68a21ea411edb198ad47aa6a377e6124f3f999a15c2fec",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674117"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "Linux"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745717"
+      ],
+      [
+        "nonce",
+        "36643",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (ubuntu-latest, stable) Cancelled!",
+    "created_at": 1766674117,
+    "id": "0000b0c66ec5b5e9596f238aae9475fcff1da5596214247626841ae487b5eaac",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "45e598189c1c3412098fb57f44342eaf29714a245185c14581e719b7fe969384b0fb42583d766404d2b0eb808ea5c7f571f6c94968fea0c8e82662c40beafd30",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674117"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "Linux"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745717"
+      ],
+      [
+        "nonce",
+        "2745",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (windows-latest, nightly) Cancelled!",
+    "created_at": 1766674115,
+    "id": "0000d72af28c82bb9a2b45fcd11e1117f11af77f840ab3e2b49ad0e19488552f",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "d6751cb3d353f627012b277655fbb47c17901f21e2e52249b907cd561fc545c3b056f05778566891203dd76483da4222991dab366deac99d8fab5a27b15e8d39",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674113"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "Windows"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745714"
+      ],
+      [
+        "nonce",
+        "51424",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas.",
+    "created_at": 1766674114,
+    "id": "2d3a0eb1c65184f0f473824eb0333bd21cbb22e1c5ec4c88551aa22e07ddb5e7",
+    "kind": 1,
+    "pubkey": "d996ace530c16e4d43c419ae2b1e0f01e3a620470e21a0347a055f340ee1cfdf",
+    "sig": "817495d66fcd9ee4e615a1a4cea0f31a30286828c1485f86f03326ec62ba97f8b7b7a5849ec1995c40c68ec9c05121e87098b649c2e7119a59bc65d6078c21c6",
+    "tags": [
+      [
+        "p",
+        "8e432ad14d3955d0863b975778f0c8817ef88c9f119d626da1a3face584bda73",
+        "",
+        "mention"
+      ],
+      [
+        "e",
+        "597c496cb57346e9781bd620708de79798b420d87ef2186609d0b48f12258a93",
+        "",
+        "root"
+      ]
+    ]
+  },
+  {
+    "content": "Post Christmas lunch nap \n\nIykyk ",
+    "created_at": 1766674112,
+    "id": "a42712a820dd716d819ea247f6ab47e0a230c35ff9185ebaa94893cb83bbc30a",
+    "kind": 1,
+    "pubkey": "cdecc31c6d9406e9a7d6b0067412aa661d9d31c8035c3fd65c06301d1cac3b92",
+    "sig": "5984b4eed8d6faaf7c4e37278feee6bb0a7ed0102e45f8a98e51fe244703104d99c76c56f96fc28e699ed7dcd7d1aff47f45d21097db299f73332fac6889f18f",
+    "tags": [
+      [
+        "alt",
+        "A short note: Post Christmas lunch nap \n\nIykyk "
+      ]
+    ]
+  },
+  {
+    "content": "Merry Xmass friend \ud83c\udf85\ud83c\udffb\u26a1\ud83c\udf84\ud83e\udec2 \n\n",
+    "created_at": 1766674110,
+    "id": "a27b10b1d235f600d78b5713e3cfc905c1de0d8f2eaead4812a4ef8e28e56136",
+    "kind": 1,
+    "pubkey": "9358c67695d9e78bde2bf3ce1eb0a5059553687632a177e7d25deeff9f2912fc",
+    "sig": "6c6b94d5722c2800d2f1447a3ccb0907aab604cf0a14800a157af58247d6cb92e2460dbf0743d2418a77aaf6ce645a3c61518724d304a99207d6f4417a7f2c20",
+    "tags": [
+      [
+        "p",
+        "97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322",
+        "wss://espelho.girino.org/"
+      ],
+      [
+        "e",
+        "d269f34607c0db1ea9b80501d8a92188079389b5992e0e331d26570c12c01dde",
+        "wss://espelho.girino.org/",
+        "root",
+        "97c70a44366a6535c145b333f973ea86dfdc2d7a99da618c40c64705ad98e322"
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (windows-latest, nightly) Cancelled!",
+    "created_at": 1766674107,
+    "id": "00003fa323a252f886aa3572c830513a5e3fd9c7f5bccc9360853039cf75b6de",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "52b50e79dfb29104192bbfc8d2fe58a9f067e3cf97183df73a188eb0d5144d909e220cca019c79bee1cce6e01228bc1242946be846f90c0fabdc6fe08c63bf7c",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674105"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "Windows"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745706"
+      ],
+      [
+        "nonce",
+        "53875",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas!\n\nhttps://blossom.primal.net/64f357b4a8a866b4ad61ae8fd0736605d94bebed8afdc9cfb4eab53c5df108e3.jpg",
+    "created_at": 1766674106,
+    "id": "efadb6a6a4ecbd4fac1dc96da535b1f7ae24459126ba85501f176226428fec67",
+    "kind": 1,
+    "pubkey": "ee85604f8ec6e4e24f8eaf2a624d042ebd431dae448fe11779adcfb6bb78575e",
+    "sig": "094f74cb02963ff6f5d95c882fda766ef6c29decd34a0342794eebb83d06492fb9b581eab5cb4a63d7eb13289066fc3bf6cbafdc8afa0b01e0be0bd97a68ac16",
+    "tags": [
+      [
+        "alt",
+        "A short note: Merry Christmas!\n\nhttps://blossom.primal.net/64f35..."
+      ],
+      [
+        "r",
+        "https://blossom.primal.net/64f357b4a8a866b4ad61ae8fd0736605d94bebed8afdc9cfb4eab53c5df108e3.jpg"
+      ],
+      [
+        "imeta",
+        "url https://blossom.primal.net/64f357b4a8a866b4ad61ae8fd0736605d94bebed8afdc9cfb4eab53c5df108e3.jpg",
+        "x 64f357b4a8a866b4ad61ae8fd0736605d94bebed8afdc9cfb4eab53c5df108e3",
+        "size 189465",
+        "m image/jpeg",
+        "dim 1536x2040",
+        "blurhash _ACO{~~qK*?H^6x[ox.7W=rYs:R+t7of0LH@+HI:ACsnj]IARPAVbrxGxa$*,?bvXm$%$6NwWB%NtR=|xaoMW:EfxaX5bYJjNss+WANtjroIoJJRoyxaEKV@NGnQnla#oz",
+        "ox 64f357b4a8a866b4ad61ae8fd0736605d94bebed8afdc9cfb4eab53c5df108e3",
+        "alt "
+      ]
+    ]
+  },
+  {
+    "content": "[992939040]() (windows-latest, stable) Cancelled!",
+    "created_at": 1766674106,
+    "id": "00009d753906df24207f60fefe9c8c5acc56641365bfe71cd2d9eb2290edaa61",
+    "kind": 1,
+    "pubkey": "2060b2108b2f9fd05ac7fd92058644f54dcf66c93247e51ec8b6f23aac13349f",
+    "sig": "32e93ff4f53579bfd7c717a267a8e3350299718a888e74c272f0e69f1ec1d3d28f9cad6f40569a2fa280a7101080cb5433a7181f20222b95ea7915072e4f9e4f",
+    "tags": [
+      [
+        "gnostr-org/gnostr"
+      ],
+      [
+        "gnostr-bot-matrix"
+      ],
+      [
+        "b785f23eab6869926b464db4fd85e47d7597afdb"
+      ],
+      [
+        "gnostr-org/gnostr/.github/workflows/gnostr-bot-matrix.yml@refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "refs/heads/1902/928016/739687/1441a51b97/dcbbe11c66-321e5be63c53d228e6e7e193df8701ae813c8f2c"
+      ],
+      [
+        "20506498457"
+      ],
+      [
+        "gnostr-bot"
+      ],
+      [
+        "gnostr-org"
+      ],
+      [
+        "1766674105"
+      ],
+      [
+        "github-hosted"
+      ],
+      [
+        "Windows"
+      ],
+      [
+        "1900"
+      ],
+      [
+        "929436"
+      ],
+      [
+        "745706"
+      ],
+      [
+        "nonce",
+        "11290",
+        "16"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Christmas!  \n\n",
+    "created_at": 1766674099,
+    "id": "360bb59940a47891a404a0404508ea83b885a830367530250bf78b707a3c5eb4",
+    "kind": 1,
+    "pubkey": "c7eda660a6bc8270530e82b4a7712acdea2e31dc0a56f8dc955ac009efd97c86",
+    "sig": "8258f4a8fbd6c5d869f32d17ddb2fead56ffd32e0bd5442da3c76cfaf001f830cf5193d9a9ac999ea57b310b4e9cbc5080da4bc9812c5fc77cb035a13cdbae0e",
+    "tags": []
+  },
+  {
+    "content": "Conversation starter for today's lunch. \n\nnostr:nevent1qqs9z9jykr95tsztwx8m43jclcez5hfupusnsnx9w37hmz0k537f0kspndmhxue69uhkummn9ekx7mp0y5erqamnwvaz7tmwdaehgu3wd3skuep0y5erqffjxpshvct5v9ez2v3swaehxw309ahx7um5wgh8w6twv5hj2v3sy5erqctkv96xzu39xgc8wumn8ghj7ur4wfcxcetjv4kxz7fwvdhk6te9xgc8wumn8ghj7un9d3shjtnyv9kh2uewd9hj7ffjxpmhxue69uhhyetvv9ujuumwdae8gtnnda3kjctv9upzpflpmsd9g5k7nlyl4enpmqaca92ldsl7atce6tjrje6x9x4twsf5qvzqqqqqqy7zxtgh",
+    "created_at": 1766674089,
+    "id": "5183f551e34b17b9946ddbc8fb9724ff1e0dad87d376c84e8d44beeb6b21ad18",
+    "kind": 1,
+    "pubkey": "a7e1dc1a5452de9fc9fae661d83b8e955f6c3feeaf19d2e439674629aab74134",
+    "sig": "1b57460d3913d771cd46089a38e909dff5dd96423eb55f89aecc8787624a1762f387d4d5502e95371908eb4f60f9863ac75c4fa0b9f0b2eb61d8dcca579ec2d7",
+    "tags": [
+      [
+        "e",
+        "511644b0cb45c04b718fbac658fe322a5d3c0f21384cc5747d7d89f6a47c97da",
+        "wss://nos.lol/%20wss://nostr.land/%20%20avatar%20wss://nostr.wine/%20%20avatar%20wss://purplerelay.com/%20wss://relay.damus.io/%20wss://relay.snort.social/",
+        "mention",
+        "a7e1dc1a5452de9fc9fae661d83b8e955f6c3feeaf19d2e439674629aab74134"
+      ]
+    ]
+  },
+  {
+    "content": "*roteado",
+    "created_at": 1766674088,
+    "id": "1adf6e5ecb007a02d5f10e9191f93a00bd506794d288aa622c3c20ee6527f285",
+    "kind": 1,
+    "pubkey": "619af6a60b3fe4c733aaca061c522cc9c7cf1d87ef4c908facc5ed936d3bdf23",
+    "sig": "d618cb9ad2682c39f3643fb7482db5c1cb05739608658f4f062b0cb11ee298f064f504541669efbd09df7411dbc256580db9cb29c7baa996fd19c77e4df1339c",
+    "tags": [
+      [
+        "e",
+        "19fd046845f84a6e00bcfce9d3f9ba5389fe2625fa2fdccca4d5bcd8f1a97d6d",
+        "wss://nos.lol/",
+        "root",
+        "2a21695720449121ba4ea0afc28dad98c09050b0fee89ed3a5c0f932bb6a07c8"
+      ],
+      [
+        "e",
+        "70ac885f25b7c47ffb81f1dd83483e4634b025a3900d8bf78caa137253b460d9",
+        "wss://relay.damus.io/",
+        "reply",
+        "619af6a60b3fe4c733aaca061c522cc9c7cf1d87ef4c908facc5ed936d3bdf23"
+      ],
+      [
+        "p",
+        "2a21695720449121ba4ea0afc28dad98c09050b0fee89ed3a5c0f932bb6a07c8"
+      ],
+      [
+        "p",
+        "c6e230a25ead3c497013637bf377bced81c7cdb60d881a63edb138b08aa68083"
+      ],
+      [
+        "p",
+        "d1da05d307e663c91c93fd9ffbbbbf987dc244bf609255ede571237599db7780"
+      ],
+      [
+        "client",
+        "jumble"
+      ]
+    ]
+  },
+  {
+    "content": "Merry Xmas Marie \ud83d\udc9c\ud83d\ude4f\ud83c\udfff",
+    "created_at": 1766674086,
+    "id": "ce551a4e5642a89e5125f330ca67ae09c4ad9c167a61cf81f70a1e79067265dd",
+    "kind": 1,
+    "pubkey": "ff2f4cd786e42b4323749c91517ec7baf22dfd035b7a101bea83b6e2bcbacd15",
+    "sig": "2aa1773dc7c20841dbb1e073b60b67cfafaf417762064d420767bec2056190ca3ca64c9bf8c6e37db10afd7caeccbb5385a23dd63af816f5f6ce37c9d370f7b5",
+    "tags": [
+      [
+        "e",
+        "1f753ac40dc4e25d774ae34dfffd759c0a420efbd5f19be941b1a3af3c101531",
+        "wss://pyramid.fiatjaf.com",
+        "root"
+      ],
+      [
+        "p",
+        "cfe3b4316d905335b6ce056ba0ec230b587a334381e82bf9a02a184f2d068f8d",
+        "",
+        "mention"
+      ]
+    ]
+  },
+  {
+    "content": "vM5DGVCQ9Uxjo5snooymCzllLE8gZQ4EwsaHsoaBP+jjr0rdfTHYVWHq8knPFgk0LK7hdHTySgmSZeqcS2qhAKpCuIaoEwHqxY+M8OzwMmjF6j3Cy/x6GD07bxAEc7eKTRMG33PoO9xT7XfQzC6DSN/muzTbeWSIuAesm64hvQCBmshSwfZMYkTDKZS6ywVaoYI7BuShAy+qCHxptUZHRYZJmvaHRDojs5dYytWnB2hOzteroaFgaFzmeMSO4jT7va+290xL+Plu4ZXhZPUc2Lec1gyoDz4bsVm269qgmLJPk4anU2Sg8ggOLl2TX3as4uP53Xxq8NNIPj+ZlqB3Z0beWHG6XNu6YSqG8nrCQqfp5s1ZlUa6/jktqSUf+kwRqtH2ZrqUF5/xLJLj+gzS6p6QvKBfi4q8zWke2xsNXePQ03O3+i3gvKeDcnhbd6Goh0wgwGPRoOqzsd8twwIUDUhYNkTZ4to/JERJQRgJrv6V7Y24F2rSBIi2yX5uTBBOGLs2oGavFs1T16TQlFX2mq8qhlPbIWERpx1yEo/fmF7p/FR5N6rjU/DtNloaJ2NpYV7aqw4c6TjwHin8sVtI46zJ03+GCDi739PFpMZCDvoXGoo5VRhE7O9OxWbzawxeVCya6MeQBsNfky1HhBibt1PTFbLv7i71XRgK4Pp+K4R3I1mAIcpeV24BXPVotNKmqH+WJVS9Vx06RYGwbikqYnL+R4kcgxRfdpIZmSTy7tNDCb7dmFAPTIi/euzE67k/sBLEAMgYazRwwPm+AAXls06AHsxmJ0W3x/DdwfWjrnAV0sWH3/+Hik1dOMOVFZWqFtZxcOy4ncwP2gpEZ4bN9IZ3e3rKSDcQUk/zdtnN5xU8WUsAVTqkk19+erKMvntP+xy7u3B7tzK2WhJOXKqgJ53vpRwsfRmaH52MhPzvQQUliNqOzwsrXD9A/Mvku8rLfiwJsmzd0Bsp3/hk1ndvxIht2a/bP96ZW4n2oa5zQQzjYBWL4lXb+67tQvrpsCrI2TWCqso72ZKoOi3PuZzoKz+OFbVYlKx5gS0CBroeAD4g2l9BqlL0fs+6M1NndO3Uyftti2JVLl7l2tc2",
+    "created_at": 1766674084,
+    "id": "21324f020cef4e4c59c97a04376231b2457360498731ef4470b55da04b25e002",
+    "kind": 1,
+    "pubkey": "92c2d9b669b0e869283d1750756e4eb37165f048b6b09535c2e51c3ea6c1e3b6",
+    "sig": "6111eca051513ac5f0864b62d1ee444513a8eb35ca0071882cdbcac29fa82e85f02a3bbb171674f1cdfe9d571ba8bc4c0987ebc0b45307e3f7db3b9c398ad72c",
+    "tags": []
+  },
+  {
+    "content": "/szB6t2HfkRjo5snoTkze531EoGGjsR1tNh/UR3RUmrdfrrDbzVLF7i5kuO0bEGdRhQK6LmFUPF/XGorWDoUVbGLVPa9DiSzOeqlZVGkNbfAaBUb8FIKzhj3JvRetih2j7cer+v4GL/jrPpO3KL7uwOaPOAnmpzUif4V8dWQ1TxYiA1YBYwnOHp4jNs9SBkuww==",
+    "created_at": 1766674084,
+    "id": "7696ab9f5cce431adaa5ba7349c8ce63d2632bef6088d9771305f82c7b34861f",
+    "kind": 1,
+    "pubkey": "92c2d9b669b0e869283d1750756e4eb37165f048b6b09535c2e51c3ea6c1e3b6",
+    "sig": "2dc2623695a767e1d1b62ffb529eb63ce4c5a9c12faac0396241ef1c0cf40590e96a0733b51c63bf82ba5164793bf296b094e18ca166386f9cbeb5a337e6ba6a",
+    "tags": []
+  },
+  {
+    "content": "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",
+    "created_at": 1766674084,
+    "id": "efa8a0766febad015560d86141d7796d4522ea23b0dda69fcbcf381d04670d7f",
+    "kind": 1,
+    "pubkey": "92c2d9b669b0e869283d1750756e4eb37165f048b6b09535c2e51c3ea6c1e3b6",
+    "sig": "2e355db80119bf976e2d1fad436f6e0f24a18fc8b5b9bf588e6620f71a54041e78d0f6d81be86f80ad39543c41d2ebd05c85dec9882bfef0cd363debf90f9519",
+    "tags": []
+  }
+]

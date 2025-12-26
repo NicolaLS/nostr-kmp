@@ -1,0 +1,20 @@
+[versions]
+agp = "8.13.0"
+# See: https://kotlinlang.org/docs/multiplatform/multiplatform-compatibility-guide.html
+# Gradle: 7.6.3–9.0.0
+# AGP: 8.2.2–8.13.0
+# Xcode: 26.0
+kotlin = "2.3.0"
+android-minSdk = "24"
+android-compileSdk = "36"
+okio = "3.16.4"
+vanniktechMavenPublish = "0.35.0"
+
+[libraries]
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+
+[plugins]
+android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktechMavenPublish" }
