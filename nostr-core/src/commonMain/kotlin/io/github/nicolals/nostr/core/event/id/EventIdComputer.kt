@@ -3,12 +3,13 @@ package io.github.nicolals.nostr.core.event.id
 import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.EventKind
 import io.github.nicolals.nostr.core.event.EventTags
+import io.github.nicolals.nostr.core.types.UnixTimeSeconds
 import okio.ByteString
 
 object EventIdComputer {
     fun nip01IdBytes(
         pubkey: PublicKey,
-        createdAt: Long,
+        createdAt: UnixTimeSeconds,
         kind: EventKind,
         tags: EventTags,
         content: String,
@@ -19,7 +20,7 @@ object EventIdComputer {
 
     fun nip01IdHex(
         pubkey: PublicKey,
-        createdAt: Long,
+        createdAt: UnixTimeSeconds,
         kind: EventKind,
         tags: EventTags,
         content: String,

@@ -5,6 +5,7 @@ import io.github.nicolals.nostr.core.event.EventKind
 import io.github.nicolals.nostr.core.event.EventTags
 import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.event.view.GenericEvent
+import io.github.nicolals.nostr.core.types.UnixTimeSeconds
 
 
 /**
@@ -47,7 +48,7 @@ class EventTemplate<U : EventView>(
 
 fun eventTemplate(
     kind: EventKind,
-    createdAt: Long,
+    createdAt: UnixTimeSeconds,
     tags: EventTags,
     content: String,
 ): EventTemplate<GenericEvent> = EventTemplate(

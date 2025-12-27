@@ -2,6 +2,7 @@ package io.github.nicolals.nostr.core.event
 
 import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.id.EventId
+import io.github.nicolals.nostr.core.types.UnixTimeSeconds
 
 
 // TODO: In case this is used in Jetpack Compose it might make sense to declare @Immutable
@@ -22,7 +23,7 @@ import io.github.nicolals.nostr.core.event.id.EventId
 data class Event(
     val id: EventId,
     val pubkey: PublicKey,
-    val createdAt: Long,
+    val createdAt: UnixTimeSeconds,
     val kind: EventKind,
     val tags: EventTags,
     val content: String,
