@@ -1,8 +1,8 @@
 package io.github.nicolals.nostr.core.event.id
 
+import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.EventKind
 import io.github.nicolals.nostr.core.event.EventTags
-import io.github.nicolals.nostr.core.types.HexKey
 import okio.Buffer
 import okio.ByteString
 
@@ -66,7 +66,7 @@ private fun Buffer.writeTags(tags: EventTags) {
 object EventIdSerializer {
     // Fast-path for internal usage without intermediate ByteString (hash buffer directly).
     internal fun nip01SerializeToBuffer(
-        pubkey: HexKey,
+        pubkey: PublicKey,
         createdAt: Long,
         kind: EventKind,
         tags: EventTags,
@@ -76,7 +76,7 @@ object EventIdSerializer {
         b.writeByte('['.code)
         b.writeByte('0'.code)
         b.writeByte(','.code)
-        b.writeNip01JsonString(pubkey)
+        b.writeNip01JsonString(pubkey.hex)
         b.writeByte(','.code)
         b.writeDecimalLong(createdAt)
         b.writeByte(','.code)
@@ -90,7 +90,7 @@ object EventIdSerializer {
     }
 
     fun nip01Serialize(
-        pubkey: HexKey,
+        pubkey: PublicKey,
         createdAt: Long,
         kind: EventKind,
         tags: EventTags,

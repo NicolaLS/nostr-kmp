@@ -1,5 +1,6 @@
 package io.github.nicolals.nostr.core.event
 
+import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.types.HexKey
 
 
@@ -20,7 +21,7 @@ import io.github.nicolals.nostr.core.types.HexKey
  */
 data class Event(
     val id: HexKey,
-    val pubkey: HexKey,
+    val pubkey: PublicKey,
     val createdAt: Long,
     val kind: EventKind,
     val tags: EventTags,

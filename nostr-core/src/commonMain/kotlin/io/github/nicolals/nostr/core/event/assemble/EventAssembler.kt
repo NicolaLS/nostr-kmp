@@ -1,16 +1,16 @@
 package io.github.nicolals.nostr.core.event.assemble
 
+import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.event.id.EventIdComputer
 import io.github.nicolals.nostr.core.event.template.EventTemplate
 import io.github.nicolals.nostr.core.event.view.EventView
-import io.github.nicolals.nostr.core.types.HexKey
 import okio.ByteString
 
 object EventAssembler {
     fun <T : EventView> sign(
         template: EventTemplate<T>,
-        pubkey: HexKey,
+        pubkey: PublicKey,
         sign: (b: ByteString) -> ByteString
     ): T {
         val idBytes = EventIdComputer.nip01IdBytes(
