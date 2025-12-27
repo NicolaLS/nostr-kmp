@@ -1,6 +1,7 @@
 package io.github.nicolals.nostr.core.event
 
 import io.github.nicolals.nostr.core.crypto.PublicKey
+import io.github.nicolals.nostr.core.event.id.EventId
 import io.github.nicolals.nostr.core.types.HexKey
 
 
@@ -20,7 +21,7 @@ import io.github.nicolals.nostr.core.types.HexKey
  * @property sig 64-bytes lowercase hex of the signature of the sha256 hash of the serialized event data, which is the same as the "id" field
  */
 data class Event(
-    val id: HexKey,
+    val id: EventId,
     val pubkey: PublicKey,
     val createdAt: Long,
     val kind: EventKind,

@@ -1,7 +1,7 @@
 package io.github.nicolals.nostr.core.message
 
 import io.github.nicolals.nostr.core.event.Event
-import io.github.nicolals.nostr.core.types.HexKey
+import io.github.nicolals.nostr.core.event.id.EventId
 
 typealias SubscriptionId = String
 
@@ -30,7 +30,7 @@ data class RelayEventMessage(
 ) : RelayMessage
 
 data class RelayOkMessage(
-    val eventId: HexKey,
+    val eventId: EventId,
     val accepted: Boolean,
     val message: String,
 ) : RelayMessage

@@ -2,7 +2,7 @@ package io.github.nicolals.nostr.core.message
 
 import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.EventKind
-import io.github.nicolals.nostr.core.types.HexKey
+import io.github.nicolals.nostr.core.event.id.EventId
 
 /**
  * Filters for NIP-01 REQ subscription queries.
@@ -11,7 +11,7 @@ import io.github.nicolals.nostr.core.types.HexKey
  * (for example: tagFilters["e"] = listOf(eventId)).
  */
 data class Filter(
-    val ids: List<HexKey>? = null,
+    val ids: List<EventId>? = null,
     val authors: List<PublicKey>? = null,
     val kinds: List<EventKind>? = null,
     val tagFilters: Map<String, List<String>>? = null,
