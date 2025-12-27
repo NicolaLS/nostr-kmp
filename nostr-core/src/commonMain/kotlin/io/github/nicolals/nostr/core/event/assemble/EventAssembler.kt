@@ -2,6 +2,7 @@ package io.github.nicolals.nostr.core.event.assemble
 
 import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.Event
+import io.github.nicolals.nostr.core.event.EventSig
 import io.github.nicolals.nostr.core.event.id.EventId
 import io.github.nicolals.nostr.core.event.id.EventIdComputer
 import io.github.nicolals.nostr.core.event.template.EventTemplate
@@ -29,7 +30,7 @@ object EventAssembler {
             kind = template.draft.kind,
             tags = template.draft.tags,
             content = template.draft.content,
-            sig = sig.hex(),
+            sig = EventSig.fromBytes(sig),
         )
         return template.wrap(event)
     }

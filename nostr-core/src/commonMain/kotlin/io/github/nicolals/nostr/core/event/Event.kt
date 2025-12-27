@@ -2,7 +2,6 @@ package io.github.nicolals.nostr.core.event
 
 import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.id.EventId
-import io.github.nicolals.nostr.core.types.HexKey
 
 
 // TODO: In case this is used in Jetpack Compose it might make sense to declare @Immutable
@@ -27,6 +26,6 @@ data class Event(
     val kind: EventKind,
     val tags: EventTags,
     val content: String,
-    val sig: HexKey,
+    val sig: EventSig,
 )
 
