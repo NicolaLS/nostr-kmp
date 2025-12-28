@@ -1,4 +1,4 @@
-package io.github.nicolals.nostr.core.event
+package io.github.nicolals.nostr.core.primitives
 
 typealias EventTag = List<String>
 /**

@@ -1,16 +1,9 @@
 package io.github.nicolals.nostr.core.message
 
 import io.github.nicolals.nostr.core.event.Event
-import io.github.nicolals.nostr.core.event.id.EventId
-import kotlin.jvm.JvmInline
+import io.github.nicolals.nostr.core.primitives.EventId
+import io.github.nicolals.nostr.core.primitives.SubscriptionId
 
-@JvmInline
-value class SubscriptionId(val value: String) {
-    init {
-        require(value.isNotBlank()) { "Subscription id must not be blank" }
-        require(value.length <= 64) { "Subscription id can not be longer than 64 characters" }
-    }
-}
 
 sealed interface ProtocolMessage
 

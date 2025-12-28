@@ -1,4 +1,4 @@
-package io.github.nicolals.nostr.core.crypto
+package io.github.nicolals.nostr.core.primitives
 
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex

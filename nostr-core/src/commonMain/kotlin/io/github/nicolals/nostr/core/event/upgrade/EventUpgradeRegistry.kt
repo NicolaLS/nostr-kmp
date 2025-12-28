@@ -1,9 +1,9 @@
 package io.github.nicolals.nostr.core.event.upgrade
 
 import io.github.nicolals.nostr.core.event.Event
-import io.github.nicolals.nostr.core.event.EventKind
 import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.event.view.GenericEvent
+import io.github.nicolals.nostr.core.primitives.EventKind
 
 class EventUpgradeRegistry private constructor(
     private val byKind: Map<EventKind, List<EventUpgrader<out EventView>>>,

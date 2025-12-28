@@ -1,9 +1,9 @@
 package io.github.nicolals.nostr.core.event.id
 
-import io.github.nicolals.nostr.core.crypto.PublicKey
-import io.github.nicolals.nostr.core.event.EventKind
-import io.github.nicolals.nostr.core.event.EventTags
-import io.github.nicolals.nostr.core.types.UnixTimeSeconds
+import io.github.nicolals.nostr.core.primitives.EventKind
+import io.github.nicolals.nostr.core.primitives.EventTags
+import io.github.nicolals.nostr.core.primitives.PublicKey
+import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
 import okio.Buffer
 import okio.ByteString
 

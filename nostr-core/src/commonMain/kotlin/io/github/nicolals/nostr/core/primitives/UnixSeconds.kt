@@ -1,4 +1,4 @@
-package io.github.nicolals.nostr.core.types
+package io.github.nicolals.nostr.core.primitives
 
 import kotlin.jvm.JvmInline
 

@@ -1,8 +1,8 @@
 package io.github.nicolals.nostr.core.event.upgrade
 
 import io.github.nicolals.nostr.core.event.Event
-import io.github.nicolals.nostr.core.event.EventKind
 import io.github.nicolals.nostr.core.event.view.EventView
+import io.github.nicolals.nostr.core.primitives.EventKind
 
 interface EventUpgrader<U : EventView> {
     /** For fast routing. Can be a single kind or a small set. */

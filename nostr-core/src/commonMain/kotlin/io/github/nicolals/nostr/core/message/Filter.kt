@@ -1,9 +1,9 @@
 package io.github.nicolals.nostr.core.message
 
-import io.github.nicolals.nostr.core.crypto.PublicKey
-import io.github.nicolals.nostr.core.event.EventKind
-import io.github.nicolals.nostr.core.event.id.EventId
-import io.github.nicolals.nostr.core.types.UnixTimeSeconds
+import io.github.nicolals.nostr.core.primitives.EventId
+import io.github.nicolals.nostr.core.primitives.EventKind
+import io.github.nicolals.nostr.core.primitives.PublicKey
+import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
 
 /**
  * Filters for NIP-01 REQ subscription queries.

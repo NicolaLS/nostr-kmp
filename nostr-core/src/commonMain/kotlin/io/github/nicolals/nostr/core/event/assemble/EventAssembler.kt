@@ -1,12 +1,12 @@
 package io.github.nicolals.nostr.core.event.assemble
 
-import io.github.nicolals.nostr.core.crypto.PublicKey
 import io.github.nicolals.nostr.core.event.Event
-import io.github.nicolals.nostr.core.event.EventSig
-import io.github.nicolals.nostr.core.event.id.EventId
 import io.github.nicolals.nostr.core.event.id.EventIdComputer
 import io.github.nicolals.nostr.core.event.template.EventTemplate
 import io.github.nicolals.nostr.core.event.view.EventView
+import io.github.nicolals.nostr.core.primitives.EventId
+import io.github.nicolals.nostr.core.primitives.EventSig
+import io.github.nicolals.nostr.core.primitives.PublicKey
 import okio.ByteString
 
 object EventAssembler {
