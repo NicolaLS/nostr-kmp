@@ -81,7 +81,7 @@ object EventIdSerializer {
         b.writeByte(','.code)
         b.writeDecimalLong(createdAt.value)
         b.writeByte(','.code)
-        b.writeDecimalLong(kind.toLong())
+        b.writeDecimalLong(kind.value.toLong())
         b.writeByte(','.code)
         b.writeTags(tags)
         b.writeByte(','.code)
