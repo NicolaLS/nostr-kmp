@@ -7,7 +7,7 @@ import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
 import okio.Buffer
 import okio.ByteString
 
-private fun Buffer.writeNip01JsonString(s: String) {
+private fun Buffer.writeNip01JsonString(s: String, context: String) {
     writeByte('"'.code)
 
     var runStart = 0
@@ -15,6 +15,13 @@ private fun Buffer.writeNip01JsonString(s: String) {
 
     for (i in 0 until n) {
         val ch = s[i]
+        // Reject control chars that would require \u00XX escapes; otherwise ID hashing becomes ambiguous.
+        if (ch.code < 0x20) {
+            when (ch) {
+                '\n', '\r', '\t', '\b', '\u000C' -> Unit
+                else -> throw EventIdSerializationException.invalidControlChar(context, ch)
+            }
+        }
         val needsEscape = when (ch) {
             '\n', '"', '\\', '\r', '\t', '\b', '\u000C' -> true
             else -> false
@@ -55,7 +62,7 @@ private fun Buffer.writeTags(tags: EventTags) {
 
         for (j in 0 until tag.size) {
             if (j > 0) writeByte(','.code)
-            writeNip01JsonString(tag[j])
+            writeNip01JsonString(tag[j], context = "tags[$i][$j]")
         }
 
         writeByte(']'.code)
@@ -77,7 +84,7 @@ object EventIdSerializer {
         b.writeByte('['.code)
         b.writeByte('0'.code)
         b.writeByte(','.code)
-        b.writeNip01JsonString(pubkey.hex)
+        b.writeNip01JsonString(pubkey.hex, context = "pubkey")
         b.writeByte(','.code)
         b.writeDecimalLong(createdAt.value)
         b.writeByte(','.code)
@@ -85,7 +92,7 @@ object EventIdSerializer {
         b.writeByte(','.code)
         b.writeTags(tags)
         b.writeByte(','.code)
-        b.writeNip01JsonString(content)
+        b.writeNip01JsonString(content, context = "content")
         b.writeByte(']'.code)
         return b
     }
