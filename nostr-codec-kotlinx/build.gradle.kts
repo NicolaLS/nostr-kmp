@@ -6,19 +6,20 @@ plugins {
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
-description = "Core Nostr types and utilities for Kotlin Multiplatform."
+description = "Nostr codec implementation using kotlinx serialization."
 
 kotlin {
     jvm()
 
     androidLibrary {
-        namespace = "io.github.nicolals.nostr.core"
+        namespace = "io.github.nicolals.nostr.codec.kotlinx"
     }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
-                api(libs.okio)
+                api(project(":nostr-core"))
+                implementation(libs.kotlinx.serialization.json)
             }
         }
         val commonTest by getting {

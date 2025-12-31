@@ -17,6 +17,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":nostr-core"))
+                api(project(":nostr-codec-kotlinx"))
             }
         }
     }
