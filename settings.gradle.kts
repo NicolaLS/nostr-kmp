@@ -16,5 +16,6 @@ dependencyResolutionManagement {
 rootProject.name = "nostr-kmp"
 include(":nostr-core")
 include(":nostr-codec-kotlinx")
+include(":nostr-crypto")
 include(":nostr-sdk")
 include(":nips:metadata")

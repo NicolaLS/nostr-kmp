@@ -18,6 +18,7 @@ kotlin {
             dependencies {
                 api(project(":nostr-core"))
                 api(project(":nostr-codec-kotlinx"))
+                api(project(":nostr-crypto"))
             }
         }
     }
