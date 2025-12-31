@@ -56,9 +56,5 @@ fun eventTemplate(
     wrap = ::GenericEvent
 )
 
-fun <U : EventView> EventTemplate<*>.upgradeToOrNull(
-    upgrader: EventTemplateUpgrader<U>
-): EventTemplate<U>? = upgrader.upgradeOrNull(this.draft)
-
 
 // TODO: Provide update and builder ergonomics.
