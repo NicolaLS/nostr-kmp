@@ -1,12 +1,14 @@
 package io.github.nicolals.nostr.core.nip
 
 import io.github.nicolals.nostr.core.codec.JsonCodec
+import io.github.nicolals.nostr.core.crypto.CryptoPrimitives
 import io.github.nicolals.nostr.core.event.upgrade.EventUpgradeRegistry
 import io.github.nicolals.nostr.core.event.upgrade.EventUpgrader
 import io.github.nicolals.nostr.core.event.view.EventView
 
 interface NipModuleContext {
     val jsonCodec: JsonCodec
+    val crypto: CryptoPrimitives
 }
 
 /**
