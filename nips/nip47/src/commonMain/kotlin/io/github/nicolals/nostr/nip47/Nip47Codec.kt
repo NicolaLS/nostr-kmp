@@ -1,12 +1,6 @@
 package io.github.nicolals.nostr.nip47
 
-import io.github.nicolals.nostr.core.codec.JsonArray
-import io.github.nicolals.nostr.core.codec.JsonBoolean
-import io.github.nicolals.nostr.core.codec.JsonNull
-import io.github.nicolals.nostr.core.codec.JsonNumber
-import io.github.nicolals.nostr.core.codec.JsonObject
-import io.github.nicolals.nostr.core.codec.JsonString
-import io.github.nicolals.nostr.core.codec.JsonValue
+import io.github.nicolals.nostr.core.codec.*
 import io.github.nicolals.nostr.core.nip.NipModuleContext
 import io.github.nicolals.nostr.nip47.model.NwcBalanceResult
 import io.github.nicolals.nostr.nip47.model.NwcError
@@ -41,24 +35,19 @@ fun NipModuleContext.encodeNwcRequest(request: NwcRequest): String =
     jsonCodec.stringify(request.toJsonObject())
 
 fun NipModuleContext.decodeNwcRequestOrNull(content: String): NwcRequest? =
-    parseJsonObjectOrNull(content)?.let(::parseNwcRequest)
+    jsonCodec.parseObjectOrNull(content)?.let(::parseNwcRequest)
 
 fun NipModuleContext.encodeNwcResponse(response: NwcResponse): String =
     jsonCodec.stringify(response.toJsonObject())
 
 fun NipModuleContext.decodeNwcResponseOrNull(content: String): NwcResponse? =
-    parseJsonObjectOrNull(content)?.let(::parseNwcResponse)
+    jsonCodec.parseObjectOrNull(content)?.let(::parseNwcResponse)
 
 fun NipModuleContext.encodeNwcNotification(notification: NwcNotification): String =
     jsonCodec.stringify(notification.toJsonObject())
 
 fun NipModuleContext.decodeNwcNotificationOrNull(content: String): NwcNotification? =
-    parseJsonObjectOrNull(content)?.let(::parseNwcNotification)
-
-private fun NipModuleContext.parseJsonObjectOrNull(content: String): JsonObject? {
-    val value = runCatching { jsonCodec.parse(content) }.getOrNull() ?: return null
-    return value as? JsonObject
-}
+    jsonCodec.parseObjectOrNull(content)?.let(::parseNwcNotification)
 
 private fun NwcRequest.toJsonObject(): JsonObject = when (this) {
     is NwcPayInvoiceRequest -> requestObject(
@@ -583,49 +572,6 @@ private fun hasAnyTransactionField(obj: JsonObject): Boolean {
         "metadata",
     )
     return fields.any { obj.valueOrNull(it) != null }
-}
-
-private fun JsonArray.stringValuesOrNull(): List<String>? {
-    val values = mutableListOf<String>()
-    for (value in this.values) {
-        val str = (value as? JsonString)?.value ?: return null
-        values += str
-    }
-    return values
-}
-
-private fun JsonObject.longValueOrNull(key: String): Long? = when (val value = valueOrNull(key)) {
-    is JsonNumber -> value.value.toLongOrNull()
-    is JsonString -> value.value.toLongOrNull()
-    else -> null
-}
-
-private fun JsonObject.booleanValue(key: String): Boolean? =
-    (valueOrNull(key) as? JsonBoolean)?.value
-
-private fun JsonObject.stringValue(key: String): String? =
-    (valueOrNull(key) as? JsonString)?.value
-
-private fun JsonObject.objectValue(key: String): JsonObject? =
-    valueOrNull(key) as? JsonObject
-
-private fun JsonObject.arrayValue(key: String): JsonArray? =
-    valueOrNull(key) as? JsonArray
-
-private fun JsonObject.valueOrNull(key: String): JsonValue? =
-    entries[key].nullIfJsonNull()
-
-private fun JsonValue?.nullIfJsonNull(): JsonValue? =
-    if (this is JsonNull) null else this
-
-private fun jsonObjectOf(vararg entries: Pair<String, JsonValue?>): JsonObject {
-    val map = linkedMapOf<String, JsonValue>()
-    for ((key, value) in entries) {
-        if (value != null) {
-            map[key] = value
-        }
-    }
-    return JsonObject(map)
 }
 
 private fun requestObject(method: String, params: JsonObject): JsonObject = JsonObject(
