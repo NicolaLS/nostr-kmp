@@ -6,22 +6,26 @@ plugins {
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
-description = "Kotlin Multiplatform Nostr SDK bundle."
+description = "NIP-47 Nostr Wallet Connect support."
 
 kotlin {
+    jvm()
+
     androidLibrary {
-        namespace = "io.github.nicolals.nostr.sdk"
+        namespace = "io.github.nicolals.nostr.nip47"
     }
 
     sourceSets {
         val commonMain by getting {
             dependencies {
                 api(project(":nostr-core"))
-                api(project(":nostr-codec-kotlinx"))
-                api(project(":nostr-crypto"))
                 api(project(":nips:nip04"))
                 api(project(":nips:nip44"))
-                api(project(":nips:nip47"))
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
             }
         }
     }
