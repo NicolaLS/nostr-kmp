@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
-description = "NIP-01 metadata event support."
+description = "NIP-01 protocol messages and metadata event with NIP-24 extra fields."
 
 kotlin {
     jvm()
