@@ -1,6 +1,7 @@
 package io.github.nicolals.nostr.nip44
 
 import io.github.nicolals.nostr.core.codec.JsonCodec
+import io.github.nicolals.nostr.core.codec.NostrWireCodec
 import io.github.nicolals.nostr.core.crypto.CryptoResult
 import io.github.nicolals.nostr.core.nip.NipModuleContext
 import io.github.nicolals.nostr.crypto.NostrCrypto
@@ -15,6 +16,8 @@ class Nip44ModuleTest {
             override fun stringify(value: io.github.nicolals.nostr.core.codec.JsonValue) =
                 error("jsonCodec not used in nip44 tests")
         }
+        override val wireCodec: NostrWireCodec
+            get() = error("wireCodec not used in nip44 tests")
         override val crypto = NostrCrypto
     }
 

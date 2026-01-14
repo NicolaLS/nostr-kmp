@@ -1,9 +1,9 @@
 package io.github.nicolals.nostr.codec.kotlinx
 
 import io.github.nicolals.nostr.core.codec.JsonNumber
+import io.github.nicolals.nostr.core.codec.JsonString
 import io.github.nicolals.nostr.core.codec.wire.WireEvent
 import io.github.nicolals.nostr.core.codec.wire.WireFilter
-import io.github.nicolals.nostr.core.codec.wire.WireRelayEventMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -108,16 +108,13 @@ class KotlinxNostrJsonCodecTest {
     }
 
     @Test
-    fun rawRelayEventMessageDecodesToWireProtocolMessage() {
-        val expectedMessage = WireRelayEventMessage(
-            subscriptionId = "sub-123",
-            event = expectedEvent,
-        )
+    fun rawRelayEventMessageDecodesToRawRelayMessage() {
         val decoded = codec.decodeRelayMessage(rawRelayEventMessageJson)
-        assertEquals(expectedMessage, decoded)
-
-        val encoded = codec.encodeRelayMessageString(expectedMessage)
-        assertEquals(codec.parse(rawRelayEventMessageJson), codec.parse(encoded))
+        // Raw message should have token "EVENT"
+        assertEquals("EVENT", decoded.token)
+        // Payload should have subscription ID and event JSON
+        assertEquals(2, decoded.payloadSize)
+        assertEquals("sub-123", (decoded.payloadAt(0) as JsonString).value)
     }
 
     @Test

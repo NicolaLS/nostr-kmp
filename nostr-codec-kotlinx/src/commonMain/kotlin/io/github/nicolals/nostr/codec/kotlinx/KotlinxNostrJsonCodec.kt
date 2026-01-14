@@ -2,6 +2,8 @@ package io.github.nicolals.nostr.codec.kotlinx
 
 import io.github.nicolals.nostr.core.codec.*
 import io.github.nicolals.nostr.core.codec.wire.*
+import io.github.nicolals.nostr.core.message.raw.RawClientMessage
+import io.github.nicolals.nostr.core.message.raw.RawRelayMessage
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonUnquotedLiteral
@@ -93,146 +95,14 @@ class KotlinxNostrJsonCodec : NostrJsonCodec {
         return JsonObject(entries)
     }
 
-    override fun decodeClientMessage(value: JsonValue): WireClientMessage {
+    override fun decodeClientMessage(value: JsonValue): RawClientMessage {
         val array = value.requireArray("client message")
-        val type = array.requireStringAt(0, "client message type")
-        return when (type) {
-            "EVENT" -> {
-                array.requireSize(2, "client EVENT message")
-                WireClientEventMessage(
-                    event = decodeEvent(array.values[1]),
-                )
-            }
-
-            "REQ" -> {
-                array.requireMinSize(3, "client REQ message")
-                WireClientReqMessage(
-                    subscriptionId = array.requireStringAt(1, "client REQ subscription id"),
-                    filters = array.values.drop(2).map { decodeFilter(it) },
-                )
-            }
-
-            "CLOSE" -> {
-                array.requireSize(2, "client CLOSE message")
-                WireClientCloseMessage(
-                    subscriptionId = array.requireStringAt(1, "client CLOSE subscription id"),
-                )
-            }
-
-            else -> throw IllegalArgumentException("Unknown client message type: $type")
-        }
+        return RawClientMessage(array)
     }
 
-    override fun encodeClientMessage(message: WireClientMessage): JsonValue = when (message) {
-        is WireClientEventMessage -> JsonArray(
-            listOf(
-                JsonString("EVENT"),
-                encodeEvent(message.event),
-            ),
-        )
-
-        is WireClientReqMessage -> JsonArray(
-            buildList {
-                add(JsonString("REQ"))
-                add(JsonString(message.subscriptionId))
-                message.filters.forEach { add(encodeFilter(it)) }
-            },
-        )
-
-        is WireClientCloseMessage -> JsonArray(
-            listOf(
-                JsonString("CLOSE"),
-                JsonString(message.subscriptionId),
-            ),
-        )
-    }
-
-    override fun decodeRelayMessage(value: JsonValue): WireRelayMessage {
+    override fun decodeRelayMessage(value: JsonValue): RawRelayMessage {
         val array = value.requireArray("relay message")
-        val type = array.requireStringAt(0, "relay message type")
-        return when (type) {
-            "EVENT" -> {
-                array.requireSize(3, "relay EVENT message")
-                WireRelayEventMessage(
-                    subscriptionId = array.requireStringAt(1, "relay EVENT subscription id"),
-                    event = decodeEvent(array.values[2]),
-                )
-            }
-
-            "OK" -> {
-                array.requireSize(4, "relay OK message")
-                WireRelayOkMessage(
-                    eventId = array.requireStringAt(1, "relay OK event id"),
-                    accepted = array.requireBooleanAt(2, "relay OK accepted"),
-                    message = array.requireStringAt(3, "relay OK message"),
-                )
-            }
-
-            "EOSE" -> {
-                array.requireSize(2, "relay EOSE message")
-                WireRelayEoseMessage(
-                    subscriptionId = array.requireStringAt(1, "relay EOSE subscription id"),
-                )
-            }
-
-            "CLOSED" -> {
-                array.requireSize(3, "relay CLOSED message")
-                WireRelayClosedMessage(
-                    subscriptionId = array.requireStringAt(1, "relay CLOSED subscription id"),
-                    message = array.requireStringAt(2, "relay CLOSED message"),
-                )
-            }
-
-            "NOTICE" -> {
-                array.requireSize(2, "relay NOTICE message")
-                WireRelayNoticeMessage(
-                    message = array.requireStringAt(1, "relay NOTICE message"),
-                )
-            }
-
-            else -> throw IllegalArgumentException("Unknown relay message type: $type")
-        }
-    }
-
-    override fun encodeRelayMessage(message: WireRelayMessage): JsonValue = when (message) {
-        is WireRelayEventMessage -> JsonArray(
-            listOf(
-                JsonString("EVENT"),
-                JsonString(message.subscriptionId),
-                encodeEvent(message.event),
-            ),
-        )
-
-        is WireRelayOkMessage -> JsonArray(
-            listOf(
-                JsonString("OK"),
-                JsonString(message.eventId),
-                JsonBoolean(message.accepted),
-                JsonString(message.message),
-            ),
-        )
-
-        is WireRelayEoseMessage -> JsonArray(
-            listOf(
-                JsonString("EOSE"),
-                JsonString(message.subscriptionId),
-            ),
-        )
-
-        is WireRelayClosedMessage -> JsonArray(
-            listOf(
-                JsonString("CLOSED"),
-                JsonString(message.subscriptionId),
-                JsonString(message.message),
-            ),
-        )
-
-        is WireRelayNoticeMessage -> JsonArray(
-            listOf(
-                JsonString("NOTICE"),
-                JsonString(message.message),
-            ),
-        )
+        return RawRelayMessage(array)
     }
 }
 
@@ -363,23 +233,3 @@ private fun JsonObject.requireArray(key: String): JsonArray = requireValue(key).
 private fun JsonObject.requireLong(key: String): Long = requireValue(key).requireLong("field '$key'")
 
 private fun JsonObject.requireInt(key: String): Int = requireValue(key).requireInt("field '$key'")
-
-private fun JsonArray.requireSize(expected: Int, label: String) {
-    if (values.size != expected) {
-        throw IllegalArgumentException("Expected $label to have $expected elements but was ${values.size}")
-    }
-}
-
-private fun JsonArray.requireMinSize(minimum: Int, label: String) {
-    if (values.size < minimum) {
-        throw IllegalArgumentException("Expected $label to have at least $minimum elements but was ${values.size}")
-    }
-}
-
-private fun JsonArray.requireStringAt(index: Int, label: String): String =
-    values.getOrNull(index)?.requireString(label)
-        ?: throw IllegalArgumentException("Missing $label at index $index")
-
-private fun JsonArray.requireBooleanAt(index: Int, label: String): Boolean =
-    values.getOrNull(index)?.requireBoolean(label)
-        ?: throw IllegalArgumentException("Missing $label at index $index")
