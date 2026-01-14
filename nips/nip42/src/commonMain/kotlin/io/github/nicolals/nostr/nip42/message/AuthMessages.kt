@@ -4,6 +4,7 @@ import io.github.nicolals.nostr.core.codec.JsonArray
 import io.github.nicolals.nostr.core.codec.JsonString
 import io.github.nicolals.nostr.core.codec.NostrWireCodec
 import io.github.nicolals.nostr.core.codec.wire.WireEvent
+import io.github.nicolals.nostr.core.codec.wire.toWireEvent
 import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.message.raw.RawClientMessage
 import io.github.nicolals.nostr.core.message.raw.RawRelayMessage
@@ -61,16 +62,3 @@ data class AuthClientMessage(
         }
     }
 }
-
-/**
- * Convert a domain Event to wire format.
- */
-internal fun Event.toWireEvent(): WireEvent = WireEvent(
-    id = id.hex,
-    pubkey = pubkey.hex,
-    createdAt = createdAt.value,
-    kind = kind.value,
-    tags = tags,
-    content = content,
-    sig = sig.hex,
-)

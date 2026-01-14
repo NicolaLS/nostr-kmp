@@ -1,39 +1,8 @@
 package io.github.nicolals.nostr.nip01.message
 
-import io.github.nicolals.nostr.core.codec.wire.WireEvent
 import io.github.nicolals.nostr.core.codec.wire.WireFilter
-import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.primitives.*
-
-/**
- * Convert a domain Event to wire format.
- */
-internal fun Event.toWireEvent(): WireEvent = WireEvent(
-    id = id.hex,
-    pubkey = pubkey.hex,
-    createdAt = createdAt.value,
-    kind = kind.value,
-    tags = tags,
-    content = content,
-    sig = sig.hex,
-)
-
-/**
- * Convert a wire Event to domain format.
- * Returns null if any field fails validation.
- */
-internal fun WireEvent.toEventOrNull(): Event? = runCatching {
-    Event(
-        id = EventId.fromHex(id),
-        pubkey = PublicKey.fromHex(pubkey),
-        createdAt = UnixTimeSeconds(createdAt),
-        kind = EventKind(kind),
-        tags = tags,
-        content = content,
-        sig = EventSig.fromHex(sig),
-    )
-}.getOrNull()
 
 /**
  * Convert a domain Filter to wire format.

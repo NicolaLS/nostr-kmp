@@ -3,6 +3,7 @@ package io.github.nicolals.nostr.nip01.message
 import io.github.nicolals.nostr.core.codec.JsonString
 import io.github.nicolals.nostr.core.codec.NostrWireCodec
 import io.github.nicolals.nostr.core.codec.wire.WireFilter
+import io.github.nicolals.nostr.core.codec.wire.toEventOrNull
 import io.github.nicolals.nostr.core.message.raw.RawClientMessage
 import io.github.nicolals.nostr.core.message.upgrade.ClientMessageUpgrader
 import io.github.nicolals.nostr.core.message.view.ClientMessageView

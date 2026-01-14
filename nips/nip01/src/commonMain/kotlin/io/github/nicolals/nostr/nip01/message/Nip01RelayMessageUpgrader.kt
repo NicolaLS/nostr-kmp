@@ -3,6 +3,7 @@ package io.github.nicolals.nostr.nip01.message
 import io.github.nicolals.nostr.core.codec.JsonBoolean
 import io.github.nicolals.nostr.core.codec.JsonString
 import io.github.nicolals.nostr.core.codec.NostrWireCodec
+import io.github.nicolals.nostr.core.codec.wire.toEventOrNull
 import io.github.nicolals.nostr.core.message.raw.RawRelayMessage
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
 import io.github.nicolals.nostr.core.message.view.RelayMessageView
