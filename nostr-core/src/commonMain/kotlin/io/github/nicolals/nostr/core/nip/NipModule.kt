@@ -11,6 +11,8 @@ import io.github.nicolals.nostr.core.message.upgrade.MessageUpgradeRegistry
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
 import io.github.nicolals.nostr.core.message.view.ClientMessageView
 import io.github.nicolals.nostr.core.message.view.RelayMessageView
+import io.github.nicolals.nostr.core.protocol.ProtocolEngine
+import io.github.nicolals.nostr.core.protocol.ProtocolReducer
 
 /**
  * Context providing shared services for NIP modules.
@@ -27,12 +29,14 @@ interface NipModuleContext {
 }
 
 /**
- * Bundle event upgraders and message upgraders for a NIP so installation is explicit and consistent.
+ * Bundle event upgraders, message upgraders, and protocol reducers for a NIP
+ * so installation is explicit and consistent.
  *
  * Each NIP module can provide:
  * - Event upgraders for interpreting specific event kinds
  * - Client message upgraders for interpreting client-to-relay messages
  * - Relay message upgraders for interpreting relay-to-client messages
+ * - Protocol reducers for handling protocol lifecycle semantics
  */
 interface NipModule {
     /** Event upgraders provided by this NIP module */
@@ -43,6 +47,9 @@ interface NipModule {
 
     /** Relay message upgraders provided by this NIP module */
     val relayMessageUpgraders: List<RelayMessageUpgrader<*>> get() = emptyList()
+
+    /** Protocol reducers provided by this NIP module */
+    val protocolReducers: List<ProtocolReducer> get() = emptyList()
 }
 
 /**
@@ -58,4 +65,11 @@ fun EventUpgradeRegistry.Builder.install(nip: NipModule) = apply {
 fun MessageUpgradeRegistry.Builder.install(nip: NipModule) = apply {
     nip.clientMessageUpgraders.forEach(::registerClient)
     nip.relayMessageUpgraders.forEach(::registerRelay)
+}
+
+/**
+ * Install all protocol reducers from a NIP module into the engine builder.
+ */
+fun ProtocolEngine.Builder.install(nip: NipModule) = apply {
+    nip.protocolReducers.forEach(::register)
 }

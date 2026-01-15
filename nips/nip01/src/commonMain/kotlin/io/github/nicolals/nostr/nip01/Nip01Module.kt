@@ -5,13 +5,13 @@ import io.github.nicolals.nostr.core.event.upgrade.EventUpgrader
 import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.message.upgrade.ClientMessageUpgrader
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
-import io.github.nicolals.nostr.core.message.view.ClientMessageView
-import io.github.nicolals.nostr.core.message.view.RelayMessageView
 import io.github.nicolals.nostr.core.nip.NipModule
 import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.protocol.ProtocolReducer
 import io.github.nicolals.nostr.nip01.event.MetadataEventUpgrader
 import io.github.nicolals.nostr.nip01.message.Nip01ClientMessageUpgrader
 import io.github.nicolals.nostr.nip01.message.Nip01RelayMessageUpgrader
+import io.github.nicolals.nostr.nip01.protocol.Nip01Reducer
 import io.github.nicolals.nostr.nip01.model.Birthday
 import io.github.nicolals.nostr.nip01.model.Metadata
 
@@ -32,6 +32,9 @@ class Nip01Module(
 
     override val relayMessageUpgraders: List<RelayMessageUpgrader<*>> =
         listOf(Nip01RelayMessageUpgrader(ctx.wireCodec))
+
+    override val protocolReducers: List<ProtocolReducer> =
+        listOf(Nip01Reducer(ctx.wireCodec))
 }
 
 fun NipModuleContext.encodeContent(metadata: Metadata): String {
