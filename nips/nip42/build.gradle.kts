@@ -19,6 +19,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":nostr-core"))
+                api(project(":nips:nip01"))
             }
         }
         val commonTest by getting {

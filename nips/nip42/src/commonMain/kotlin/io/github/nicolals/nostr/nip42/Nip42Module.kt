@@ -6,9 +6,11 @@ import io.github.nicolals.nostr.core.message.upgrade.ClientMessageUpgrader
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
 import io.github.nicolals.nostr.core.nip.NipModule
 import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.protocol.ProtocolReducer
 import io.github.nicolals.nostr.nip42.event.AuthEventUpgrader
 import io.github.nicolals.nostr.nip42.message.Nip42ClientMessageUpgrader
 import io.github.nicolals.nostr.nip42.message.Nip42RelayMessageUpgrader
+import io.github.nicolals.nostr.nip42.protocol.Nip42Reducer
 
 /**
  * NIP-42 module providing client authentication to relays.
@@ -53,4 +55,7 @@ class Nip42Module(
 
     override val relayMessageUpgraders: List<RelayMessageUpgrader<*>> =
         listOf(Nip42RelayMessageUpgrader())
+
+    override val protocolReducers: List<ProtocolReducer> =
+        listOf(Nip42Reducer(ctx.wireCodec))
 }
