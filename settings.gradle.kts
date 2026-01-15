@@ -17,6 +17,7 @@ rootProject.name = "nostr-kmp"
 include(":nostr-core")
 include(":nostr-codec-kotlinx")
 include(":nostr-crypto")
+include(":nostr-transport-ktor")
 include(":nostr-sdk")
 include(":nips:nip01")
 include(":nips:nip04")

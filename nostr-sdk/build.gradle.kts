@@ -19,6 +19,7 @@ kotlin {
                 api(project(":nostr-core"))
                 api(project(":nostr-codec-kotlinx"))
                 api(project(":nostr-crypto"))
+                api(project(":nostr-transport-ktor"))
                 api(project(":nips:nip04"))
                 api(project(":nips:nip42"))
                 api(project(":nips:nip44"))
