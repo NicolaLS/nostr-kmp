@@ -246,7 +246,7 @@ class Nip01ReducerTest {
 
         val signal = result.signals.filterIsInstance<Nip01Signal.SubscriptionClosed>().firstOrNull()
         assertNotNull(signal)
-        assertTrue(signal.byRelay)
+        assertTrue(!signal.byRelay)
     }
 
     @Test
@@ -403,7 +403,7 @@ class Nip01ReducerTest {
     }
 
     @Test
-    fun acceptedStatusIsSticky() {
+    fun republishResetsStatusToPending() {
         // Setup: accepted publish
         var state = connectedState()
         state = reducer.reduce(state, Nip01Intent.Publish(testEvent))!!.state
@@ -415,7 +415,7 @@ class Nip01ReducerTest {
         assertNotNull(result)
         val pub = result.state.publish(testEventId)
         assertNotNull(pub)
-        assertEquals(PublishStatus.Accepted, pub.status) // Still accepted, not Pending
+        assertEquals(PublishStatus.Pending, pub.status)
     }
 
     @Test

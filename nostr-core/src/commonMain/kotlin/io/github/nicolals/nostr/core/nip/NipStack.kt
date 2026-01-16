@@ -1,21 +1,26 @@
 package io.github.nicolals.nostr.core.nip
 
+import io.github.nicolals.nostr.core.codec.NostrWireCodec
 import io.github.nicolals.nostr.core.event.upgrade.EventUpgradeRegistry
 import io.github.nicolals.nostr.core.message.upgrade.MessageUpgradeRegistry
 import io.github.nicolals.nostr.core.protocol.ProtocolEngine
 
 /**
- * Bundles event registry, message registry, and protocol engine for unified module installation.
+ * Bundles event registry, message registry, protocol engine, and wire codec for unified usage.
  *
  * This solves the common problem of needing to install NIP modules into three separate
  * registries. With `NipRegistry`, you install once and all registries are updated.
  *
+ * The registry also holds the [wireCodec] used for encoding/decoding messages, making it
+ * the single dependency needed by runtime implementations.
+ *
  * ## Usage
  *
  * ```kotlin
- * val ctx = SimpleNipModuleContext(KotlinxNostrJsonCodec(), NostrCrypto)
+ * val codec = KotlinxNostrJsonCodec()
+ * val ctx = SimpleNipModuleContext(codec, NostrCrypto)
  *
- * val registry = NipRegistry.Builder()
+ * val registry = NipRegistry.Builder(codec)
  *     .install(Nip01Module(ctx))
  *     .install(Nip42Module(ctx))
  *     .build()
@@ -24,6 +29,9 @@ import io.github.nicolals.nostr.core.protocol.ProtocolEngine
  * val eventView = registry.events.upgrade(event)
  * val messageView = registry.messages.upgradeRelay(rawMessage)
  * val result = registry.engine.process(state, input)
+ *
+ * // Access codec for encoding/decoding
+ * val json = registry.wireCodec.encodeClientMessage(clientMessage)
  * ```
  *
  * ## Note on Module Order
@@ -40,11 +48,16 @@ class NipRegistry(
 
     /** Protocol engine for FSM processing */
     val engine: ProtocolEngine,
+
+    /** Wire codec for encoding/decoding Nostr messages */
+    val wireCodec: NostrWireCodec,
 ) {
     /**
      * Builder for creating [NipRegistry] instances.
+     *
+     * @param wireCodec The codec used for encoding/decoding Nostr wire messages.
      */
-    class Builder {
+    class Builder(private val wireCodec: NostrWireCodec) {
         private val eventBuilder = EventUpgradeRegistry.Builder()
         private val messageBuilder = MessageUpgradeRegistry.Builder()
         private val engineBuilder = ProtocolEngine.Builder()
@@ -68,6 +81,7 @@ class NipRegistry(
             events = eventBuilder.build(),
             messages = messageBuilder.build(),
             engine = engineBuilder.build(),
+            wireCodec = wireCodec,
         )
     }
 }

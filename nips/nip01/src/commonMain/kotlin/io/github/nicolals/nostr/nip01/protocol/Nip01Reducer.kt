@@ -178,29 +178,16 @@ class Nip01Reducer(
         }
 
         val eventId = intent.event.id
-        val existing = state.publish(eventId)
-
-        // If already accepted, keep accepted status (sticky) but still send
-        val newStatus = if (existing?.status == PublishStatus.Accepted) {
-            PublishStatus.Accepted
-        } else {
-            PublishStatus.Pending
-        }
-
         val pubState = PublishState(
             eventId = eventId,
-            status = newStatus,
-            okMessage = existing?.okMessage,
+            status = PublishStatus.Pending,
+            okMessage = null,
         )
 
         val eventMessage = EventClientMessage.create(intent.event, wireCodec)
         val newState = state.withPublish(pubState)
 
-        val signals = if (newStatus == PublishStatus.Pending) {
-            listOf(Nip01Signal.PublishQueued(eventId))
-        } else {
-            emptyList()
-        }
+        val signals = listOf(Nip01Signal.PublishQueued(eventId))
 
         return ReduceResult(
             state = newState,
@@ -330,11 +317,6 @@ class Nip01Reducer(
             return ReduceResult.stateOnly(state)
         }
 
-        // If already accepted, don't regress (sticky)
-        if (pub.status == PublishStatus.Accepted) {
-            return ReduceResult.stateOnly(state)
-        }
-
         val newStatus = if (message.accepted) {
             PublishStatus.Accepted
         } else {
@@ -379,11 +361,12 @@ class Nip01Reducer(
 
         val newState = state.withSubscription(closedState)
 
+        val initiatedByRelay = sub.phase != SubscriptionPhase.Closing
         val signal = Nip01Signal.SubscriptionClosed(
             subscriptionId = subscriptionId,
             generation = sub.generation,
             reason = message.message,
-            byRelay = true,
+            byRelay = initiatedByRelay,
         )
 
         return ReduceResult.withSignals(newState, signal)

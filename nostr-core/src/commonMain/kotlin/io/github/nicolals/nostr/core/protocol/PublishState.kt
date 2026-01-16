@@ -13,8 +13,8 @@ import io.github.nicolals.nostr.core.primitives.EventId
  * ```
  *
  * Note: Republishing an event (same event ID) is allowed and will
- * send another EVENT message, but the state remains based on the
- * most recent OK received.
+ * send another EVENT message. The state transitions back to Pending
+ * for the latest publish attempt until a new OK is received.
  */
 enum class PublishStatus {
     /**
@@ -28,7 +28,7 @@ enum class PublishStatus {
      * OK received with `accepted = true`.
      *
      * The relay has accepted and stored the event. This is a terminal
-     * state (sticky - does not regress on republish).
+     * state for the current publish attempt.
      */
     Accepted,
 
