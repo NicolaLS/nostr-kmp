@@ -29,6 +29,26 @@ interface NipModuleContext {
 }
 
 /**
+ * Simple implementation of [NipModuleContext] bundling a codec and crypto primitives.
+ *
+ * @param codec A codec that implements both [NostrWireCodec] and [JsonCodec].
+ *   Typically [io.github.nicolals.nostr.codec.kotlinx.KotlinxNostrJsonCodec].
+ * @param crypto Cryptographic primitives implementation.
+ *   Typically [io.github.nicolals.nostr.crypto.NostrCrypto].
+ */
+class SimpleNipModuleContext(
+    private val codec: NostrWireCodec,
+    override val crypto: CryptoPrimitives,
+) : NipModuleContext {
+    override val jsonCodec: JsonCodec
+        get() = codec as? JsonCodec
+            ?: error("wireCodec must implement JsonCodec")
+
+    override val wireCodec: NostrWireCodec
+        get() = codec
+}
+
+/**
  * Bundle event upgraders, message upgraders, and protocol reducers for a NIP
  * so installation is explicit and consistent.
  *
