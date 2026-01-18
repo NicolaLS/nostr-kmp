@@ -44,7 +44,21 @@ import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
 class EventTemplate<U : EventView>(
     val draft: EventDraft,
     internal val wrap: (Event) -> U,
-)
+) {
+    /**
+     * Signs this template by constructing a complete [Event] using the provided factory function.
+     *
+     * The [createEvent] function receives the draft and should return a signed [Event]
+     * with computed id, pubkey, and sig fields.
+     *
+     * @param createEvent Factory function that creates the signed Event from this draft
+     * @return The typed event view wrapping the signed event
+     */
+    fun sign(createEvent: (EventDraft) -> Event): U {
+        val event = createEvent(draft)
+        return wrap(event)
+    }
+}
 
 fun eventTemplate(
     kind: EventKind,

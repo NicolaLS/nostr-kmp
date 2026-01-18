@@ -9,4 +9,6 @@ sealed class CryptoError {
     data class DecryptionFailed(val reason: String? = null) : CryptoError()
     data class ProviderError(val operation: String, val reason: String? = null) : CryptoError()
     data class Unsupported(val operation: String) : CryptoError()
+    data class SigningFailed(val reason: String? = null) : CryptoError()
+    data class VerificationFailed(val reason: String? = null) : CryptoError()
 }
