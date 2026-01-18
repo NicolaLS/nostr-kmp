@@ -9,16 +9,11 @@ import io.ktor.client.HttpClient
 /**
  * Factory for creating Ktor-based [RelayConnection] instances.
  *
- * ## Usage
+ * ## Quick Start
  *
  * ```kotlin
- * // Create HttpClient with WebSockets plugin
- * val client = HttpClient(OkHttp) {
- *     install(WebSockets)
- * }
- *
- * // Create factory
- * val factory = KtorRelayTransportFactory(client)
+ * // Create factory with default platform HttpClient (recommended)
+ * val factory = KtorRelayTransportFactory()
  *
  * // Create connection
  * val connection = factory.create(RelayUrl.parse("wss://relay.example.com"))
@@ -26,22 +21,32 @@ import io.ktor.client.HttpClient
  * connection.connect()
  * ```
  *
- * ## HttpClient Requirements
+ * ## Custom HttpClient
  *
- * The provided [HttpClient] must have the WebSockets plugin installed.
- * The engine should be appropriate for the target platform:
+ * For advanced use cases (custom timeouts, interceptors, etc.), provide your own client:
+ *
+ * ```kotlin
+ * val client = HttpClient(OkHttp) {
+ *     install(WebSockets)
+ *     // Custom configuration...
+ * }
+ * val factory = KtorRelayTransportFactory(client)
+ * ```
+ *
+ * ## Platform Engines
+ *
+ * The default client uses the appropriate engine for each platform:
  * - JVM/Android: OkHttp
  * - iOS: Darwin
  *
  * ## Thread Safety
  *
  * This factory is thread-safe. [create] can be called from any thread.
- * The HttpClient must also be thread-safe (which it is by default).
  *
- * @param httpClient The Ktor HTTP client with WebSocket support installed.
+ * @param httpClient The Ktor HTTP client with WebSocket support. Defaults to [createDefaultHttpClient].
  */
 class KtorRelayTransportFactory(
-    private val httpClient: HttpClient,
+    private val httpClient: HttpClient = createDefaultHttpClient(),
 ) : RelayTransportFactory {
 
     /**
