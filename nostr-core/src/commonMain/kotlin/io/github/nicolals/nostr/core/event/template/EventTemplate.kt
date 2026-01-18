@@ -60,11 +60,19 @@ class EventTemplate<U : EventView>(
     }
 }
 
+/**
+ * Creates a generic event template with the given parameters.
+ *
+ * @param kind The event kind
+ * @param content The event content
+ * @param tags The event tags (default: empty)
+ * @param createdAt The creation timestamp (default: current time)
+ */
 fun eventTemplate(
     kind: EventKind,
-    createdAt: UnixTimeSeconds,
-    tags: EventTags,
     content: String,
+    tags: EventTags = emptyList(),
+    createdAt: UnixTimeSeconds = UnixTimeSeconds.now(),
 ): EventTemplate<GenericEvent> = EventTemplate(
     draft = EventDraft(createdAt, kind, tags, content),
     wrap = ::GenericEvent
