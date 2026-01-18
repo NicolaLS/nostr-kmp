@@ -30,3 +30,23 @@ kotlin {
         }
     }
 }
+
+// Ensure publishing this module also publishes all its dependencies first
+val dependencyProjects = listOf(
+    ":nostr-core",
+    ":nostr-codec-kotlinx",
+    ":nostr-crypto",
+    ":nostr-transport-ktor",
+    ":nips:nip01",
+    ":nips:nip04",
+    ":nips:nip42",
+    ":nips:nip44",
+    ":nips:nip45",
+    ":nips:nip47",
+)
+
+tasks.matching { it.name.startsWith("publish") && it.name.endsWith("ToMavenLocal") }.configureEach {
+    dependencyProjects.forEach { depProject ->
+        dependsOn("$depProject:$name")
+    }
+}
