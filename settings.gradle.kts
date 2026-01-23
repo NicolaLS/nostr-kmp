@@ -13,6 +13,13 @@ dependencyResolutionManagement {
     }
 }
 
+includeBuild("/Users/sus/Misc/GitHub/kotlin-multiplatform-libsodium") {
+    dependencySubstitution {
+        substitute(module("com.ionspin.kotlin:multiplatform-crypto-libsodium-bindings"))
+            .using(project(":multiplatform-crypto-libsodium-bindings"))
+    }
+}
+
 rootProject.name = "nostr-kmp"
 include(":nostr-core")
 include(":nostr-codec-kotlinx")

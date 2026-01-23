@@ -74,13 +74,13 @@ object NostrSigning : SigningPrimitives {
         }
         return runProvider("derivePublicKeyXOnly") {
             val pubKey = Secp256k1.pubkeyCreate(secretKey32.toByteArray())
-            // pubkeyCreate returns compressed format (33 bytes with 02/03 prefix)
-            // We need x-only format (32 bytes without prefix)
-            if (pubKey.size != 33) {
-                throw IllegalStateException("unexpected public key size: ${pubKey.size}")
-            }
-            // Drop the first byte (parity prefix) to get x-only
-            pubKey.copyOfRange(1, 33).toByteString()
+            // pubkeyCreate can return compressed (33 bytes) or uncompressed (65 bytes) format.
+            // We need x-only format (32 bytes without prefix).
+            when (pubKey.size) {
+                33 -> pubKey.copyOfRange(1, 33)
+                65 -> pubKey.copyOfRange(1, 33)
+                else -> throw IllegalStateException("unexpected public key size: ${pubKey.size}")
+            }.toByteString()
         }
     }
 
