@@ -1,0 +1,52 @@
+{
+  "name": "nwc-pay",
+  "seed": 42,
+  "relay": {
+    "host": "127.0.0.1",
+    "port": 48080,
+    "path": "/relay"
+  },
+  "client": {
+    "connectTimeoutMs": 10000,
+    "subscriptions": []
+  },
+  "relayBehavior": {
+    "publish": {
+      "acceptRate": 1.0,
+      "okDelayMs": 5
+    },
+    "forward": {
+      "enabled": true,
+      "kinds": [23194, 23195],
+      "dropRate": 0.01,
+      "duplicateRate": 0.02,
+      "minDelayMs": 5,
+      "maxDelayMs": 50
+    },
+    "edgeCases": {
+      "eoseAfterCloseMs": 100
+    }
+  },
+  "nwc": {
+    "requestCount": 200,
+    "ratePerSec": 40,
+    "timeoutMs": 3000,
+    "encryption": {
+      "nip04Ratio": 0.5
+    },
+    "request": {
+      "invoiceSize": 180,
+      "amountMsat": 25000
+    },
+    "wallet": {
+      "minDelayMs": 10,
+      "maxDelayMs": 150,
+      "errorRate": 0.1,
+      "dropRate": 0.02,
+      "duplicateRate": 0.02,
+      "wrongTagRate": 0.01,
+      "invalidContentRate": 0.01,
+      "unknownResponseRate": 0.01
+    }
+  }
+}

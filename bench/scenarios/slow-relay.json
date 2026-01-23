@@ -1,0 +1,47 @@
+{
+  "name": "slow-relay",
+  "seed": 2024,
+  "relay": {
+    "host": "127.0.0.1",
+    "port": 48083,
+    "path": "/relay"
+  },
+  "eventProfiles": {
+    "small": {
+      "kind": 1,
+      "contentSize": 64,
+      "tagsPerEvent": 1,
+      "tagValueSize": 6
+    }
+  },
+  "client": {
+    "connectTimeoutMs": 5000,
+    "runDurationMs": 25000,
+    "subscriptions": [
+      { "id": "sub-1", "filters": [ { "kinds": [1] } ] }
+    ]
+  },
+  "relayBehavior": {
+    "subscription": {
+      "stored": {
+        "label": "stored",
+        "profile": "small",
+        "count": 1000,
+        "ratePerSec": 200,
+        "batchSize": 20
+      },
+      "live": {
+        "label": "live",
+        "profile": "small",
+        "durationMs": 15000,
+        "ratePerSec": 50,
+        "batchSize": 10
+      },
+      "sendEose": true,
+      "eoseDelayMs": 2000
+    },
+    "notices": [
+      { "delayMs": 500, "message": "slow relay" }
+    ]
+  }
+}

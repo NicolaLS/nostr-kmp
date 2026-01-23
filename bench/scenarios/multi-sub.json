@@ -1,0 +1,54 @@
+{
+  "name": "multi-sub",
+  "seed": 314159,
+  "relay": {
+    "host": "127.0.0.1",
+    "port": 48081,
+    "path": "/relay"
+  },
+  "eventProfiles": {
+    "small": {
+      "kind": 1,
+      "contentSize": 96,
+      "tagsPerEvent": 2,
+      "tagValueSize": 8
+    },
+    "large": {
+      "kind": 1,
+      "contentSize": 2048,
+      "tagsPerEvent": 6,
+      "tagValueSize": 16
+    }
+  },
+  "client": {
+    "connectTimeoutMs": 5000,
+    "runDurationMs": 30000,
+    "subscriptions": [
+      { "id": "sub-1", "filters": [ { "kinds": [1] } ] },
+      { "id": "sub-2", "filters": [ { "kinds": [0, 3] } ] },
+      { "id": "sub-3", "filters": [ { "kinds": [1, 6, 7] } ] }
+    ]
+  },
+  "relayBehavior": {
+    "subscription": {
+      "stored": {
+        "label": "stored",
+        "profile": "large",
+        "count": 5000,
+        "ratePerSec": 2500,
+        "batchSize": 250
+      },
+      "live": {
+        "label": "live",
+        "profile": "small",
+        "durationMs": 20000,
+        "ratePerSec": 300,
+        "batchSize": 100
+      },
+      "sendEose": true
+    },
+    "notices": [
+      { "delayMs": 1500, "message": "multi-sub scenario" }
+    ]
+  }
+}

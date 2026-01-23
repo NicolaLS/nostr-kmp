@@ -1,0 +1,69 @@
+{
+  "name": "baseline",
+  "seed": 42,
+  "relay": {
+    "host": "127.0.0.1",
+    "port": 48080,
+    "path": "/relay"
+  },
+  "eventProfiles": {
+    "small": {
+      "kind": 1,
+      "contentSize": 64,
+      "tagsPerEvent": 2,
+      "tagValueSize": 8
+    },
+    "medium": {
+      "kind": 1,
+      "contentSize": 512,
+      "tagsPerEvent": 4,
+      "tagValueSize": 16
+    }
+  },
+  "client": {
+    "connectTimeoutMs": 5000,
+    "runDurationMs": 40000,
+    "subscriptions": [
+      {
+        "id": "sub-1",
+        "filters": [
+          { "kinds": [1] }
+        ]
+      }
+    ],
+    "publish": {
+      "count": 200,
+      "ratePerSec": 50,
+      "profile": "small"
+    }
+  },
+  "relayBehavior": {
+    "subscription": {
+      "stored": {
+        "label": "stored",
+        "profile": "medium",
+        "count": 10000,
+        "ratePerSec": 5000,
+        "batchSize": 500
+      },
+      "live": {
+        "label": "live",
+        "profile": "small",
+        "durationMs": 30000,
+        "ratePerSec": 500,
+        "batchSize": 200
+      },
+      "sendEose": true,
+      "eoseDelayMs": 0
+    },
+    "publish": {
+      "acceptRate": 0.99,
+      "okDelayMs": 5,
+      "acceptedMessage": "",
+      "rejectedMessage": "error: rejected"
+    },
+    "notices": [
+      { "delayMs": 1000, "message": "welcome" }
+    ]
+  }
+}

@@ -1,0 +1,58 @@
+{
+    "scenario": "baseline",
+    "startedAtEpochMs": 1769172863495,
+    "finishedAtEpochMs": 1769172903732,
+    "connection": {
+        "connectAttemptAtEpochMs": 1769172863495,
+        "connectedAtEpochMs": 1769172863719,
+        "connectDurationMs": 224
+    },
+    "subscriptions": [
+        {
+            "id": "sub-1",
+            "subscribeAtNs": 83349315945833,
+            "liveAtNs": 83351405270125,
+            "closedAtNs": 83389323443958,
+            "interruptedAtNs": null,
+            "totalEvents": 25000,
+            "droppedEvents": 0,
+            "phases": [
+                {
+                    "name": "stored",
+                    "expectedCount": 10000,
+                    "receivedCount": 10000,
+                    "firstReceivedNs": 83349509771125,
+                    "lastReceivedNs": 83351404679791,
+                    "minLagNs": 85815542,
+                    "maxLagNs": 194009667,
+                    "avgLagNs": 1.365219039298E8
+                },
+                {
+                    "name": "live",
+                    "expectedCount": 15000,
+                    "receivedCount": 15000,
+                    "firstReceivedNs": 83351452541958,
+                    "lastReceivedNs": 83381057309500,
+                    "minLagNs": -348560584,
+                    "maxLagNs": 49219250,
+                    "avgLagNs": -1.486105337092E8
+                }
+            ]
+        }
+    ],
+    "publish": {
+        "total": 200,
+        "accepted": 199,
+        "rejected": 1,
+        "timedOut": 0,
+        "minLatencyNs": 5744792,
+        "maxLatencyNs": 41221000,
+        "avgLatencyNs": 7563344.605
+    },
+    "errors": {
+        "parseErrors": 0,
+        "sendFailures": 0,
+        "backpressureDrops": 0,
+        "inputDrops": 0
+    }
+}

@@ -1,0 +1,79 @@
+{
+  "name": "edge-cases",
+  "seed": 1337,
+  "relay": {
+    "host": "127.0.0.1",
+    "port": 48082,
+    "path": "/relay"
+  },
+  "eventProfiles": {
+    "small": {
+      "kind": 1,
+      "contentSize": 128,
+      "tagsPerEvent": 2,
+      "tagValueSize": 8
+    }
+  },
+  "client": {
+    "connectTimeoutMs": 5000,
+    "runDurationMs": 15000,
+    "subscriptions": [
+      {
+        "id": "sub-1",
+        "filters": [ { "kinds": [1] } ],
+        "closeAfterMs": 5000
+      }
+    ]
+  },
+  "relayBehavior": {
+    "subscription": {
+      "stored": {
+        "label": "stored",
+        "profile": "small",
+        "count": 2000,
+        "ratePerSec": 2000,
+        "batchSize": 200
+      },
+      "live": {
+        "label": "live",
+        "profile": "small",
+        "durationMs": 10000,
+        "ratePerSec": 200,
+        "batchSize": 50
+      },
+      "sendEose": true,
+      "eoseDelayMs": 200
+    },
+    "notices": [
+      { "delayMs": 700, "message": "edge-case notice" }
+    ],
+    "disconnects": [
+      { "delayMs": 12000, "code": 1001, "reason": "simulated disconnect" }
+    ],
+    "edgeCases": {
+      "eoseAfterCloseMs": 300,
+      "eventAfterClose": {
+        "label": "after-close",
+        "profile": "small",
+        "count": 100,
+        "ratePerSec": 500,
+        "batchSize": 100,
+        "startDelayMs": 250
+      },
+      "eventForUnknownSub": {
+        "label": "unknown-sub",
+        "profile": "small",
+        "count": 50,
+        "ratePerSec": 200,
+        "batchSize": 50,
+        "startDelayMs": 1000
+      },
+      "eoseForUnknownSubDelayMs": 1500,
+      "closedForUnknownSubDelayMs": 2000,
+      "malformedFrames": [
+        { "delayMs": 1200, "payload": "[\"EVENT\",]" },
+        { "delayMs": 2200, "payload": "{not-json}" }
+      ]
+    }
+  }
+}
