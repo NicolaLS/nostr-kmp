@@ -243,6 +243,9 @@ class CoroutinesRelaySession(
     // Timer management
     private val activeTimers = mutableMapOf<TimerKey, Job>()
 
+    // Ping loop job for keepalive
+    private var pingJob: Job? = null
+
     // Track pending jobs (reconnect delays, retry delays) so we can cancel on close
     private val pendingJobs = mutableSetOf<Job>()
 
@@ -481,6 +484,9 @@ class CoroutinesRelaySession(
         _connectionStatus.value = ConnectionStatus.Connected
         reconnectAttempt = 0
 
+        // Start ping loop if configured
+        startPingLoop()
+
         // Drive engine with TransportOpened
         driveEngine(TransportInput.Opened)
 
@@ -513,6 +519,9 @@ class CoroutinesRelaySession(
         transport = null
         currentTransport?.setListener(null)
 
+        // Stop ping loop
+        stopPingLoop()
+
         // Drive engine with transport closed
         driveEngine(TransportInput.Closed(info))
 
@@ -534,6 +543,9 @@ class CoroutinesRelaySession(
         val currentTransport = transport
         transport = null
         currentTransport?.setListener(null)
+
+        // Stop ping loop
+        stopPingLoop()
 
         // Drive engine with transport failed
         driveEngine(TransportInput.Failed(error))
@@ -561,6 +573,9 @@ class CoroutinesRelaySession(
         if (_isClosed) return
         _isClosed = true
         intentionalDisconnect = true
+
+        // Stop ping loop
+        stopPingLoop()
 
         // Cancel all pending jobs (reconnect delays, retry delays)
         for (job in pendingJobs) {
@@ -1123,6 +1138,37 @@ class CoroutinesRelaySession(
     private fun handleTimerFired(key: TimerKey) {
         activeTimers.remove(key)
         driveEngine(TimerFired(key))
+    }
+
+    // ========== Ping Loop ==========
+
+    private fun startPingLoop() {
+        stopPingLoop() // Cancel any existing ping loop
+
+        val interval = config.pingIntervalMillis ?: return
+
+        pingJob = scope.launch {
+            while (true) {
+                delay(interval)
+                if (_isClosed) break
+
+                val connection = transport
+                if (connection == null) break
+
+                // Send ping - if this fails, the transport error handling will kick in
+                val result = connection.ping(null)
+                if (result is TransportResult.Failure) {
+                    // Ping failed - trigger transport failure handling
+                    enqueueInput(SessionInput.TransportFailed(result.error))
+                    break
+                }
+            }
+        }
+    }
+
+    private fun stopPingLoop() {
+        pingJob?.cancel()
+        pingJob = null
     }
 
     // ========== Utilities ==========

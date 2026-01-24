@@ -16,6 +16,7 @@ package io.github.nicolals.nostr.core.runtime
  *     retryPolicy = RetryPolicy.default(),
  *     deduplicationPolicy = DeduplicationPolicy.lru(maxSize = 5000),
  *     closePolicy = ClosePolicy.Immediate,
+ *     pingIntervalMillis = 30_000, // Send ping every 30 seconds
  * )
  * ```
  *
@@ -26,18 +27,30 @@ package io.github.nicolals.nostr.core.runtime
  * - Retry interrupted publishes (3 attempts) and resubscribe
  * - Deduplicate events (10,000 event window)
  * - Close subscriptions immediately on client request
+ * - No automatic pinging (null pingIntervalMillis)
  *
  * @property reconnectPolicy How to handle disconnects.
  * @property retryPolicy How to handle interrupted operations after reconnect.
  * @property deduplicationPolicy How to filter duplicate events.
  * @property closePolicy How to handle client-initiated subscription close.
+ * @property pingIntervalMillis Interval in milliseconds between WebSocket pings.
+ *   When set, the session will periodically send pings to detect dead connections.
+ *   Useful for detecting network issues faster than TCP timeouts.
+ *   Set to null (default) to disable automatic pinging.
  */
 data class SessionConfig(
     val reconnectPolicy: ReconnectPolicy = ReconnectPolicy.exponentialBackoff(),
     val retryPolicy: RetryPolicy = RetryPolicy.default(),
     val deduplicationPolicy: DeduplicationPolicy = DeduplicationPolicy.lru(),
     val closePolicy: ClosePolicy = ClosePolicy.Immediate,
+    val pingIntervalMillis: Long? = null,
 ) {
+    init {
+        require(pingIntervalMillis == null || pingIntervalMillis > 0) {
+            "pingIntervalMillis must be positive or null, got: $pingIntervalMillis"
+        }
+    }
+
     companion object {
         /**
          * Default configuration with sensible defaults for most use cases.
@@ -54,6 +67,7 @@ data class SessionConfig(
             retryPolicy = RetryPolicy.never(),
             deduplicationPolicy = DeduplicationPolicy.none(),
             closePolicy = ClosePolicy.Immediate,
+            pingIntervalMillis = null,
         )
     }
 }
