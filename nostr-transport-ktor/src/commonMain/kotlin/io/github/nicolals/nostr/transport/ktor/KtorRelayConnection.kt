@@ -308,17 +308,28 @@ internal class KtorRelayConnection(
         // Close the send channel to stop the send loop
         sendChannel.close()
 
+        // Capture reference and clear field
+        val currentSession = session
+        session = null
+
+        if (currentSession != null) {
+            try {
+                // Use a short timeout to prevent blocking forever if the close handshake stalls
+                withTimeoutOrNull(2_000) {
+                    currentSession.close()
+                }
+            } catch (_: Exception) {
+                // Ignore
+            } finally {
+                // Force cancel the session to ensure resources are released
+                // This handles the case where close() timed out or failed
+                currentSession.cancel()
+            }
+        }
+
         // Cancel the jobs
         sendJob?.cancel()
         receiveJob?.cancel()
-
-        // Close the session
-        try {
-            session?.close()
-        } catch (_: Exception) {
-            // Ignore
-        }
-        session = null
 
         // Cancel the scope to clean up any remaining coroutines
         scope.cancel()
