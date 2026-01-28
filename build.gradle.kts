@@ -24,6 +24,10 @@ subprojects {
             iosX64()
             iosArm64()
             iosSimulatorArm64()
+
+            compilerOptions {
+                freeCompilerArgs.add("-Xexpect-actual-classes")
+            }
         }
     }
 
