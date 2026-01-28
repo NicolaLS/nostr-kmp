@@ -18,7 +18,7 @@ allprojects {
 subprojects {
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
         extensions.configure<KotlinMultiplatformExtension> {
-            jvmToolchain(21)
+            jvmToolchain(libs.versions.jvm.get().toInt())
             applyDefaultHierarchyTemplate()
 
             iosX64()
