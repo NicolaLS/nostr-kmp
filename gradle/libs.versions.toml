@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.0"
+agp = "8.13.2"
 # See: https://kotlinlang.org/docs/multiplatform/multiplatform-compatibility-guide.html
 # Gradle: 7.6.3–9.0.0
 # AGP: 8.2.2–8.13.0
