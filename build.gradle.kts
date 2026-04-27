@@ -2,6 +2,7 @@
 
 import com.android.build.api.dsl.androidLibrary
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 plugins {
@@ -45,7 +46,11 @@ subprojects {
         extensions.configure<MavenPublishBaseExtension>("mavenPublishing") {
             publishToMavenCentral()
 
-            if (rootProject.hasProperty("signing.keyId")) {
+            if (
+                rootProject.hasProperty("signing.keyId") ||
+                rootProject.hasProperty("signingInMemoryKey") ||
+                rootProject.hasProperty("signingInMemoryKeyId")
+            ) {
                 signAllPublications()
             }
 
@@ -77,5 +82,21 @@ subprojects {
                 }
             }
         }
+    }
+}
+
+gradle.projectsEvaluated {
+    // Keep compile/package work parallel, but serialize Maven Central uploads to avoid
+    // Central Portal rate limits when this KMP project publishes many artifacts.
+    val mavenCentralUploadTasks = allprojects
+        .flatMap { project ->
+            project.tasks.withType(PublishToMavenRepository::class.java)
+                .matching { it.repository.name == "mavenCentral" }
+                .toList()
+        }
+        .sortedBy { it.path }
+
+    mavenCentralUploadTasks.zipWithNext().forEach { (previous, next) ->
+        next.mustRunAfter(previous)
     }
 }
