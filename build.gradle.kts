@@ -86,17 +86,26 @@ subprojects {
 }
 
 gradle.projectsEvaluated {
-    // Keep compile/package work parallel, but serialize Maven Central uploads to avoid
-    // Central Portal rate limits when this KMP project publishes many artifacts.
-    val mavenCentralUploadTasks = allprojects
-        .flatMap { project ->
-            project.tasks.withType(PublishToMavenRepository::class.java)
+    // Keep compile/package work parallel and allow each module to upload its own
+    // publications together, but serialize uploads between modules to reduce
+    // Central Portal rate-limit pressure.
+    val mavenCentralUploadTasksByProject = allprojects
+        .map { project ->
+            project to project.tasks.withType(PublishToMavenRepository::class.java)
                 .matching { it.repository.name == "mavenCentral" }
                 .toList()
         }
-        .sortedBy { it.path }
+        .filter { (_, tasks) -> tasks.isNotEmpty() }
+        .sortedBy { (project, _) -> project.path }
 
-    mavenCentralUploadTasks.zipWithNext().forEach { (previous, next) ->
-        next.mustRunAfter(previous)
+    mavenCentralUploadTasksByProject.zipWithNext().forEach { taskGroups ->
+        val previousTasks = taskGroups.first.second
+        val nextTasks = taskGroups.second.second
+
+        nextTasks.forEach { next ->
+            previousTasks.forEach { previous ->
+                next.mustRunAfter(previous)
+            }
+        }
     }
 }
