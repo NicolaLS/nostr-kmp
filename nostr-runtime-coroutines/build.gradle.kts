@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.androidLibrary
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -11,7 +9,7 @@ description = "Coroutines-based runtime for Nostr relay sessions with policy-dri
 kotlin {
     jvm()
 
-    androidLibrary {
+    android {
         namespace = "io.github.nicolals.nostr.runtime.coroutines"
     }
 

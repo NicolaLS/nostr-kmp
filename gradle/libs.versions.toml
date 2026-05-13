@@ -1,19 +1,17 @@
 [versions]
-agp = "8.13.2"
+agp = "9.2.1"
 # See: https://kotlinlang.org/docs/multiplatform/multiplatform-compatibility-guide.html
-# Gradle: 7.6.3–9.0.0
-# AGP: 8.2.2–8.13.0
-# Xcode: 26.0
-kotlin = "2.3.0"
+# Keep Kotlin, AGP, and Gradle aligned with downstream consumers.
+kotlin = "2.3.21"
 jvm = "21"
 android-minSdk = "24"
 android-compileSdk = "36"
 okio = "3.16.4"
-kotlinx-serialization = "1.9.0"
+kotlinx-serialization = "1.10.0"
 vanniktechMavenPublish = "0.35.0"
 libsodium = "0.9.5"
 secp256k1 = "0.22.0"
-ktor = "3.3.3"
+ktor = "3.4.0"
 kotlinx-coroutines = "1.10.2"
 
 [libraries]

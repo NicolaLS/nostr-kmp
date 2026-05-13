@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.androidLibrary
-
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
@@ -11,7 +9,7 @@ description = "NIP-45 event count messages (COUNT request/response)."
 kotlin {
     jvm()
 
-    androidLibrary {
+    android {
         namespace = "io.github.nicolals.nostr.nip45"
     }
 

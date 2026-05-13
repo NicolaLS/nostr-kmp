@@ -1,6 +1,6 @@
 @file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
 
-import com.android.build.api.dsl.androidLibrary
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -15,7 +15,7 @@ plugins {
 
 allprojects {
     group = "io.github.nicolals"
-    version = "0.3.1-SNAPSHOT"
+    version = "0.3.2-SNAPSHOT"
 }
 
 subprojects {
@@ -43,7 +43,7 @@ subprojects {
     plugins.withId("com.android.kotlin.multiplatform.library") {
         extensions.configure<KotlinMultiplatformExtension> {
             @Suppress("UnstableApiUsage")
-            androidLibrary {
+            targets.withType<KotlinMultiplatformAndroidLibraryTarget>().configureEach {
                 compileSdk = libs.versions.android.compileSdk.get().toInt()
                 minSdk = libs.versions.android.minSdk.get().toInt()
                 compilerOptions {
