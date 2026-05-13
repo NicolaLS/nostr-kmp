@@ -3,7 +3,9 @@
 import com.android.build.api.dsl.androidLibrary
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
@@ -17,6 +19,12 @@ allprojects {
 }
 
 subprojects {
+    tasks.withType<KotlinJvmCompile>().configureEach {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
+
     plugins.withId("org.jetbrains.kotlin.multiplatform") {
         extensions.configure<KotlinMultiplatformExtension> {
             jvmToolchain(libs.versions.jvm.get().toInt())
@@ -38,6 +46,9 @@ subprojects {
             androidLibrary {
                 compileSdk = libs.versions.android.compileSdk.get().toInt()
                 minSdk = libs.versions.android.minSdk.get().toInt()
+                compilerOptions {
+                    jvmTarget.set(JvmTarget.JVM_11)
+                }
             }
         }
     }
