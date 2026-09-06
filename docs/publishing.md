@@ -1,5 +1,9 @@
 # Publishing
 
+All SDK modules, including `nwc-kmp`, share the version and publishing
+configuration in the root `build.gradle.kts`. Run commands from the repository
+root; the snapshot workflow publishes all modules together.
+
 ## GitHub Setup
 
 Configure these repository secrets in GitHub under
@@ -29,7 +33,7 @@ Keep the root project version in `build.gradle.kts` as a `-SNAPSHOT` version,
 for example:
 
 ```kotlin
-version = "0.3.1-SNAPSHOT"
+version = "0.3.3-SNAPSHOT"
 ```
 
 Then run the manual GitHub workflow:
@@ -43,7 +47,7 @@ Then run the manual GitHub workflow:
 Verify a snapshot upload with module metadata, for example:
 
 ```sh
-curl -fsSL https://central.sonatype.com/repository/maven-snapshots/io/github/nicolals/nostr-core/0.3.1-SNAPSHOT/maven-metadata.xml
+curl -fsSL https://central.sonatype.com/repository/maven-snapshots/io/github/nicolals/nostr-core/0.3.3-SNAPSHOT/maven-metadata.xml
 ```
 
 Consumers need the snapshot repository explicitly:
@@ -60,8 +64,11 @@ repositories {
 
 ## Publish a Release
 
-Set the root project version to a non-snapshot version and publish with signing
-enabled. Locally, set `NOSTR_KMP_ENABLE_SIGNING=1`, reload direnv, then run:
+Set the root project version to a non-snapshot version, commit it, and create a
+GitHub release from that commit. The `Publish` workflow publishes all modules
+with signing enabled using the repository secrets above.
+
+To publish locally, set `NOSTR_KMP_ENABLE_SIGNING=1`, reload direnv, then run:
 
 ```sh
 ./gradlew publishToMavenCentral --parallel

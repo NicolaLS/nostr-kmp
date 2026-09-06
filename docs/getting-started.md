@@ -27,11 +27,11 @@ For a client that signs events and talks to relays:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.nicolals:nostr-core:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-crypto:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-transport-ktor:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-runtime-coroutines:0.3.1-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-core:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-crypto:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-transport-ktor:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-runtime-coroutines:0.3.3-SNAPSHOT")
         }
     }
 }
@@ -41,10 +41,10 @@ Add NIP artifacts separately when you need typed extension support:
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.nicolals:nip04:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nip42:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nip44:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nip47:0.3.1-SNAPSHOT")
+    implementation("io.github.nicolals:nip04:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nip42:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nip44:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nip47:0.3.3-SNAPSHOT")
 }
 ```
 

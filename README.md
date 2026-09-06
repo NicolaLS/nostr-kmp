@@ -5,7 +5,7 @@ and protocol extensions. It separates the protocol model, codec, crypto,
 transport, runtime, and NIP support into small modules so applications can
 depend only on the pieces they use.
 
-Current project version: `0.3.1-SNAPSHOT`.
+Current project version: `0.3.3-SNAPSHOT`.
 
 ## Modules
 
@@ -22,6 +22,7 @@ Current project version: `0.3.1-SNAPSHOT`.
 | `nips:nip44` | NIP-44 v2 encrypted payload helpers. |
 | `nips:nip45` | NIP-45 COUNT request and response messages. |
 | `nips:nip47` | NIP-47 Nostr Wallet Connect events, payloads, and encryption selection. |
+| `nwc-kmp` | High-level Nostr Wallet Connect client with typed wallet operations and notifications. |
 
 There is no aggregate `nostr-sdk` artifact in this repository today. Add the
 specific modules your application needs.
@@ -48,11 +49,11 @@ runtime:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.nicolals:nostr-core:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-crypto:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-transport-ktor:0.3.1-SNAPSHOT")
-            implementation("io.github.nicolals:nostr-runtime-coroutines:0.3.1-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-core:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-crypto:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-transport-ktor:0.3.3-SNAPSHOT")
+            implementation("io.github.nicolals:nostr-runtime-coroutines:0.3.3-SNAPSHOT")
         }
     }
 }
@@ -62,9 +63,9 @@ Add NIP modules only when needed:
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.nicolals:nip04:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nip44:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nip47:0.3.1-SNAPSHOT")
+    implementation("io.github.nicolals:nip04:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nip44:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nip47:0.3.3-SNAPSHOT")
 }
 ```
 
@@ -127,6 +128,7 @@ private fun <T> requireOk(result: CryptoResult<T>): T = when (result) {
 - [Modules](docs/modules.md): artifacts, dependencies, and NIP capabilities.
 - [Architecture](docs/architecture.md): event model, codecs, NIP registries, transport, runtime, and policies.
 - [Recipes](docs/recipes.md): focused examples for typed messages, metadata, encryption, COUNT, and NWC.
+- [Nostr Wallet Connect Client](nwc-kmp/README.md): wallet connections, payments, invoices, and notifications.
 - [Publishing](docs/publishing.md): snapshot and release publishing instructions.
 
 ## Build and Test
@@ -139,6 +141,7 @@ Use the Gradle wrapper from the repository root:
 ./gradlew allTests
 ./gradlew jvmTest
 ./gradlew :nostr-core:build
+./gradlew :nwc-kmp:jvmTest
 ./gradlew :nips:allTests
 ```
 

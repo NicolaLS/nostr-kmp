@@ -1,7 +1,7 @@
 # Modules
 
 All published artifacts use the `io.github.nicolals` group and the root project
-version. For the current snapshot, use `0.3.1-SNAPSHOT`.
+version. For the current snapshot, use `0.3.3-SNAPSHOT`.
 
 ## Core Modules
 
@@ -27,14 +27,27 @@ It is not an SDK artifact with source code.
 | `nip45` | `:nips:nip45` | COUNT client and relay message views. |
 | `nip47` | `:nips:nip47` | Nostr Wallet Connect info, request, response, notification events, JSON payload codecs, and NIP-04/NIP-44 encryption selection. |
 
+## Wallet Client
+
+The [`nwc-kmp`](../nwc-kmp/README.md) artifact (`:nwc-kmp`) provides a high-level
+Nostr Wallet Connect client built on the core, codec, crypto, transport,
+coroutine runtime, and NIP-04/44/47 projects in this repository. It shares the
+root version and publishing configuration. Applications can depend on it directly:
+
+```kotlin
+commonMain.dependencies {
+    implementation("io.github.nicolals:nwc-kmp:0.3.3-SNAPSHOT")
+}
+```
+
 ## Common Dependency Sets
 
 Signing and local event construction:
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.nicolals:nostr-core:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nostr-crypto:0.3.1-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-core:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-crypto:0.3.3-SNAPSHOT")
 }
 ```
 
@@ -42,8 +55,8 @@ Wire encoding and decoding:
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.nicolals:nostr-core:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.1-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-core:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.3-SNAPSHOT")
 }
 ```
 
@@ -51,10 +64,10 @@ Relay client runtime:
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nostr-crypto:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nostr-transport-ktor:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nostr-runtime-coroutines:0.3.1-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-crypto:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-transport-ktor:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-runtime-coroutines:0.3.3-SNAPSHOT")
 }
 ```
 
@@ -62,9 +75,9 @@ Nostr Wallet Connect:
 
 ```kotlin
 commonMain.dependencies {
-    implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nostr-crypto:0.3.1-SNAPSHOT")
-    implementation("io.github.nicolals:nip47:0.3.1-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nostr-crypto:0.3.3-SNAPSHOT")
+    implementation("io.github.nicolals:nip47:0.3.3-SNAPSHOT")
 }
 ```
 

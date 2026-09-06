@@ -15,7 +15,7 @@ plugins {
 
 allprojects {
     group = "io.github.nicolals"
-    version = "0.3.2-SNAPSHOT"
+    version = "0.3.3-SNAPSHOT"
 }
 
 subprojects {
