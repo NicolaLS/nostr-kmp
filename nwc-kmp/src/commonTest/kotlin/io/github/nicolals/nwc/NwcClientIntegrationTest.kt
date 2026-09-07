@@ -61,6 +61,32 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class NwcClientIntegrationTest {
+    @Test
+    fun overflowingResponseStreamFailsClientAndPendingRequest() = runTest {
+        val factory = TestRelayFactory(codec)
+        val client = NwcClient(uri, backgroundScope, transportFactory = factory, cachedWalletInfo = walletInfo)
+        try {
+            runCurrent()
+            assertTrue(client.awaitReady())
+            val relay = factory.connections.single()
+            val request = async { client.getBalance() }
+            runCurrent()
+            val publication = relay.publications.last()
+            relay.ack(publication)
+            runCurrent()
+            val unrelated = response(publication.copy(
+                id = io.github.nicolals.nostr.core.primitives.EventId.fromHex("f".repeat(64)),
+            ), 100)
+            repeat(300) { relay.deliver(unrelated) }
+            runCurrent()
+            assertTrue(client.state.value is NwcClientState.Failed)
+            assertTrue(request.await() is NwcResult.Failure)
+            assertEquals(0, client.pendingRequestCount)
+            assertEquals(TransportState.Closed, relay.state)
+        } finally {
+            client.close()
+        }
+    }
     private val codec = KotlinxNostrJsonCodec()
     private val walletSecret = SecretKey.fromHex("1".padStart(64, '0'))
     private val clientSecret = SecretKey.fromHex("2".padStart(64, '0'))

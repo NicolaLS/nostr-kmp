@@ -796,7 +796,7 @@ class NwcClient private constructor(
             }
             subscriptionHandle = handle
             eventCollectorJob = scope.launch {
-                handle.events.collect { event -> handleResponseEvent(event) }
+                collectWalletEvents(pool, handle, ::handleResponseEvent)
             }
         }
     }
@@ -819,7 +819,33 @@ class NwcClient private constructor(
             }
             notificationHandle = handle
             notificationCollectorJob = scope.launch {
-                handle.events.collect { event -> handleNotificationEvent(event) }
+                collectWalletEvents(pool, handle, ::handleNotificationEvent)
+            }
+        }
+    }
+
+    private suspend fun collectWalletEvents(
+        pool: CoroutinesRelayPool,
+        handle: CoroutinesPoolSubscriptionHandle,
+        consume: suspend (Event) -> Unit,
+    ) {
+        try {
+            handle.events.collect { consume(it) }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // Clear the connection from a sibling job: cleanup cancels this collector.
+            scope.launch {
+                val previous = lifecycleMutex.withLock {
+                    if (relayPool !== pool || _state.value == NwcClientState.Closed) return@launch
+                    val error = io.github.nicolals.nwc.NwcError.ProtocolError("Wallet event stream failed")
+                    _state.value = NwcClientState.Failed(error)
+                    ++connectionGeneration
+                    val previous = clearConnectionLocked()
+                    failPending(error)
+                    previous
+                }
+                previous?.close()
             }
         }
     }

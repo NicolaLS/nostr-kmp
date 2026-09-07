@@ -96,7 +96,12 @@ Possible states:
 - `Connecting`: relay connection and subscriptions are being established.
 - `Ready`: requests can be sent.
 - `Closed`: `close()` was called or the parent scope was cancelled.
-- `Failed`: connection setup failed with a typed `NwcError`.
+- `Failed`: connection setup or wallet event collection failed with a typed `NwcError`.
+
+If a response or notification subscription overflows or its collector fails, the
+client fails pending requests and closes that connection's relay pool. Already
+published requests retain an uncertain outcome. Call `connect()` to establish a
+fresh connection after addressing the failure.
 
 Observe state from UI code:
 

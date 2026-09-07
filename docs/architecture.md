@@ -154,6 +154,11 @@ loss can select `SubscriptionOverflowPolicy.DropNewest` and observe the handle's
 events remain eligible for later replay. These policies also apply to each
 underlying subscription in a relay pool.
 
+The NWC client converts response/notification stream failures into a typed client
+failure, fails pending requests, and closes the affected pool. It does not remain
+Ready with an abandoned event collector. Requests already published retain an
+uncertain outcome rather than being reported as definitely unsent.
+
 Sessions and pools borrow their transport factory. The factory owner closes it
 when all sessions are finished. `KtorRelayTransportFactory()` owns its default
 WebSockets-enabled HTTP client; a supplied client is borrowed. Closing a connection
