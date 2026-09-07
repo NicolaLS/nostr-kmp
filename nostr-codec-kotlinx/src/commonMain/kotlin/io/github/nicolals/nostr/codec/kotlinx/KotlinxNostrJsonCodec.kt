@@ -4,6 +4,7 @@ import io.github.nicolals.nostr.core.codec.*
 import io.github.nicolals.nostr.core.codec.wire.*
 import io.github.nicolals.nostr.core.message.raw.RawClientMessage
 import io.github.nicolals.nostr.core.message.raw.RawRelayMessage
+import io.github.nicolals.nostr.core.message.isStandardFilterField
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonUnquotedLiteral
@@ -74,11 +75,13 @@ class KotlinxNostrJsonCodec : NostrJsonCodec {
             since = since,
             until = until,
             limit = limit,
+            extraFields = obj.entries.filterKeys { !isStandardFilterField(it) && !it.startsWith('#') },
         )
     }
 
     override fun encodeFilter(filter: WireFilter): JsonValue {
         val entries = linkedMapOf<String, JsonValue>()
+        entries.putAll(filter.extraFields)
         filter.ids?.let { values -> entries["ids"] = JsonArray(values.map { JsonString(it) }) }
         filter.authors?.let { values -> entries["authors"] = JsonArray(values.map { JsonString(it) }) }
         filter.kinds?.let { values -> entries["kinds"] = JsonArray(values.map { JsonNumber(it.toString()) }) }

@@ -4,6 +4,9 @@ import io.github.nicolals.nostr.core.codec.JsonNumber
 import io.github.nicolals.nostr.core.codec.JsonString
 import io.github.nicolals.nostr.core.codec.wire.WireEvent
 import io.github.nicolals.nostr.core.codec.wire.WireFilter
+import io.github.nicolals.nostr.core.codec.wire.toFilterOrNull
+import io.github.nicolals.nostr.core.codec.wire.toWireFilter
+import io.github.nicolals.nostr.core.message.Filter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -170,5 +173,28 @@ class KotlinxNostrJsonCodecTest {
         assertFailsWith<IllegalArgumentException> {
             codec.stringify(JsonNumber("01"))
         }
+    }
+
+    @Test
+    fun filterExtensionsSurviveWireAndDomainRoundTrips() {
+        val input = """{"kinds":[1],"search":"bitcoin","vendor":{"score":0.5},"optional":null}"""
+        val wire = codec.decodeFilter(input)
+        val domain = requireNotNull(wire.toFilterOrNull())
+        assertEquals(JsonString("bitcoin"), domain.extraFields["search"])
+        assertEquals(codec.parse(input), codec.encodeFilter(domain.toWireFilter()))
+    }
+
+    @Test
+    fun extensionsCannotShadowTypedFilterFields() {
+        for (key in listOf("authors", "limit", "#p", "")) {
+            val fields = mapOf(key to JsonString("override"))
+            assertFailsWith<IllegalArgumentException>(key) { Filter(extraFields = fields) }
+            assertFailsWith<IllegalArgumentException>(key) { WireFilter(extraFields = fields) }
+        }
+    }
+
+    @Test
+    fun oversizedWireKindsCannotWrapIntoValidDomainKinds() {
+        assertEquals(null, WireFilter(kinds = listOf(4_294_967_297L)).toFilterOrNull())
     }
 }

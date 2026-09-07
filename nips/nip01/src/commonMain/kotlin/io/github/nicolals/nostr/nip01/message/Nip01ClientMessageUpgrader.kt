@@ -1,5 +1,6 @@
 package io.github.nicolals.nostr.nip01.message
 
+import io.github.nicolals.nostr.core.codec.wire.toFilterOrNull
 import io.github.nicolals.nostr.core.codec.JsonString
 import io.github.nicolals.nostr.core.codec.NostrWireCodec
 import io.github.nicolals.nostr.core.codec.wire.WireFilter

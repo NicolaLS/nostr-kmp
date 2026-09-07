@@ -1,5 +1,8 @@
 package io.github.nicolals.nostr.core.codec.wire
 
+import io.github.nicolals.nostr.core.codec.JsonValue
+import io.github.nicolals.nostr.core.message.requireValidFilterExtensions
+
 data class WireFilter(
     val ids: List<String>? = null,
     val authors: List<String>? = null,
@@ -8,4 +11,9 @@ data class WireFilter(
     val since: Long? = null,
     val until: Long? = null,
     val limit: Int? = null,
-)
+    val extraFields: Map<String, JsonValue> = emptyMap(),
+) {
+    init {
+        requireValidFilterExtensions(extraFields)
+    }
+}
