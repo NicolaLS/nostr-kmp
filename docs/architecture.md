@@ -91,6 +91,11 @@ reducers cannot suppress one another. Shared reducers keep per-session state in
 `ProtocolState`. Effects describe sending a message or managing a timer and are
 executed by the runtime.
 
+Each transport opening supplies a fresh `ConnectionContext` containing the relay
+URL. NIP-42 challenge tokens bind a response to that context and the exact challenge
+occurrence. Stale tokens, mismatched tags, and invalid auth event shapes are rejected
+locally without sending. The signer remains an explicit application choice.
+
 Modules can contribute `admissionPolicies`. Before any reducer handles an
 `OperationIntent`, these policies return `Allow`, `Reject(reason)`, or
 `Defer(reason)`. Rejection takes precedence over deferral. Admission runs before

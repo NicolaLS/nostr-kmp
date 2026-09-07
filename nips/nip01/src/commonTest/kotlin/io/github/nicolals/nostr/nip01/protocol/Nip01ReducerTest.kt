@@ -89,7 +89,7 @@ class Nip01ReducerTest {
     @Test
     fun transportOpenedTransitionsToOpen() {
         val state = ProtocolState()
-        val result = reducer.reduce(state, TransportInput.Opened)
+        val result = reducer.reduce(state, TransportInput.Opened(io.github.nicolals.nostr.core.protocol.ConnectionContext(io.github.nicolals.nostr.core.transport.RelayUrl.parse("wss://test.relay"))))
 
         assertNotNull(result)
         assertEquals(ConnectionPhase.Open, result.state.connection.phase)

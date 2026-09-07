@@ -23,6 +23,7 @@ kotlin {
         }
         val commonTest by getting {
             dependencies {
+                implementation(project(":nips:nip42"))
                 implementation(libs.kotlin.test)
                 implementation(libs.kotlinx.coroutines.test)
             }

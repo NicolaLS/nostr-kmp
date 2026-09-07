@@ -10,6 +10,9 @@ import io.github.nicolals.nostr.core.protocol.ProtocolSignal
  * The runtime surfaces these via flows or callbacks.
  */
 sealed interface Nip42Signal : ProtocolSignal {
+    /** Local validation rejected a response; no AUTH message was sent. */
+    data class AuthResponseRejected(val reason: AuthRejectionReason) : Nip42Signal
+
 
     /**
      * An AUTH challenge was received from the relay.
@@ -17,9 +20,9 @@ sealed interface Nip42Signal : ProtocolSignal {
      * The client should create a signed kind 22242 event with the
      * challenge and send it via [Nip42Intent.Authenticate].
      *
-     * @property challenge The challenge string to sign.
+     * @property challenge The challenge token to retain while signing.
      */
-    data class ChallengeReceived(val challenge: String) : Nip42Signal
+    data class ChallengeReceived(val challenge: AuthChallenge) : Nip42Signal
 
     /**
      * Authentication was sent and is pending confirmation.

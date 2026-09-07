@@ -53,7 +53,7 @@ class Nip01Reducer(
     override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? {
         return when (input) {
             // Transport lifecycle
-            is TransportInput.Opened -> handleTransportOpened(state)
+            is TransportInput.Opened -> handleTransportOpened(state, input)
             is TransportInput.Closed -> handleTransportClosed(state, input)
             is TransportInput.Failed -> handleTransportFailed(state, input)
 
@@ -73,8 +73,8 @@ class Nip01Reducer(
 
     // ========== Transport Lifecycle ==========
 
-    private fun handleTransportOpened(state: ProtocolState): ReduceResult {
-        val newState = state.withConnection(ConnectionState(ConnectionPhase.Open))
+    private fun handleTransportOpened(state: ProtocolState, input: TransportInput.Opened): ReduceResult {
+        val newState = state.withConnection(ConnectionState(ConnectionPhase.Open, input.context))
         return ReduceResult.withSignals(newState, CoreSignal.ConnectionOpened)
     }
 

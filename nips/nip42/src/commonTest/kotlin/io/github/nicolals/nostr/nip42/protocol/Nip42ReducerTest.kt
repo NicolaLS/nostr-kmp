@@ -15,6 +15,8 @@ import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.primitives.EventSig
 import io.github.nicolals.nostr.core.primitives.PublicKey
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
+import io.github.nicolals.nostr.core.protocol.ConnectionContext
+import io.github.nicolals.nostr.core.transport.RelayUrl
 import io.github.nicolals.nostr.core.protocol.ConnectionPhase
 import io.github.nicolals.nostr.core.protocol.ConnectionState
 import io.github.nicolals.nostr.core.protocol.InboundMessage
@@ -33,6 +35,24 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class Nip42ReducerTest {
+    @Test fun malformedOrMismatchedAuthEventsAreRejectedBeforeSending() {
+        val state = stateWithChallenge()
+        val challenge = requireNotNull(getAuthState(state).challenge)
+        val invalidEvents = listOf(
+            testAuthEvent.copy(kind = EventKind(1)),
+            testAuthEvent.copy(content = "unexpected"),
+            testAuthEvent.copy(tags = listOf(listOf("relay", "wss://other.relay"), listOf("challenge", testChallenge))),
+            testAuthEvent.copy(tags = listOf(listOf("relay", testRelayUrl), listOf("challenge", "old"))),
+            testAuthEvent.copy(tags = testAuthEvent.tags + listOf(listOf("challenge", testChallenge))),
+            testAuthEvent.copy(tags = testAuthEvent.tags + listOf(listOf("relay", testRelayUrl))),
+        )
+        for (event in invalidEvents) {
+            val result = requireNotNull(reducer.reduce(state, Nip42Intent.Authenticate(event, challenge)))
+            assertEquals(state, result.state)
+            assertTrue(result.effects.isEmpty())
+            assertEquals(listOf(Nip42Signal.AuthResponseRejected(AuthRejectionReason.InvalidEvent)), result.signals)
+        }
+    }
 
     // ===== Test Fixtures =====
 
@@ -49,6 +69,8 @@ class Nip42ReducerTest {
 
     private val testChallenge = "test-challenge-12345"
     private val testRelayUrl = "wss://relay.example.com"
+
+    private val testConnection = ConnectionContext(RelayUrl.parse(testRelayUrl))
 
     private val testEventId = EventId.fromHex("a".repeat(64))
     private val testPubkey = PublicKey.fromHex("c".repeat(64))
@@ -68,13 +90,13 @@ class Nip42ReducerTest {
     )
 
     private fun connectedState() = ProtocolState(
-        connection = ConnectionState(ConnectionPhase.Open)
+        connection = ConnectionState(ConnectionPhase.Open, testConnection)
     )
 
     private fun stateWithChallenge(): ProtocolState {
         val authState = Nip42State(
             phase = AuthPhase.ChallengeReceived,
-            challenge = testChallenge,
+            challenge = AuthChallenge(testChallenge, testConnection),
         )
         return connectedState().withModuleStates(
             connectedState().moduleStates.set(Nip42StateKey, authState)
@@ -95,11 +117,11 @@ class Nip42ReducerTest {
         assertNotNull(result)
         val authState = getAuthState(result.state)
         assertEquals(AuthPhase.ChallengeReceived, authState.phase)
-        assertEquals(testChallenge, authState.challenge)
+        assertEquals(testChallenge, authState.challenge?.value)
 
         val signal = result.signals.filterIsInstance<Nip42Signal.ChallengeReceived>().firstOrNull()
         assertNotNull(signal)
-        assertEquals(testChallenge, signal.challenge)
+        assertEquals(testChallenge, signal.challenge.value)
     }
 
     @Test
@@ -113,7 +135,7 @@ class Nip42ReducerTest {
 
         assertNotNull(result)
         val authState = getAuthState(result.state)
-        assertEquals(newChallenge, authState.challenge)
+        assertEquals(newChallenge, authState.challenge?.value)
     }
 
     @Test
@@ -121,7 +143,7 @@ class Nip42ReducerTest {
         // Already authenticated
         val authenticatedState = Nip42State(
             phase = AuthPhase.Authenticated,
-            challenge = "old-challenge",
+            challenge = AuthChallenge("old-challenge", testConnection),
             authenticatedPubkey = testPubkey,
         )
         val state = connectedState().withModuleStates(
@@ -136,7 +158,7 @@ class Nip42ReducerTest {
         // Should still be authenticated
         assertEquals(AuthPhase.Authenticated, authState.phase)
         // But challenge should be updated
-        assertEquals(testChallenge, authState.challenge)
+        assertEquals(testChallenge, authState.challenge?.value)
         // Should NOT emit ChallengeReceived when already authenticated
         assertTrue(result.signals.filterIsInstance<Nip42Signal.ChallengeReceived>().isEmpty())
     }
@@ -146,7 +168,7 @@ class Nip42ReducerTest {
     @Test
     fun authenticateWhenChallengeReceivedSendsAuthMessage() {
         val state = stateWithChallenge()
-        val intent = Nip42Intent.Authenticate(testAuthEvent)
+        val intent = Nip42Intent.Authenticate(testAuthEvent, getAuthState(state).challenge ?: AuthChallenge(testChallenge, testConnection))
         val result = reducer.reduce(state, intent)
 
         assertNotNull(result)
@@ -167,7 +189,7 @@ class Nip42ReducerTest {
     @Test
     fun authenticateWithoutChallengeDoesNothing() {
         val state = connectedState() // No challenge received
-        val intent = Nip42Intent.Authenticate(testAuthEvent)
+        val intent = Nip42Intent.Authenticate(testAuthEvent, getAuthState(state).challenge ?: AuthChallenge(testChallenge, testConnection))
         val result = reducer.reduce(state, intent)
 
         assertNotNull(result)
@@ -178,7 +200,7 @@ class Nip42ReducerTest {
     @Test
     fun authenticateWhenNotConnectedDoesNothing() {
         val state = ProtocolState() // Disconnected
-        val intent = Nip42Intent.Authenticate(testAuthEvent)
+        val intent = Nip42Intent.Authenticate(testAuthEvent, getAuthState(state).challenge ?: AuthChallenge(testChallenge, testConnection))
         val result = reducer.reduce(state, intent)
 
         assertNotNull(result)
@@ -193,7 +215,7 @@ class Nip42ReducerTest {
         // Setup: auth pending
         val pendingState = Nip42State(
             phase = AuthPhase.AuthPending,
-            challenge = testChallenge,
+            challenge = AuthChallenge(testChallenge, testConnection),
             pendingAuthEventId = testEventId,
             pendingAuthPubkey = testPubkey,
         )
@@ -221,7 +243,7 @@ class Nip42ReducerTest {
         // Setup: auth pending
         val pendingState = Nip42State(
             phase = AuthPhase.AuthPending,
-            challenge = testChallenge,
+            challenge = AuthChallenge(testChallenge, testConnection),
             pendingAuthEventId = testEventId,
             pendingAuthPubkey = testPubkey,
         )
@@ -248,7 +270,7 @@ class Nip42ReducerTest {
         // Setup: auth pending for different event
         val pendingState = Nip42State(
             phase = AuthPhase.AuthPending,
-            challenge = testChallenge,
+            challenge = AuthChallenge(testChallenge, testConnection),
             pendingAuthEventId = testEventId,
             pendingAuthPubkey = testPubkey,
         )
@@ -282,7 +304,7 @@ class Nip42ReducerTest {
         // Setup: authenticated state
         val authenticatedState = Nip42State(
             phase = AuthPhase.Authenticated,
-            challenge = testChallenge,
+            challenge = AuthChallenge(testChallenge, testConnection),
             authenticatedPubkey = testPubkey,
         )
         val state = connectedState().withModuleStates(
@@ -294,7 +316,7 @@ class Nip42ReducerTest {
         assertNotNull(result)
         val authState = getAuthState(result.state)
         assertEquals(AuthPhase.Unauthenticated, authState.phase)
-        assertNull(authState.challenge)
+        assertNull(authState.challenge?.value)
         assertNull(authState.authenticatedPubkey)
 
         val signal = result.signals.filterIsInstance<Nip42Signal.AuthReset>().firstOrNull()
@@ -315,7 +337,7 @@ class Nip42ReducerTest {
         // Setup: pending auth state
         val pendingState = Nip42State(
             phase = AuthPhase.AuthPending,
-            challenge = testChallenge,
+            challenge = AuthChallenge(testChallenge, testConnection),
             pendingAuthEventId = testEventId,
             pendingAuthPubkey = testPubkey,
         )

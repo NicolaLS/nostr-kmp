@@ -59,7 +59,7 @@ enum class AuthPhase {
  * previous challenge.
  *
  * @property phase Current authentication phase.
- * @property challenge The current challenge string from the relay, if any.
+ * @property challenge The current connection-bound challenge token, if any.
  * @property pendingAuthEventId Event ID of pending auth, for correlating OK.
  * @property pendingAuthPubkey Pubkey used for pending auth, for signal emission.
  * @property authenticatedPubkey The pubkey that was authenticated, if successful.
@@ -67,7 +67,7 @@ enum class AuthPhase {
  */
 data class Nip42State(
     val phase: AuthPhase = AuthPhase.Unauthenticated,
-    val challenge: String? = null,
+    val challenge: AuthChallenge? = null,
     val pendingAuthEventId: EventId? = null,
     val pendingAuthPubkey: PublicKey? = null,
     val authenticatedPubkey: PublicKey? = null,

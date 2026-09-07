@@ -107,21 +107,28 @@ val authObserver = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             is Nip42Signal.ChallengeReceived -> {
                 val authEvent = signer.sign(
                     AuthEvent.template(
-                        relayUrl = session.url.value,
                         challenge = signal.challenge,
                         createdAt = UnixTimeSeconds.now(),
                     ),
                 ).getOrThrow()
-                session.submit(Nip42Intent.Authenticate(authEvent.event))
+                session.submit(Nip42Intent.Authenticate(authEvent.event, signal.challenge))
             }
             is Nip42Signal.Authenticated -> println("Relay authentication succeeded")
             is Nip42Signal.AuthFailed -> println("Relay authentication rejected")
+            is Nip42Signal.AuthResponseRejected -> println("Authentication response rejected locally: ${signal.reason}")
             else -> Unit
         }
     }
 }
 session.connect()
 ```
+
+The challenge object binds signing to one relay and connection. Retain it through
+asynchronous signing and pass the same object to `Authenticate`. A replaced
+challenge or reconnect causes `AuthResponseRejected(StaleChallenge)` with no send,
+even if the challenge text repeats. `AuthEvent.template(challenge, createdAt)`
+builds the matching relay and challenge tags. Admission policy refusals are returned
+by `submit`; local response validation failures are emitted as signals.
 
 Application policy can retry a subscription after successful authentication.
 Cancel `authObserver` with the owning feature. Handle signer rejection and observer

@@ -29,7 +29,7 @@ sealed interface TransportInput : ProtocolInput {
     /**
      * The transport connection has been established.
      */
-    data object Opened : TransportInput
+    data class Opened(val context: ConnectionContext) : TransportInput
 
     /**
      * The transport connection was closed normally.

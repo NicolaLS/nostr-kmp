@@ -126,7 +126,7 @@ class ProtocolEngineTest {
         assertEquals(AdmissionDecision.Reject("denied"), result.admission)
         assertTrue(result.effects.isEmpty())
         assertEquals(0, calls)
-        assertEquals(AdmissionDecision.Allow, engine.process(ProtocolState(), TransportInput.Opened).admission)
+        assertEquals(AdmissionDecision.Allow, engine.process(ProtocolState(), TransportInput.Opened(io.github.nicolals.nostr.core.protocol.ConnectionContext(io.github.nicolals.nostr.core.transport.RelayUrl.parse("wss://test.relay")))).admission)
         assertEquals(1, calls)
     }
 

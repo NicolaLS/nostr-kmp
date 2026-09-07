@@ -32,7 +32,7 @@ package io.github.nicolals.nostr.core.protocol
  * var state = ProtocolState()
  *
  * // Process transport opened
- * val result = engine.process(state, TransportInput.Opened)
+ * val result = engine.process(state, TransportInput.Opened(ConnectionContext(relayUrl)))
  * state = result.state
  * // Execute effects, surface signals...
  *

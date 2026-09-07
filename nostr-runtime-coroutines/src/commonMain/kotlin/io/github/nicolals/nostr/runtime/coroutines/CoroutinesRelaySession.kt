@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import io.github.nicolals.nostr.core.nip.NipRegistry
 import io.github.nicolals.nostr.core.primitives.EventId
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
+import io.github.nicolals.nostr.core.protocol.ConnectionContext
 import io.github.nicolals.nostr.core.protocol.CoreSignal
 import io.github.nicolals.nostr.core.protocol.InboundMessage
 import io.github.nicolals.nostr.core.protocol.ProtocolEffect
@@ -652,7 +653,7 @@ class CoroutinesRelaySession(
         startPingLoop()
 
         // Drive engine with TransportOpened
-        driveEngine(TransportInput.Opened)
+        driveEngine(TransportInput.Opened(ConnectionContext(url)))
 
         // Send all pending subscriptions (Starting) or retry interrupted ones
         for ((_, record) in subscriptions.toMap()) {

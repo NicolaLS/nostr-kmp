@@ -9,6 +9,7 @@ import io.github.nicolals.nostr.core.protocol.ProtocolState
 import io.github.nicolals.nostr.core.protocol.ReduceResult
 import io.github.nicolals.nostr.core.protocol.TransportInput
 import io.github.nicolals.nostr.nip01.message.OkMessage
+import io.github.nicolals.nostr.nip42.event.AuthEvent
 import io.github.nicolals.nostr.nip42.message.AuthChallengeMessage
 import io.github.nicolals.nostr.nip42.message.AuthClientMessage
 
@@ -83,18 +84,19 @@ class Nip42Reducer(
         state: ProtocolState,
         intent: Nip42Intent.Authenticate,
     ): ReduceResult {
-        if (!state.isConnected) {
-            return ReduceResult.stateOnly(state)
-        }
+        fun reject(reason: AuthRejectionReason) =
+            ReduceResult.withSignals(state, Nip42Signal.AuthResponseRejected(reason))
+        if (!state.isConnected) return reject(AuthRejectionReason.NotConnected)
 
         val authState = state.moduleStates[Nip42StateKey]
-
-        // Must have a pending challenge to authenticate
-        if (authState.challenge == null) {
-            return ReduceResult.stateOnly(state)
+        if (authState.challenge !== intent.challenge || state.connection.context !== intent.challenge.connection) {
+            return reject(AuthRejectionReason.StaleChallenge)
         }
-
         val authEvent = intent.authEvent
+        val view = AuthEvent.fromEventOrNull(authEvent)
+        if (view == null || view.challenge != intent.challenge.value || view.relayUrl != intent.challenge.relayUrl.value) {
+            return reject(AuthRejectionReason.InvalidEvent)
+        }
         val pubkey = authEvent.pubkey
 
         val newAuthState = authState.copy(
@@ -131,7 +133,8 @@ class Nip42Reducer(
         state: ProtocolState,
         message: AuthChallengeMessage,
     ): ReduceResult {
-        val challenge = message.challenge
+        val connection = requireNotNull(state.connection.context) { "AUTH requires an opened connection context" }
+        val challenge = AuthChallenge(message.challenge, connection)
         val authState = state.moduleStates[Nip42StateKey]
 
         // New challenge replaces any previous challenge and resets auth state

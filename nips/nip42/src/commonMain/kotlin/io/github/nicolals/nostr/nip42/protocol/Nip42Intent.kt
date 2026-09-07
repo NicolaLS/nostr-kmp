@@ -23,7 +23,7 @@ sealed interface Nip42Intent : OperationIntent {
      *
      * This intent should only be sent after receiving an AUTH challenge
      * from the relay (i.e., when [Nip42State.hasPendingChallenge] is true).
-     * Sending without a pending challenge will be ignored.
+     * Stale challenges and invalid events emit AuthResponseRejected without sending.
      *
      * ## Response
      *
@@ -31,7 +31,8 @@ sealed interface Nip42Intent : OperationIntent {
      * On success, [Nip42Signal.Authenticated] is emitted.
      * On failure, [Nip42Signal.AuthFailed] is emitted.
      *
+     * @property challenge The exact token received from ChallengeReceived.
      * @property authEvent The signed kind 22242 authentication event.
      */
-    data class Authenticate(val authEvent: Event) : Nip42Intent
+    data class Authenticate(val authEvent: Event, val challenge: AuthChallenge) : Nip42Intent
 }

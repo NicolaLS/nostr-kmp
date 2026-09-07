@@ -6,6 +6,7 @@ import io.github.nicolals.nostr.core.event.template.EventTemplate
 import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
+import io.github.nicolals.nostr.nip42.protocol.AuthChallenge
 
 /**
  * NIP-42 authentication event (kind 22242).
@@ -36,20 +37,29 @@ class AuthEvent(
          * Returns null if the event is not a valid auth event.
          */
         fun fromEventOrNull(event: Event): AuthEvent? {
-            if (event.kind != KIND) return null
+            if (event.kind != KIND || event.content.isNotEmpty()) return null
 
             val relayUrl = event.tags
-                .firstOrNull { it.firstOrNull() == TAG_RELAY }
+                .filter { it.firstOrNull() == TAG_RELAY }
+                .singleOrNull()?.takeIf { it.size == 2 }
                 ?.getOrNull(1)
                 ?: return null
 
             val challenge = event.tags
-                .firstOrNull { it.firstOrNull() == TAG_CHALLENGE }
+                .filter { it.firstOrNull() == TAG_CHALLENGE }
+                .singleOrNull()?.takeIf { it.size == 2 }
                 ?.getOrNull(1)
                 ?: return null
 
             return AuthEvent(event, relayUrl, challenge)
         }
+
+        /** Builds a response using the relay and text bound to the received challenge. */
+        fun template(
+            challenge: AuthChallenge,
+            createdAt: UnixTimeSeconds,
+            extraTags: List<List<String>> = emptyList(),
+        ): EventTemplate<AuthEvent> = template(challenge.relayUrl.value, challenge.value, createdAt, extraTags)
 
         /**
          * Create an unsigned template for an authentication event.
@@ -65,6 +75,9 @@ class AuthEvent(
             createdAt: UnixTimeSeconds,
             extraTags: List<List<String>> = emptyList(),
         ): EventTemplate<AuthEvent> {
+            require(extraTags.none { it.firstOrNull() == TAG_RELAY || it.firstOrNull() == TAG_CHALLENGE }) {
+                "Extra tags must not override relay or challenge"
+            }
             val tags = buildList {
                 add(listOf(TAG_RELAY, relayUrl))
                 add(listOf(TAG_CHALLENGE, challenge))
