@@ -1,136 +1,104 @@
 # Architecture
 
-The SDK is split around a small set of stable boundaries: event model, codecs,
-NIP modules, transport, and runtime. The goal is to keep protocol semantics
-testable without forcing a specific network stack or concurrency model.
+The SDK separates event models, codecs, cryptographic capabilities, protocol
+modules, transport, and runtime. NIP modules are optional. There is no aggregate
+SDK artifact and no global service context.
 
-## Event Model
+## Events and trust
 
-`nostr-core` owns the fundamental domain types:
+`EventDraft` contains unsigned fields. `EventTemplate<T>` pairs a draft with a
+cheap typed view factory. `EventTemplateSigner.sign(template)` suspends and
+returns `CryptoResult<T>`; the default convenience method checks that a custom
+signer returned the requested draft and public key before wrapping it.
 
-- `Event`: signed Nostr event.
-- `EventDraft`: unsigned event fields that can be signed.
-- `EventTemplate<T : EventView>`: unsigned draft plus a typed wrapper factory.
-- `EventView`: typed view over an `Event`.
-- `GenericEvent`: fallback `EventView` for events without a registered upgrader.
-- `EventId`, `PublicKey`, `SecretKey`, `EventSig`, `EventKind`, `SubscriptionId`: validated value classes.
-- `Filter`: NIP-01 subscription filter.
+Drafts and events own immutable snapshots of both tag-list levels. `Event` is a
+structural model: constructing or decoding one does not authenticate it.
+`EventVerifier` defines the trust boundary. `NostrEventVerifier` computes the
+canonical NIP-01 ID and verifies the Schnorr signature against that ID.
 
-Templates preserve type information through signing:
+Relay sessions require a verifier and apply it before emitting events, processing
+protocol event signals, or recording deduplication IDs. Wallet clients additionally
+validate the configured wallet author, client recipient, and request correlation.
+Applications implementing other authenticated workflows must also enforce their
+own expected identities and protocol-specific constraints.
 
-```kotlin
-val template = eventTemplate(
-    kind = EventKind(1),
-    content = "hello",
-)
+## Cryptographic capabilities
 
-val signed: GenericEvent = signer.sign(template)
-val event = signed.event
-```
+`CryptoPrimitives` and `SigningPrimitives` expose local algorithms for low-level
+implementations. `EventTemplateSigner` exposes an account's asynchronous signing
+capability without requiring private-key export. Optional `Nip04Cipher` and
+`Nip44Cipher` interfaces provide asynchronous encryption/decryption with a peer
+public key; local implementations accept a `SecretKey` and a crypto provider.
+NIP-47 composes these through `NwcCipher`.
 
-Typed views should be cheap to construct. If a NIP view needs expensive parsing
-or decryption, keep it lazy or pass known parsed values from the template or
-upgrader.
+A remote signer can implement those capabilities with network calls or user
+approval. Cancellation propagates. Expected failures use `CryptoResult.Err`.
+Private keys, keypairs, message keys, and successful crypto-result diagnostic
+strings are redacted. Explicit raw-key access remains available to callers who
+need persistence or low-level primitives; those values must not be logged.
 
-## Codecs
+NIP-44 payload helpers enforce authenticated decryption and resource limits. The
+supported maximum plaintext is 65,535 UTF-8 bytes. Low-level encryption does not
+replace outer-event signature verification or application-level sender checks.
+NIP-04 is retained for compatibility and needs a verified signed event because
+its ciphertext alone does not authenticate the sender or message.
 
-`nostr-core` defines codec contracts and a small JSON value model:
+## Codecs and filters
 
-- `JsonCodec`: parse and stringify `JsonValue`.
-- `NostrWireCodec`: encode and decode wire events, filters, and raw messages.
-- `NostrJsonCodec`: combined JSON and wire codec with string helpers.
+`JsonCodec` handles the SDK's JSON value model; `NostrWireCodec` handles wire
+events, filters, and raw message arrays. `NostrJsonCodec` combines those contracts.
+`KotlinxNostrJsonCodec` is the default implementation.
 
-`nostr-codec-kotlinx` implements `NostrJsonCodec` with
-`KotlinxNostrJsonCodec`. It decodes protocol messages to raw message arrays.
-Typed interpretation is intentionally delegated to NIP upgraders.
+Numbers preserve their source literal. Conversion to bounded integers is exact:
+fractional values and overflow are rejected before exponent expansion can allocate
+large buffers. Unknown filter fields survive wire and domain conversions through
+`extraFields`. Extensions cannot override standard fields or tag filters.
+`nip50` supplies typed search accessors without changing the core codec.
 
-## NIP Modules
+## NIP modules
 
-Each NIP module can provide:
+A `NipModule` can contribute event upgraders, client/relay message upgraders, and
+pure protocol reducers. `NipRegistry.Builder(codec).install(module)` installs all
+those pieces together. Unknown event kinds and message tokens remain available as
+generic views.
 
-- event upgraders
-- client message upgraders
-- relay message upgraders
-- protocol reducers
+Dependencies are explicit: `Nip01Module(codec)` uses JSON and wire codecs;
+`Nip42Module(codec)` and `Nip45Module(codec)` require only wire encoding;
+`Nip04Module()` needs no service to interpret an event; `Nip47Module(selector)`
+needs only its encryption selector. NIP-44 provides crypto capabilities, so there
+is no empty registry module to install.
 
-The common interface is `NipModule`. A `NipModuleContext` gives modules access
-to JSON, wire encoding, and crypto primitives.
+## Protocol engine and extensions
 
-Install modules into a `NipRegistry` when you need all registries built
-together:
+`ProtocolEngine` threads immutable state through registered reducers. Inputs and
+signals are open interfaces. Effects describe sending a message or managing a
+timer; effects are executed by the runtime. Reducer registration order is explicit,
+with dependencies installed first. The session installs NIP-01 before additional
+modules.
 
-```kotlin
-val registry = NipRegistry.Builder(codec)
-    .install(Nip01Module(ctx))
-    .install(Nip42Module(ctx))
-    .build()
+The coroutine runtime exposes `submit(ProtocolInput)` and `send(ClientMessageView)`.
+Its `signals` and `messages` flows expose all installed extensions. An application
+can implement a new reducer or issue COUNT/AUTH commands without changing runtime
+source code. Start collecting before submitting the corresponding operation.
+Each active observer has its own bounded buffer. A slow observer fails with
+`SessionObservationOverflowException`; it cannot silently lose a response or block
+session shutdown. Streams complete when the session closes.
 
-val eventView = registry.events.upgrade(event)
-val relayMessage = registry.messages.upgradeRelay(rawRelayMessage)
-```
+## Runtime and resource ownership
 
-Module order matters for protocol reducers. Install dependency modules first.
-For example, NIP-01 should be installed before NIP-42.
+The session actor serializes state changes. Bounded operation admission fails
+rejected handles explicitly; lifecycle commands remain deliverable under load.
+Transport callbacks carry a connection generation, and termination is processed
+once per connection. Timers execute scheduled retries instead of recalculating
+their delays indefinitely.
 
-## Protocol Engine
+`SessionConfig` stores a deduplication factory, not a live cache. Each logical
+subscription owns its cache, and pooled subscriptions separately deduplicate their
+merged events across relays. Reusing a configuration does not share mutable state.
 
-The core protocol engine is a reducer-based finite state machine. It consumes
-`ProtocolInput` values, updates `ProtocolState`, and emits `ProtocolEffect`
-values such as sending a message or scheduling a timer.
-
-Most application code uses `CoroutinesRelaySession` instead of driving the
-engine directly. The engine remains useful for tests, alternate runtimes, or
-custom transports.
-
-## Transport
-
-`nostr-core` defines transport interfaces:
-
-- `RelayUrl`: validated `ws://` or `wss://` relay URL.
-- `RelayConnection`: single WebSocket connection.
-- `RelayConnectionListener`: open, message, pong, close, and failure callbacks.
-- `RelayTransportFactory`: creates connections.
-- `TransportResult`, `TransportError`, `TransportState`, and `TransportConfig`.
-
-`nostr-transport-ktor` implements those contracts with Ktor WebSockets. A
-connection instance is single-use; create a new connection for reconnects.
-
-## Coroutine Runtime
-
-`nostr-runtime-coroutines` provides the main client-facing runtime:
-
-- `CoroutinesRelaySession`: one relay connection.
-- `CoroutinesRelayPool`: multiple relay sessions with read/write roles.
-- `CoroutinesSubscriptionHandle`: subscription status and event `Flow`.
-- `CoroutinesPublishHandle`: publish status and `await()` helpers.
-- pool handles for merged subscriptions and per-relay publish statuses.
-
-The session serializes state changes through an internal actor coroutine. Public
-methods are safe to call from multiple coroutines.
-
-## Runtime Policies
-
-`SessionConfig` controls runtime behavior:
-
-- `ReconnectPolicy`: reconnect delay and give-up behavior after disconnects.
-- `RetryPolicy`: retry interrupted publishes and subscriptions after reconnect.
-- `DeduplicationPolicy`: filter duplicate events.
-- `ClosePolicy`: client-initiated subscription close behavior.
-- `pingIntervalMillis`: optional WebSocket ping interval.
-
-Defaults are suitable for most clients: exponential reconnect, publish retry,
-resubscribe after disconnect, LRU event deduplication, immediate close, and no
-automatic pings.
-
-## Extending the SDK
-
-To add a NIP module:
-
-1. Create event or message view types for the protocol surface.
-2. Implement `EventUpgrader`, `ClientMessageUpgrader`, or `RelayMessageUpgrader`.
-3. Add a `ProtocolReducer` only if the NIP changes connection, publish, or subscription behavior.
-4. Bundle the pieces in a `NipModule`.
-5. Add common tests around wire parsing, typed upgrades, and reducer behavior.
-
-Keep constructors lightweight and use the existing `NipModuleContext` services
-instead of adding codec or crypto singletons to each module.
+Sessions and pools borrow their transport factory. The factory owner closes it
+when all sessions are finished. `KtorRelayTransportFactory()` owns its default
+WebSockets-enabled HTTP client; a supplied client is borrowed. Closing a connection
+works before, during, or after its handshake. Parent-scope cancellation cleans up
+session operations and transport resources; explicit `closeAndJoin()` allows
+callers to await that cleanup.

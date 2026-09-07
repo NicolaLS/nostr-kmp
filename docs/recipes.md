@@ -1,292 +1,200 @@
 # Recipes
 
-These examples assume the standard shared services:
+Examples run inside suspending functions or coroutine scopes. The shared values
+below are explicit dependencies; no module context is required.
 
 ```kotlin
 import io.github.nicolals.nostr.codec.kotlinx.KotlinxNostrJsonCodec
-import io.github.nicolals.nostr.core.crypto.CryptoResult
-import io.github.nicolals.nostr.core.nip.SimpleNipModuleContext
+import io.github.nicolals.nostr.core.codec.NostrJsonCodec
 import io.github.nicolals.nostr.crypto.NostrCrypto
+import io.github.nicolals.nostr.crypto.NostrEventVerifier
+import io.github.nicolals.nostr.crypto.NostrSigner
+import io.github.nicolals.nostr.runtime.coroutines.CoroutinesRelaySession
 
 val codec = KotlinxNostrJsonCodec()
-val ctx = SimpleNipModuleContext(codec, NostrCrypto)
-
-private fun <T> requireOk(result: CryptoResult<T>): T = when (result) {
-    is CryptoResult.Ok -> result.value
-    is CryptoResult.Err -> error("Crypto operation failed: ${result.error}")
-}
+val verifier = NostrEventVerifier()
+val signer = NostrSigner.generate().getOrThrow()
 ```
 
-Examples that call `await...`, `publish`, `subscribe`, or `closeAndJoin` run
-from a suspending scope.
-
-## Sign a Text Note
-
-```kotlin
-import io.github.nicolals.nostr.core.event.template.eventTemplate
-import io.github.nicolals.nostr.core.primitives.EventKind
-import io.github.nicolals.nostr.crypto.NostrSigner
-
-val signer = requireOk(NostrSigner.generate())
-
-val note = signer.sign(
-    eventTemplate(
-        kind = EventKind(1),
-        content = "Hello, Nostr!",
-    ),
-)
-
-println(note.event.id.hex)
-```
-
-## Restore a Signer From a Secret Key
-
-```kotlin
-import io.github.nicolals.nostr.core.primitives.SecretKey
-import io.github.nicolals.nostr.crypto.NostrSigner
-
-val secretKey = SecretKey.fromHex("0000000000000000000000000000000000000000000000000000000000000001")
-val signer = requireOk(NostrSigner.fromSecretKey(secretKey))
-```
-
-## Decode and Upgrade a Relay Message
-
-```kotlin
-import io.github.nicolals.nostr.core.nip.NipRegistry
-import io.github.nicolals.nostr.nip01.Nip01Module
-import io.github.nicolals.nostr.nip01.message.NoticeMessage
-
-val registry = NipRegistry.Builder(codec)
-    .install(Nip01Module(ctx))
-    .build()
-
-val raw = codec.decodeRelayMessage("""["NOTICE","relay is restarting"]""")
-
-when (val message = registry.messages.upgradeRelay(raw)) {
-    is NoticeMessage -> println(message.message)
-    else -> println("Unhandled relay message: ${message.raw.tokenOrNull}")
-}
-```
-
-## Create a Metadata Event
+## Sign a typed metadata event
 
 ```kotlin
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
 import io.github.nicolals.nostr.nip01.event.MetadataEvent
 import io.github.nicolals.nostr.nip01.model.Metadata
 
-val metadata = Metadata(
-    name = "alice",
-    about = "Kotlin Nostr client",
-    picture = "https://example.com/alice.png",
-    displayName = "Alice",
-)
-
-val metadataEvent = signer.sign(
+val metadata = Metadata(name = "alice", about = "Kotlin client", picture = "https://example.com/avatar.png")
+val signed = signer.sign(
     MetadataEvent.template(
         metadata = metadata,
         createdAt = UnixTimeSeconds.now(),
         tags = emptyList(),
-        ctx = ctx,
+        codec = codec,
     ),
-)
+).getOrThrow()
 ```
 
-Install `Nip01Module(ctx)` and call `registry.events.upgrade(event)` to turn
-incoming kind `0` events into `MetadataEvent` when the content is valid.
+## Decode and upgrade messages
 
-## Publish and Collect Events
+```kotlin
+import io.github.nicolals.nostr.core.nip.NipRegistry
+import io.github.nicolals.nostr.nip01.Nip01Module
+import io.github.nicolals.nostr.nip01.message.NoticeMessage
+
+val registry = NipRegistry.Builder(codec).install(Nip01Module(codec)).build()
+val raw = codec.decodeRelayMessage("""["NOTICE","relay restarting"]""")
+val message = registry.messages.upgradeRelay(raw)
+if (message is NoticeMessage) println(message.message)
+```
+
+Decoding and upgrading do not verify an event. For events obtained outside a relay
+session, call `verifier.verify(event)` before using them as authenticated input.
+
+## COUNT through a session
+
+Install `Nip45Module(codec)` when constructing the session. Use a distinct query
+ID for each outstanding count. Start the response collector before sending.
 
 ```kotlin
 import io.github.nicolals.nostr.core.message.Filter
-import io.github.nicolals.nostr.core.primitives.EventKind
-import io.github.nicolals.nostr.core.transport.RelayUrl
-import io.github.nicolals.nostr.runtime.coroutines.CoroutinesRelaySession
-import io.github.nicolals.nostr.transport.ktor.KtorRelayTransportFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import io.github.nicolals.nostr.core.primitives.SubscriptionId
+import io.github.nicolals.nostr.core.transport.TransportResult
+import io.github.nicolals.nostr.nip45.message.CountClientMessage
+import io.github.nicolals.nostr.nip45.message.CountRelayMessage
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeout
+
+suspend fun countNotes(session: CoroutinesRelaySession, codec: NostrJsonCodec): Long = coroutineScope {
+    val id = SubscriptionId("count-notes")
+    val response = async(start = CoroutineStart.UNDISPATCHED) {
+        withTimeout(5_000) {
+            session.messages.filterIsInstance<CountRelayMessage>().first { it.subscriptionId == id }
+        }
+    }
+    try {
+        val sent = session.send(CountClientMessage.create(id, listOf(Filter()), codec))
+        check(sent is TransportResult.Success) { "COUNT could not be queued for transport" }
+        response.await().result.count
+    } finally {
+        response.cancel()
+    }
+}
+```
+
+A successful `send` means the transport accepted the message for sending, not that
+the relay has processed it. The matching response completes the operation.
+
+## Authenticate with a selected relay
+
+Install `Nip42Module(codec)`. Authentication identifies your account to the relay;
+choose the relay/account in application policy before enabling this handler. The
+SDK does not automatically sign every relay challenge.
+
+```kotlin
+import io.github.nicolals.nostr.nip42.event.AuthEvent
+import io.github.nicolals.nostr.nip42.protocol.Nip42Intent
+import io.github.nicolals.nostr.nip42.protocol.Nip42Signal
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 
-val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-val session = CoroutinesRelaySession(
-    url = RelayUrl.parse("wss://relay.example.com"),
-    moduleContext = ctx,
-    transportFactory = KtorRelayTransportFactory(),
-    scope = scope,
-)
-
-session.connect()
-
-val sub = session.subscribe(
-    filters = listOf(Filter(kinds = listOf(EventKind(1)), limit = 10)),
-)
-
-val job = scope.launch {
-    sub.events.collect { event ->
-        println(event.content)
+val authObserver = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+    session.signals.collect { signal ->
+        when (signal) {
+            is Nip42Signal.ChallengeReceived -> {
+                val authEvent = signer.sign(
+                    AuthEvent.template(
+                        relayUrl = session.url.value,
+                        challenge = signal.challenge,
+                        createdAt = UnixTimeSeconds.now(),
+                    ),
+                ).getOrThrow()
+                session.submit(Nip42Intent.Authenticate(authEvent.event))
+            }
+            is Nip42Signal.Authenticated -> println("Relay authentication succeeded")
+            is Nip42Signal.AuthFailed -> println("Relay authentication rejected")
+            else -> Unit
+        }
     }
 }
-
-if (session.awaitConnected(timeoutMs = 10_000)) {
-    session.publish(note.event).await(timeoutMs = 10_000)
-}
-sub.close()
-job.cancel()
-session.closeAndJoin()
+session.connect()
 ```
 
-## Encrypt a NIP-04 Direct Message
+Application policy can retry a subscription after successful authentication.
+Cancel `authObserver` with the owning feature. Handle signer rejection and observer
+overflow in production code; neither is silently converted into success.
+
+## NIP-44 with local or remote encryption
 
 ```kotlin
-import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
-import io.github.nicolals.nostr.crypto.NostrSigner
+import io.github.nicolals.nostr.core.primitives.SecretKey
+import io.github.nicolals.nostr.nip44.LocalNip44Cipher
+import io.github.nicolals.nostr.nip44.Nip44Cipher
+
+val senderCipher: Nip44Cipher = LocalNip44Cipher(senderSecretKey, NostrCrypto)
+val recipientCipher: Nip44Cipher = LocalNip44Cipher(recipientSecretKey, NostrCrypto)
+val content = senderCipher.encrypt("private payload", recipientPubkey).getOrThrow()
+val plaintext = recipientCipher.decrypt(content, senderPubkey).getOrThrow()
+```
+
+`senderSecretKey` and `recipientSecretKey` are `SecretKey` values loaded by the
+application. A remote implementation of `Nip44Cipher` can suspend for I/O or user
+approval without exporting those keys. Keep plaintext and key material out of logs.
+For Nostr event workflows, verify the outer event and expected identities as well.
+
+## NIP-04 compatibility
+
+```kotlin
+import io.github.nicolals.nostr.nip04.LocalNip04Cipher
 import io.github.nicolals.nostr.nip04.event.EncryptedDirectMessageEvent
 
-val recipientSigner = requireOk(NostrSigner.generate())
-
-val dmTemplate = requireOk(
-    EncryptedDirectMessageEvent.template(
-        recipientPubkey = recipientSigner.pubkey,
-        plaintext = "secret message",
-        createdAt = UnixTimeSeconds.now(),
-        ctx = ctx,
-        senderPrivateKey = signer.keys.secretKey.bytes,
-    ),
-)
-
-val dm = signer.sign(dmTemplate)
-val plaintext = requireOk(dm.decryptForRecipient(recipientSigner.keys.secretKey.bytes, ctx))
+val template = EncryptedDirectMessageEvent.template(
+    recipientPubkey = recipientPubkey,
+    plaintext = "private payload",
+    createdAt = UnixTimeSeconds.now(),
+    cipher = LocalNip04Cipher(senderSecretKey, NostrCrypto),
+).getOrThrow()
+val message = signer.sign(template).getOrThrow()
+val plaintext = message.decryptForRecipient(
+    cipher = LocalNip04Cipher(recipientSecretKey, NostrCrypto),
+    verifier = verifier,
+).getOrThrow()
 ```
 
-## Encrypt and Decrypt NIP-44 Content
+Use the signer corresponding to `senderSecretKey`. The event helper verifies the
+signature before decrypting. Select NIP-44 for new protocols where it is supported;
+NIP-04 remains available for existing protocol interoperability.
+
+## Low-level NWC request construction
+
+The higher-level `nwc-kmp` client manages response validation, correlation, timeouts,
+and connection ownership. When building another client, compose the same capabilities:
 
 ```kotlin
-import io.github.nicolals.nostr.crypto.NostrSigner
-import io.github.nicolals.nostr.nip44.decryptNip44Content
-import io.github.nicolals.nostr.nip44.encryptNip44Content
-
-val recipientSigner = requireOk(NostrSigner.generate())
-
-val encrypted = requireOk(
-    ctx.encryptNip44Content(
-        plaintext = "private payload",
-        senderPrivateKey = signer.keys.secretKey.bytes,
-        recipientPublicKey = recipientSigner.pubkey,
-    ),
-)
-
-val decrypted = requireOk(
-    ctx.decryptNip44Content(
-        content = encrypted,
-        receiverPrivateKey = recipientSigner.keys.secretKey.bytes,
-        senderPublicKey = signer.pubkey,
-    ),
-)
-```
-
-For production message flows, validate the outer event signature and expected
-pubkey before decrypting event content.
-
-## Create a NIP-45 COUNT Request
-
-```kotlin
-import io.github.nicolals.nostr.core.message.Filter
-import io.github.nicolals.nostr.core.primitives.EventKind
-import io.github.nicolals.nostr.core.primitives.SubscriptionId
-import io.github.nicolals.nostr.nip45.message.CountClientMessage
-
-val countMessage = CountClientMessage.create(
-    subscriptionId = SubscriptionId("count-1"),
-    filters = listOf(Filter(kinds = listOf(EventKind(1)))),
-    codec = codec,
-)
-
-val json = codec.encodeClientMessageString(countMessage)
-```
-
-Send `json` through a `RelayConnection` or a runtime extension that exposes
-custom client messages.
-
-## Create and Track a Nostr Wallet Connect Request
-
-```kotlin
-import io.github.nicolals.nostr.core.message.Filter
-import io.github.nicolals.nostr.core.primitives.PublicKey
-import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
-import io.github.nicolals.nostr.core.runtime.PublishStatus
-import io.github.nicolals.nostr.crypto.NostrSigner
-import io.github.nicolals.nostr.nip47.NwcEncryptionSelector
+import io.github.nicolals.nostr.nip47.Nip47Cipher
 import io.github.nicolals.nostr.nip47.event.NwcRequestEvent
-import io.github.nicolals.nostr.nip47.event.NwcResponseEvent
 import io.github.nicolals.nostr.nip47.model.NwcEncryption
 import io.github.nicolals.nostr.nip47.model.NwcGetBalanceRequest
-import io.github.nicolals.nostr.nip47.model.NwcResponse
-import io.github.nicolals.nostr.runtime.coroutines.CoroutinesRelaySession
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapNotNull
 
-suspend fun requestWalletBalance(
-    session: CoroutinesRelaySession,
-    clientSigner: NostrSigner,
-    walletPubkey: PublicKey,
-    encryption: NwcEncryption = NwcEncryption.NIP04,
-): NwcResponse {
-    val responseHandle = session.subscribe(
-        listOf(
-            Filter(
-                kinds = listOf(NwcResponseEvent.KIND),
-                authors = listOf(walletPubkey),
-                tagFilters = mapOf("p" to listOf(clientSigner.pubkey.hex)),
-            ),
-        ),
-    )
-
-    val requestTemplate = requireOk(
-        NwcRequestEvent.template(
-            walletPubkey = walletPubkey,
-            request = NwcGetBalanceRequest,
-            createdAt = UnixTimeSeconds.now(),
-            ctx = ctx,
-            clientPrivateKey = clientSigner.keys.secretKey.bytes,
-            encryption = encryption,
-        ),
-    )
-
-    val requestEvent = clientSigner.sign(requestTemplate)
-    val requestId = requestEvent.event.id.hex
-
-    when (val status = session.publish(requestEvent.event).await(timeoutMs = 5_000)) {
-        is PublishStatus.Accepted -> Unit
-        else -> error("NWC request was not accepted by the relay: $status")
-    }
-
-    try {
-        return responseHandle.events
-            .mapNotNull { event ->
-                val responseEvent = NwcResponseEvent.fromEventOrNull(
-                    event,
-                    NwcEncryptionSelector { _ -> encryption },
-                ) ?: return@mapNotNull null
-
-                if (responseEvent.requestEventId?.hex != requestId) {
-                    return@mapNotNull null
-                }
-
-                responseEvent.decryptForClient(
-                    ctx = ctx,
-                    clientPrivateKey = clientSigner.keys.secretKey.bytes,
-                ).getOrNull()
-            }
-            .first()
-    } finally {
-        responseHandle.close()
-    }
-}
+val cipher = Nip47Cipher(
+    nip04 = LocalNip04Cipher(clientSecretKey, NostrCrypto),
+    nip44 = LocalNip44Cipher(clientSecretKey, NostrCrypto),
+)
+val template = NwcRequestEvent.template(
+    walletPubkey = walletPubkey,
+    request = NwcGetBalanceRequest,
+    createdAt = UnixTimeSeconds.now(),
+    codec = codec,
+    cipher = cipher,
+    encryption = NwcEncryption.NIP44_V2,
+).getOrThrow()
+val request = clientSigner.sign(template).getOrThrow()
 ```
 
-This mirrors the important low-level flow used by `nwc-kmp`: subscribe for
-response events before publishing the request, filter responses by wallet
-pubkey and client `p` tag, then correlate by the response `e` tag. Production
-clients should also handle wallets that omit the response `e` tag when exactly
-one request is pending.
+Choose encryption from authenticated wallet information. Collect responses before
+publishing. Verify response IDs/signatures, wallet author, client recipient, method,
+and exact request ID before accepting a result. An encrypted payload alone does not
+establish that its sender is the configured wallet.

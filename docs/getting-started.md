@@ -1,33 +1,22 @@
 # Getting Started
 
-This guide shows the shortest path from dependencies to a connected relay
-session. The examples use common Kotlin APIs where possible, so the same
-patterns apply on JVM, Android, and iOS.
+The same APIs work from common Kotlin on JVM, Android, and iOS. Signing,
+connection waits, custom protocol commands, and shutdown are suspending operations.
 
-Snippets that call `await...`, `addRelay`, `connectAll`, `subscribe`,
-`publish`, or `close` are meant to run from a suspending scope.
-
-## Add Dependencies
-
-Snapshots require the Maven Central snapshot repository:
+## Dependencies
 
 ```kotlin
 repositories {
+    mavenCentral()
     maven {
         url = uri("https://central.sonatype.com/repository/maven-snapshots/")
         mavenContent { snapshotsOnly() }
     }
-    mavenCentral()
 }
-```
 
-For a client that signs events and talks to relays:
-
-```kotlin
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.nicolals:nostr-core:0.3.3-SNAPSHOT")
             implementation("io.github.nicolals:nostr-codec-kotlinx:0.3.3-SNAPSHOT")
             implementation("io.github.nicolals:nostr-crypto:0.3.3-SNAPSHOT")
             implementation("io.github.nicolals:nostr-transport-ktor:0.3.3-SNAPSHOT")
@@ -37,195 +26,157 @@ kotlin {
 }
 ```
 
-Add NIP artifacts separately when you need typed extension support:
+Optional NIP artifacts are added independently. For wallet operations, use
+[`nwc-kmp`](../nwc-kmp/README.md), which supplies its own default implementations.
+
+## Signing
 
 ```kotlin
-commonMain.dependencies {
-    implementation("io.github.nicolals:nip04:0.3.3-SNAPSHOT")
-    implementation("io.github.nicolals:nip42:0.3.3-SNAPSHOT")
-    implementation("io.github.nicolals:nip44:0.3.3-SNAPSHOT")
-    implementation("io.github.nicolals:nip47:0.3.3-SNAPSHOT")
-}
-```
-
-## Create Shared SDK Services
-
-Most modules need a `NipModuleContext`, which bundles the JSON/wire codec and
-crypto provider.
-
-```kotlin
-import io.github.nicolals.nostr.codec.kotlinx.KotlinxNostrJsonCodec
-import io.github.nicolals.nostr.core.nip.SimpleNipModuleContext
-import io.github.nicolals.nostr.crypto.NostrCrypto
-
-val codec = KotlinxNostrJsonCodec()
-val ctx = SimpleNipModuleContext(codec, NostrCrypto)
-```
-
-## Sign an Event
-
-Events are created as unsigned templates, then signed by an
-`EventTemplateSigner`. `NostrSigner` is the built-in in-memory signer.
-
-```kotlin
-import io.github.nicolals.nostr.core.crypto.CryptoResult
 import io.github.nicolals.nostr.core.event.template.eventTemplate
 import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.crypto.NostrSigner
 
-val signer = requireOk(NostrSigner.generate())
-
-val note = signer.sign(
-    eventTemplate(
-        kind = EventKind(1),
-        content = "Hello, Nostr!",
-    ),
-)
-
-println(note.event.id.hex)
-
-private fun <T> requireOk(result: CryptoResult<T>): T = when (result) {
-    is CryptoResult.Ok -> result.value
-    is CryptoResult.Err -> error("Crypto operation failed: ${result.error}")
-}
+val signer = NostrSigner.generate().getOrThrow()
+val note = signer.sign(eventTemplate(EventKind(1), "Hello, Nostr!")).getOrThrow()
 ```
 
-To restore an existing key, use `SecretKey.fromHex(...)` and
-`NostrSigner.fromSecretKey(...)`.
+`sign` returns `CryptoResult<T>`. Handle `CryptoResult.Err` when your application
+needs to distinguish failures; `getOrThrow()` is useful in short examples.
+Cancellation propagates normally. Restore a local signer using
+`NostrSigner.fromSecretKey(SecretKey.fromHex(...))`. A signer exposes its public
+key and signing operation; it does not expose its private key.
 
-## Connect to a Relay
+Drafts and signed events snapshot nested tag lists. Mutating the lists used to
+create a draft cannot alter the signed event.
 
-`CoroutinesRelaySession` manages one relay connection. It installs NIP-01
-internally for standard `EVENT`, `REQ`, `CLOSE`, `OK`, `EOSE`, `CLOSED`, and
-`NOTICE` handling.
+## One relay
 
 ```kotlin
+import io.github.nicolals.nostr.codec.kotlinx.KotlinxNostrJsonCodec
 import io.github.nicolals.nostr.core.transport.RelayUrl
+import io.github.nicolals.nostr.crypto.NostrEventVerifier
 import io.github.nicolals.nostr.runtime.coroutines.CoroutinesRelaySession
 import io.github.nicolals.nostr.transport.ktor.KtorRelayTransportFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 
-val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
+val codec = KotlinxNostrJsonCodec()
+val transport = KtorRelayTransportFactory()
 val session = CoroutinesRelaySession(
     url = RelayUrl.parse("wss://relay.example.com"),
-    moduleContext = ctx,
-    transportFactory = KtorRelayTransportFactory(),
+    codec = codec,
+    eventVerifier = NostrEventVerifier(),
+    transportFactory = transport,
     scope = scope,
 )
-
 session.connect()
 val connected = session.awaitConnected(timeoutMs = 10_000)
 ```
 
-Observe connection changes with `connectionStatusFlow`, and call
-`closeAndJoin()` when the session is no longer needed.
+`scope` should belong to the feature or service using the session. Incoming events
+must pass the supplied verifier before reaching observers, subscriptions, or the
+deduplication cache. `NostrEventVerifier` checks the canonical event ID and Schnorr
+signature. A codec alone only parses structural types; parsing does not authenticate
+an event.
 
-## Publish
-
-```kotlin
-import io.github.nicolals.nostr.core.runtime.PublishStatus
-
-if (session.awaitConnected(timeoutMs = 10_000)) {
-    val finalStatus = session.publish(note.event).await(timeoutMs = 10_000)
-
-    when (finalStatus) {
-        is PublishStatus.Accepted -> println("Accepted: ${finalStatus.message}")
-        is PublishStatus.Rejected -> println("Rejected: ${finalStatus.message}")
-        null -> println("Timed out waiting for relay OK")
-        else -> println("Publish ended with $finalStatus")
-    }
-}
-```
-
-Publishing returns immediately with a handle. The handle exposes the current
-`status`, a `statusFlow`, and `await()` helpers.
-
-## Subscribe
+## Publishing and subscribing
 
 ```kotlin
 import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.primitives.EventKind
 import kotlinx.coroutines.launch
 
-val filter = Filter(
-    kinds = listOf(EventKind(1)),
-    limit = 20,
-)
-
-val handle = session.subscribe(listOf(filter))
-
-val collectionJob = scope.launch {
-    handle.events.collect { event ->
-        println("${event.pubkey.hex}: ${event.content}")
-    }
+val subscription = session.subscribe(listOf(Filter(kinds = listOf(EventKind(1)), limit = 20)))
+val collection = scope.launch {
+    subscription.events.collect { event -> println(event.id.hex) }
 }
 
-handle.awaitLive(timeoutMs = 10_000)
-handle.close()
-collectionJob.cancel()
+if (session.awaitConnected()) {
+    val status = session.publish(note.event).await(timeoutMs = 10_000)
+    println(status)
+}
+
+subscription.close()
+collection.cancel()
 ```
 
-The subscription starts in `Starting`, usually moves to `CatchingUp`, then
-becomes `Live` after the relay sends `EOSE`. Use `statusFlow` when your UI or
-service needs to react to those transitions.
+A subscription moves through `Starting`, `CatchingUp`, and `Live` after `EOSE`.
+Deduplication belongs to each logical subscription: independent subscribers can
+receive the same event. Policies and status flows let applications observe
+retries, rejection, and closure. An operation rejected because the session is
+closed or overloaded receives a terminal handle status.
 
-## Use a Relay Pool
-
-`CoroutinesRelayPool` manages multiple sessions and merges subscription events
-with cross-relay deduplication.
+## Relay pools
 
 ```kotlin
-import io.github.nicolals.nostr.core.transport.RelayUrl
 import io.github.nicolals.nostr.runtime.coroutines.CoroutinesRelayPool
 import io.github.nicolals.nostr.runtime.coroutines.RelayRole
-import io.github.nicolals.nostr.transport.ktor.KtorRelayTransportFactory
 
-suspend fun useRelayPool() {
-    val pool = CoroutinesRelayPool(
-        moduleContext = ctx,
-        transportFactory = KtorRelayTransportFactory(),
-        scope = scope,
-    )
-
-    pool.addRelay(RelayUrl.parse("wss://relay-one.example"), RelayRole.ReadWrite)
-    pool.addRelay(RelayUrl.parse("wss://relay-two.example"), RelayRole.Read)
-    pool.connectAll()
-
-    val pooledSub = pool.subscribe(listOf(filter))
-    val pooledPublish = pool.publish(note.event)
-
-    val publishStatuses = pooledPublish.awaitAll()
-    pooledSub.close()
-    pool.close()
-}
+val pool = CoroutinesRelayPool(
+    codec = codec,
+    eventVerifier = NostrEventVerifier(),
+    transportFactory = transport,
+    scope = scope,
+)
+pool.addRelay(RelayUrl.parse("wss://relay-one.example"), RelayRole.ReadWrite)
+pool.addRelay(RelayUrl.parse("wss://relay-two.example"), RelayRole.Read)
+pool.connectAll()
+val merged = pool.subscribe(listOf(Filter(kinds = listOf(EventKind(1)), limit = 20)))
 ```
 
-Relay roles control default routing: `Read`, `Write`, or `ReadWrite`. You can
-also pass explicit relay URL sets to `subscribe(...)` or `publish(...)`.
+Pool subscriptions deduplicate copies across their selected relays. The read/write
+roles control default routing; explicit relay selections still respect those roles.
 
-## Add Optional NIP Modules
-
-When constructing a session, pass additional modules for typed event/message
-support beyond NIP-01:
+## Optional modules and filters
 
 ```kotlin
 import io.github.nicolals.nostr.nip42.Nip42Module
 import io.github.nicolals.nostr.nip45.Nip45Module
 
-val sessionWithExtensions = CoroutinesRelaySession(
-    url = RelayUrl.parse("wss://relay.example.com"),
-    moduleContext = ctx,
-    transportFactory = KtorRelayTransportFactory(),
+val extendedSession = CoroutinesRelaySession(
+    url = relayUrl,
+    codec = codec,
+    eventVerifier = NostrEventVerifier(),
+    transportFactory = transport,
     scope = scope,
-    additionalModules = listOf(
-        Nip42Module(ctx),
-        Nip45Module(ctx),
-    ),
+    additionalModules = listOf(Nip42Module(codec), Nip45Module(codec)),
 )
 ```
 
-Upgrade received events with `session.events.upgrade(event)` when you need a
-typed `EventView`.
+NIP-01 is installed by the session. Other modules receive explicit dependencies;
+there is no shared `NipModuleContext`. Use `session.events.upgrade(event)` for typed
+event views, `session.submit(intent)` for reducer inputs, and `session.send(message)`
+for custom client messages. [Recipes](recipes.md) includes AUTH and COUNT workflows.
+
+NIP-50 search is an independent filter extension requiring no module registration:
+
+```kotlin
+import io.github.nicolals.nostr.nip50.withSearch
+
+val query = Filter(kinds = listOf(EventKind(1)), limit = 20).withSearch("bitcoin")
+```
+
+Add the `nip50` artifact to use that helper. Other extensions can use
+`Filter.extraFields`; codecs and REQ/COUNT conversions preserve them.
+
+## Resource ownership
+
+Close handles and sessions when finished. A session or pool borrows its transport
+factory; the owner closes the factory after all its sessions are done.
+`KtorRelayTransportFactory()` owns its internally created HTTP client. A factory
+constructed with a supplied `HttpClient` borrows it; the caller must install Ktor's
+WebSockets plugin and close that client.
+
+```kotlin
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
+
+withContext(NonCancellable) {
+    merged.close()
+    pool.close()
+    session.closeAndJoin()
+    extendedSession.closeAndJoin()
+    transport.closeAndJoin()
+}
+```
+
+Put cleanup in `finally`. Parent-scope cancellation also terminates sessions and
+their operations. An explicit join waits for transport cleanup to finish.

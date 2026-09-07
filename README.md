@@ -22,6 +22,7 @@ Current project version: `0.3.3-SNAPSHOT`.
 | `nips:nip44` | NIP-44 v2 encrypted payload helpers. |
 | `nips:nip45` | NIP-45 COUNT request and response messages. |
 | `nips:nip47` | NIP-47 Nostr Wallet Connect events, payloads, and encryption selection. |
+| `nips:nip50` | Typed NIP-50 search filters without codec or registry changes. |
 | `nwc-kmp` | High-level Nostr Wallet Connect client with typed wallet operations and notifications. |
 
 There is no aggregate `nostr-sdk` artifact in this repository today. Add the
@@ -76,51 +77,45 @@ event, and closes the session.
 
 ```kotlin
 import io.github.nicolals.nostr.codec.kotlinx.KotlinxNostrJsonCodec
-import io.github.nicolals.nostr.core.crypto.CryptoResult
 import io.github.nicolals.nostr.core.event.template.eventTemplate
-import io.github.nicolals.nostr.core.nip.SimpleNipModuleContext
 import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.transport.RelayUrl
-import io.github.nicolals.nostr.crypto.NostrCrypto
+import io.github.nicolals.nostr.crypto.NostrEventVerifier
 import io.github.nicolals.nostr.crypto.NostrSigner
 import io.github.nicolals.nostr.runtime.coroutines.CoroutinesRelaySession
 import io.github.nicolals.nostr.transport.ktor.KtorRelayTransportFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
-suspend fun publishTextNote() {
-    val codec = KotlinxNostrJsonCodec()
-    val ctx = SimpleNipModuleContext(codec, NostrCrypto)
-    val signer = requireOk(NostrSigner.generate())
-
-    val note = signer.sign(
-        eventTemplate(
-            kind = EventKind(1),
-            content = "Hello from nostr-kmp",
-        ),
-    )
-
+suspend fun publishTextNote() = coroutineScope {
+    val signer = NostrSigner.generate().getOrThrow()
+    val note = signer.sign(eventTemplate(EventKind(1), "Hello from nostr-kmp")).getOrThrow()
+    val transport = KtorRelayTransportFactory()
     val session = CoroutinesRelaySession(
         url = RelayUrl.parse("wss://relay.example.com"),
-        moduleContext = ctx,
-        transportFactory = KtorRelayTransportFactory(),
-        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        codec = KotlinxNostrJsonCodec(),
+        eventVerifier = NostrEventVerifier(),
+        transportFactory = transport,
+        scope = this,
     )
-
-    session.connect()
-    if (session.awaitConnected(timeoutMs = 10_000)) {
-        val status = session.publish(note.event).await(timeoutMs = 10_000)
-        println(status)
+    try {
+        session.connect()
+        if (session.awaitConnected(timeoutMs = 10_000)) {
+            println(session.publish(note.event).await(timeoutMs = 10_000))
+        }
+    } finally {
+        withContext(NonCancellable) {
+            session.closeAndJoin()
+            transport.closeAndJoin()
+        }
     }
-    session.closeAndJoin()
-}
-
-private fun <T> requireOk(result: CryptoResult<T>): T = when (result) {
-    is CryptoResult.Ok -> result.value
-    is CryptoResult.Err -> error("Crypto operation failed: ${result.error}")
 }
 ```
+
+Incoming relay events are verified before delivery. Signing is suspending and returns
+`CryptoResult`; remote signers and encryption providers can be injected without
+exporting private keys. Modules take the codecs or crypto capabilities they need.
 
 ## Documentation
 
@@ -148,5 +143,5 @@ Use the Gradle wrapper from the repository root:
 ## Supported Targets
 
 The modules are Kotlin Multiplatform libraries with common code plus JVM,
-Android, and iOS targets. `nostr-transport-ktor` uses OkHttp on JVM and Android,
+Android, and iOS targets. `nostr-transport-ktor` uses CIO on JVM and Android,
 and Darwin on iOS.

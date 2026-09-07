@@ -24,7 +24,7 @@ import io.github.nicolals.nostr.nip42.protocol.Nip42Reducer
  *
  * Install the module to handle AUTH protocol messages:
  * ```kotlin
- * val messageRegistry = MessageUpgradeRegistry.Builder()
+ * val registry = NipRegistry.Builder(codec)
  *     .install(Nip01Module(codec))
  *     .install(Nip42Module(codec))
  *     .build()
@@ -37,7 +37,7 @@ import io.github.nicolals.nostr.nip42.protocol.Nip42Reducer
  *     challenge = challengeFromRelay,
  *     createdAt = UnixTimeSeconds.now(),
  * )
- * val authEvent = signer.sign(template)
+ * val authEvent = signer.sign(template).getOrThrow()
  * val authMessage = AuthClientMessage.create(authEvent.event, codec)
  * ```
  *

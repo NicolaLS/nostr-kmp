@@ -11,7 +11,7 @@ version. For the current snapshot, use `0.3.3-SNAPSHOT`.
 | `nostr-codec-kotlinx` | `:nostr-codec-kotlinx` | `nostr-core`, `kotlinx.serialization-json` | Implements `NostrJsonCodec` for JSON values, events, filters, and raw client/relay messages. |
 | `nostr-crypto` | `:nostr-crypto` | `nostr-core`, libsodium, `secp256k1-kmp` | Implements `NostrCrypto`, `NostrSigning`, and `NostrSigner`. |
 | `nostr-transport-ktor` | `:nostr-transport-ktor` | `nostr-core`, Ktor client WebSockets, coroutines | Implements `RelayTransportFactory` using Ktor WebSockets. |
-| `nostr-runtime-coroutines` | `:nostr-runtime-coroutines` | `nostr-core`, `nip01`, `nip42`, coroutines | Provides `CoroutinesRelaySession`, `CoroutinesRelayPool`, publish handles, and subscription handles. |
+| `nostr-runtime-coroutines` | `:nostr-runtime-coroutines` | `nostr-core`, `nip01`, coroutines | Provides `CoroutinesRelaySession`, `CoroutinesRelayPool`, publish handles, and subscription handles. |
 
 The `:nips` Gradle project is an aggregate lifecycle project for local builds.
 It is not an SDK artifact with source code.
@@ -23,9 +23,10 @@ It is not an SDK artifact with source code.
 | `nip01` | `:nips:nip01` | NIP-01 client and relay messages, metadata events, and core protocol reducer. |
 | `nip04` | `:nips:nip04` | Kind `4` encrypted direct message event view plus NIP-04 encrypt/decrypt helpers. |
 | `nip42` | `:nips:nip42` | Relay AUTH challenge/client message upgraders, kind `22242` auth event, and auth protocol reducer. |
-| `nip44` | `:nips:nip44` | NIP-44 v2 conversation key, payload encoding, encryption, and decryption helpers. |
+| `nip44` | `:nips:nip44` | NIP-44 v2 conversation keys, payload helpers, and asynchronous local/remote cipher capabilities. |
 | `nip45` | `:nips:nip45` | COUNT client and relay message views. |
-| `nip47` | `:nips:nip47` | Nostr Wallet Connect info, request, response, notification events, JSON payload codecs, and NIP-04/NIP-44 encryption selection. |
+| `nip47` | `:nips:nip47` | Nostr Wallet Connect events, JSON payload codecs, and injected NIP-04/NIP-44 encryption. |
+| `nip50` | `:nips:nip50` | Typed search filter extensions; no registry installation required. |
 
 ## Wallet Client
 
@@ -95,9 +96,9 @@ import io.github.nicolals.nostr.nip42.Nip42Module
 import io.github.nicolals.nostr.nip45.Nip45Module
 
 val registry = NipRegistry.Builder(codec)
-    .install(Nip01Module(ctx))
-    .install(Nip42Module(ctx))
-    .install(Nip45Module(ctx))
+    .install(Nip01Module(codec))
+    .install(Nip42Module(codec))
+    .install(Nip45Module(codec))
     .build()
 ```
 
@@ -107,15 +108,19 @@ installs NIP-01 first.
 ```kotlin
 val session = CoroutinesRelaySession(
     url = relayUrl,
-    moduleContext = ctx,
+    codec = codec,
+    eventVerifier = NostrEventVerifier(),
     transportFactory = factory,
     scope = scope,
     additionalModules = listOf(
-        Nip42Module(ctx),
-        Nip45Module(ctx),
+        Nip42Module(codec),
+        Nip45Module(codec),
     ),
 )
 ```
+
+Modules take only the services they need. `Nip04Module()` needs no context,
+and NIP-44 exposes cipher capabilities without an empty registry module.
 
 NIP-47 needs an encryption selector. Use NIP-04 as the fallback until a wallet
 info event advertises NIP-44 support; this matches the compatibility behavior
@@ -132,7 +137,7 @@ val selector = nwcEncryptionSelectorByWalletPubkey(
     fallback = NwcEncryption.NIP04,
 )
 
-val module = Nip47Module(ctx, selector)
+val module = Nip47Module(selector)
 ```
 
 When you have a wallet kind `13194` info event, use
@@ -144,9 +149,11 @@ advertises it.
 All modules use common Kotlin source sets plus JVM, Android, and iOS targets.
 `nostr-transport-ktor` creates default platform clients with:
 
-- JVM: Ktor OkHttp engine
-- Android: Ktor OkHttp engine
+- JVM: Ktor CIO engine
+- Android: Ktor CIO engine
 - iOS: Ktor Darwin engine
 
-Provide your own Ktor `HttpClient` to customize timeouts, headers, logging,
-proxy settings, or engine configuration.
+Provide your own Ktor `HttpClient` with the WebSockets plugin installed to
+customize timeouts, headers, proxy settings, or engine configuration. Supplied
+HTTP clients and transport factories are borrowed; their owner closes them.
+The default Ktor factory owns its internally created client.
