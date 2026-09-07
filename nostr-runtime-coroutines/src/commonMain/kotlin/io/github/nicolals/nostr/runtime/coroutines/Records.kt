@@ -39,4 +39,5 @@ internal data class PublishRecord(
     val event: Event,
     val handle: CoroutinesPublishHandle,
     val retryCount: Int = 0,
+    val wasSent: Boolean = false,
 )

@@ -11,7 +11,6 @@ import io.github.nicolals.nostr.core.protocol.TimerKey
 import io.github.nicolals.nostr.core.transport.CloseInfo
 import io.github.nicolals.nostr.core.transport.TransportError
 import io.github.nicolals.nostr.core.transport.TransportResult
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 
 /**
@@ -66,9 +65,11 @@ internal sealed interface SessionInput {
     /** User requested to close a subscription */
     data class CloseSubscription(val handle: CoroutinesSubscriptionHandle) : SessionInput
 
-    data class Submit(val input: ProtocolIntent, val completion: CompletableDeferred<AdmissionDecision>) : SessionInput
+    data class CancelPublish(val handle: CoroutinesPublishHandle) : SessionInput
 
-    data class Send(val message: ClientMessageView, val completion: CompletableDeferred<TransportResult<Unit>>) : SessionInput
+    data class Submit(val input: ProtocolIntent, val command: SessionCommand<AdmissionDecision>) : SessionInput
+
+    data class Send(val message: ClientMessageView, val command: SessionCommand<TransportResult<Unit>>) : SessionInput
 
     // ========== Internal Events ==========
 

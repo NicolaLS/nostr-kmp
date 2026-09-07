@@ -103,10 +103,20 @@ changes. Rejection completes the handle; closing a deferred subscription removes
 it. Policies must be pure and use protocol state rather than mutable external
 flags. Raw `send` is a transport-level escape hatch and bypasses admission.
 
+Call a publish handle's `cancel()` to remove queued/deferred work and stop retries.
+Its terminal `Cancelled(mayHaveBeenSent)` status distinguishes cancellation before
+publication from an uncertain outcome after sending. Cancelling or timing out
+`await()` alone stops observation. Pool publish handles offer the same cancellation
+operation; `close()` only stops their status tracking.
+
 The coroutine runtime exposes `submit(ProtocolIntent)` and `send(ClientMessageView)`.
 `submit` cannot inject synthetic inbound messages or transport lifecycle inputs.
 It returns an admission decision; custom submitted operations are caller-owned
 and must be resubmitted explicitly after deferral. Unsupported intents are rejected.
+Cancellation of `submit` or `send` races atomically with actor admission: cancellation
+while queued prevents execution. Once actor processing starts, cancellation stops
+waiting but cannot recall an effect. Observe protocol responses to determine remote
+outcomes.
 Its `signals` and `messages` flows expose all installed extensions. An application
 can implement a new reducer or issue COUNT/AUTH commands without changing runtime
 source code. Start collecting before submitting the corresponding operation.

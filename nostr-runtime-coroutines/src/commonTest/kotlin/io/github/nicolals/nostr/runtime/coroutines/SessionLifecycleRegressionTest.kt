@@ -279,7 +279,7 @@ class SessionLifecycleRegressionTest {
     @Test fun terminalPooledPublishReleasesTrackingJobsWithoutManualClose() = runTest {
         val job = Job()
         val scope = CoroutineScope(job + StandardTestDispatcher(testScheduler))
-        val handle = CoroutinesPublishHandle(TestFixtures.testEventId)
+        val handle = CoroutinesPublishHandle(TestFixtures.testEventId) {}
         val url = RelayUrl.parse("wss://test.relay")
         val pooled = CoroutinesPoolPublishHandle(TestFixtures.testEventId, mapOf(url to handle), scope)
         runCurrent()

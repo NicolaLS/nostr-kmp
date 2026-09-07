@@ -29,6 +29,7 @@ class FakeRelayConnection(
 
     val sentMessages = mutableListOf<String>()
     var sendError: TransportError? = null
+    var onSend: (() -> Unit)? = null
 
     fun captureListener(): RelayConnectionListener = checkNotNull(listener)
     var closeCode: Int? = null
@@ -44,6 +45,7 @@ class FakeRelayConnection(
         if (_state != TransportState.Open) {
             return TransportResult.failure(TransportError.InvalidState("send", _state))
         }
+        onSend?.invoke()
         sentMessages.add(text)
         return TransportResult.success()
     }

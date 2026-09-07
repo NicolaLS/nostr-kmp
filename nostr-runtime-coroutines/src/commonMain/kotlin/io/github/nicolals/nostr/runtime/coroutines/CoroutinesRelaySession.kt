@@ -53,6 +53,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.sync.Semaphore
@@ -406,8 +407,8 @@ class CoroutinesRelaySession(
         when (input) {
             is SessionInput.Subscribe -> input.handle.updateStatus(SubscriptionStatus.Closed(reason))
             is SessionInput.Publish -> input.handle.updateStatus(PublishStatus.Abandoned)
-            is SessionInput.Submit -> input.completion.completeExceptionally(IllegalStateException(reason))
-            is SessionInput.Send -> input.completion.completeExceptionally(IllegalStateException(reason))
+            is SessionInput.Submit -> input.command.reject(reason)
+            is SessionInput.Send -> input.command.reject(reason)
             else -> Unit
         }
     }
@@ -497,7 +498,7 @@ class CoroutinesRelaySession(
      * @return A handle for tracking the publish status.
      */
     fun publish(event: Event): CoroutinesPublishHandle {
-        val handle = CoroutinesPublishHandle(event.id)
+        val handle = CoroutinesPublishHandle(event.id) { enqueueInput(SessionInput.CancelPublish(it)) }
 
         if (_isClosed) {
             handle.updateStatus(PublishStatus.Abandoned)
@@ -513,24 +514,23 @@ class CoroutinesRelaySession(
      * processed. NIP modules can expose their own [ProtocolInput] types without
      * requiring runtime changes. Returns an explicit admission decision. Unlike
      * publish/subscribe handles, custom submitted operations remain caller-owned:
-     * a deferred result must be resubmitted by the caller. Throws if closed or overloaded.
+     * a deferred result must be resubmitted by the caller. Cancellation before actor
+     * processing prevents execution; after processing starts it only stops waiting.
+     * Throws if closed or overloaded.
      */
-    suspend fun submit(input: ProtocolIntent): AdmissionDecision {
-        val completion = CompletableDeferred<AdmissionDecision>()
-        enqueueInput(SessionInput.Submit(input, completion))
-        return completion.await()
+    suspend fun submit(input: ProtocolIntent): AdmissionDecision = suspendCancellableCoroutine { continuation ->
+        enqueueInput(SessionInput.Submit(input, SessionCommand(continuation)))
     }
 
     /**
      * Encodes and queues a custom client message on the current transport.
      * Success means transport admission, not relay acknowledgement. Use [submit]
      * when a module also needs to maintain protocol state or produce signals.
-     * Throws if the session is closed or overloaded.
+     * Cancellation before actor processing prevents sending; once processing starts,
+     * transport admission may still occur. Throws if the session is closed or overloaded.
      */
-    suspend fun send(message: ClientMessageView): TransportResult<Unit> {
-        val completion = CompletableDeferred<TransportResult<Unit>>()
-        enqueueInput(SessionInput.Send(message, completion))
-        return completion.await()
+    suspend fun send(message: ClientMessageView): TransportResult<Unit> = suspendCancellableCoroutine { continuation ->
+        enqueueInput(SessionInput.Send(message, SessionCommand(continuation)))
     }
 
     // ========== Actor Input Processing ==========
@@ -556,10 +556,13 @@ class CoroutinesRelaySession(
             is SessionInput.Subscribe -> handleSubscribe(input)
             is SessionInput.Publish -> handlePublish(input)
             is SessionInput.CloseSubscription -> handleCloseSubscription(input.handle)
+            is SessionInput.CancelPublish -> handleCancelPublish(input.handle)
             is SessionInput.Submit -> {
-                input.completion.complete(driveEngine(input.input))
+                if (input.command.start()) input.command.complete(driveEngine(input.input))
             }
-            is SessionInput.Send -> input.completion.complete(sendMessage(input.message))
+            is SessionInput.Send -> {
+                if (input.command.start()) input.command.complete(sendMessage(input.message))
+            }
             is SessionInput.Ping -> if (isCurrentTransport(input.generation)) {
                 val result = transport?.ping(null)
                 if (result is TransportResult.Failure) handleTransportFailed(result.error)
@@ -1071,6 +1074,10 @@ class CoroutinesRelaySession(
     // ========== Publish Handling ==========
 
     private fun handlePublish(input: SessionInput.Publish) {
+        if (input.handle.isCancellationRequested) {
+            input.handle.updateStatus(PublishStatus.Cancelled(mayHaveBeenSent = false))
+            return
+        }
         if (_isClosed) {
             input.handle.updateStatus(PublishStatus.Abandoned)
             return
@@ -1098,9 +1105,25 @@ class CoroutinesRelaySession(
         }
     }
 
+    private fun handleCancelPublish(handle: CoroutinesPublishHandle) {
+        val record = publishes[handle.eventId] ?: return
+        if (record.handle !== handle) return
+        publishes.remove(handle.eventId)
+        handle.updateStatus(PublishStatus.Cancelled(mayHaveBeenSent = record.wasSent))
+        forgetPublish(handle.eventId)
+    }
+
     private fun sendPublish(record: PublishRecord) {
+        if (record.handle.isCancellationRequested) {
+            handleCancelPublish(record.handle)
+            return
+        }
         when (val decision = driveEngine(Nip01Intent.Publish(record.event))) {
-            AdmissionDecision.Allow -> Unit
+            AdmissionDecision.Allow -> {
+                publishes[record.eventId]?.takeIf { it.handle === record.handle }?.let {
+                    publishes[record.eventId] = it.copy(wasSent = true)
+                }
+            }
             is AdmissionDecision.Defer -> record.handle.updateStatus(PublishStatus.Deferred(decision.reason))
             is AdmissionDecision.Reject -> {
                 record.handle.updateStatus(PublishStatus.Rejected(decision.reason))

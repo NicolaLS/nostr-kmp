@@ -1186,6 +1186,7 @@ class NwcClient private constructor(
                 "Request may have been published without acknowledgment", PUBLISH_ACK_TIMEOUT_MS
             )
         } finally {
+            handle.cancel()
             handle.close()
         }
     }

@@ -65,6 +65,11 @@ class CoroutinesPoolPublishHandle internal constructor(
         deferred.mapValues { (_, result) -> result.await() }
     }
 
+    /** Cancels outstanding sends/retries on every relay. Already sent events cannot be recalled. */
+    fun cancel() {
+        handles.values.forEach { it.cancel() }
+    }
+
     /**
      * Stops status tracking for this handle.
      */

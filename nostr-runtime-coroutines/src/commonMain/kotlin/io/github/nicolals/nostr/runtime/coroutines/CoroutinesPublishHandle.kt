@@ -35,7 +35,15 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 class CoroutinesPublishHandle internal constructor(
     override val eventId: EventId,
+    private val cancelCallback: (CoroutinesPublishHandle) -> Unit,
 ) : PublishHandle {
+
+    private val cancelRequested = MutableStateFlow(false)
+    internal val isCancellationRequested: Boolean get() = cancelRequested.value
+
+    override fun cancel() {
+        if (!status.isTerminal && cancelRequested.compareAndSet(false, true)) cancelCallback(this)
+    }
 
     private val _statusFlow = MutableStateFlow<PublishStatus>(PublishStatus.Queued)
 
@@ -54,7 +62,7 @@ class CoroutinesPublishHandle internal constructor(
      * Suspends until the publish reaches a terminal status.
      *
      * Terminal statuses are: [PublishStatus.Accepted], [PublishStatus.Rejected],
-     * [PublishStatus.Abandoned], or [PublishStatus.Replaced].
+     * [PublishStatus.Abandoned], [PublishStatus.Replaced], or [PublishStatus.Cancelled].
      *
      * @return The terminal status.
      */
@@ -66,7 +74,9 @@ class CoroutinesPublishHandle internal constructor(
      * Suspends until the publish reaches a terminal status or timeout occurs.
      *
      * Terminal statuses are: [PublishStatus.Accepted], [PublishStatus.Rejected],
-     * [PublishStatus.Abandoned], or [PublishStatus.Replaced].
+     * [PublishStatus.Abandoned], [PublishStatus.Replaced], or [PublishStatus.Cancelled].
+     *
+     * Timeout or cancellation stops waiting only. Call [cancel] to stop future sends/retries.
      *
      * @param timeoutMs Maximum time to wait in milliseconds.
      * @return The terminal status, or null if timeout occurred.

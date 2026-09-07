@@ -6,7 +6,7 @@ import io.github.nicolals.nostr.core.primitives.EventId
  * Handle for tracking a publish operation.
  *
  * Provides observable status of the publish lifecycle:
- * Queued → Pending → Accepted/Rejected/Interrupted/Abandoned/Replaced
+ * Queued → Pending → Accepted/Rejected/Interrupted/Abandoned/Replaced/Cancelled
  *
  * ## Usage
  *
@@ -30,6 +30,9 @@ interface PublishHandle {
      */
     val eventId: EventId
 
+    /** Stop queued/deferred work and future retries. Already sent events cannot be recalled. */
+    fun cancel()
+
     /**
      * The current status of the publish operation.
      */
@@ -38,7 +41,7 @@ interface PublishHandle {
     /**
      * Whether the publish has reached a terminal state.
      *
-     * Terminal states are: Accepted, Rejected, Abandoned, Replaced.
+     * Terminal states are: Accepted, Rejected, Abandoned, Replaced, Cancelled.
      * Interrupted is NOT terminal as it may be retried.
      */
     val isTerminal: Boolean
@@ -49,6 +52,11 @@ interface PublishHandle {
  * Status of a publish operation.
  */
 sealed interface PublishStatus {
+    /** Locally cancelled. A sent event may still be accepted by the relay. */
+    data class Cancelled(val mayHaveBeenSent: Boolean) : PublishStatus {
+        override val isTerminal: Boolean = true
+    }
+
     /** Waiting for an admission policy; automatically reconsidered when protocol state changes. */
     data class Deferred(val reason: String) : PublishStatus {
         override val isTerminal: Boolean = false
