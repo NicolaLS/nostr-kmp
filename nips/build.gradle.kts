@@ -18,6 +18,7 @@ val nipProjects = listOf(
     ":nips:nip44",
     ":nips:nip45",
     ":nips:nip47",
+    ":nips:nip50",
 )
 
 // Aggregate common lifecycle tasks
