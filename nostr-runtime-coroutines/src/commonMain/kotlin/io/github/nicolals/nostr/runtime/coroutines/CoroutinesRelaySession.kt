@@ -82,8 +82,11 @@ import kotlin.concurrent.Volatile
  *
  * ## NIP Support
  *
- * The session internally installs NIP-01 for basic protocol support. Additional
- * NIP modules can be passed via [additionalModules] for typed event views.
+ * The codec convenience constructor installs NIP-01 followed by additional NIP
+ * modules. The registry constructor gives the caller full control over reducer
+ * ordering, including interceptors that consume an intent before NIP-01 runs.
+ * Built-in subscription and publish handles require NIP-01-compatible reducers
+ * that emit the corresponding [Nip01Signal] lifecycle signals.
  *
  * ## Lifecycle
  *
@@ -100,7 +103,7 @@ import kotlin.concurrent.Volatile
  * session.connect()
  *
  * // Optionally wait for connection
- * session.awaitConnected(timeout = 5000)
+ * session.awaitConnected(timeoutMs = 5000)
  *
  * // Subscribe to events
  * val handle = session.subscribe(listOf(filter))
@@ -137,30 +140,45 @@ import kotlin.concurrent.Volatile
  * ```
  *
  * @param url The relay URL to connect to.
- * @param codec JSON and Nostr wire encoding.
+ * @param registry Caller-ordered protocol reducers, view upgraders and wire codec.
+ *   Components and injected services must be safe to share across sessions;
+ *   keep per-session reducer state in [ProtocolState], owned by each session.
+ * @param jsonCodec JSON parsing and stringification for the registry's wire values.
  * @param eventVerifier Verifies event identity and signature before delivery.
  * @param transportFactory Factory for creating WebSocket connections.
  * @param scope The coroutine scope for the session's coroutines.
  * @param config Session configuration (policies).
- * @param additionalModules Additional NIP modules to install for typed event views.
  */
 class CoroutinesRelaySession(
     override val url: RelayUrl,
-    private val codec: NostrJsonCodec,
+    private val registry: NipRegistry,
+    private val jsonCodec: JsonCodec,
     private val eventVerifier: EventVerifier,
     private val transportFactory: RelayTransportFactory,
     private val scope: CoroutineScope,
     private val config: SessionConfig = SessionConfig.Default,
-    additionalModules: List<NipModule> = emptyList(),
 ) : RelaySession {
-
-    // ========== Internal Registry ==========
-
-    // Build registry with NIP-01 (required) + any additional modules
-    private val registry: NipRegistry = NipRegistry.Builder(codec)
-        .install(Nip01Module(codec))
-        .apply { additionalModules.forEach { install(it) } }
-        .build()
+    /** Installs NIP-01 and then [additionalModules] using one JSON/wire codec. */
+    constructor(
+        url: RelayUrl,
+        codec: NostrJsonCodec,
+        eventVerifier: EventVerifier,
+        transportFactory: RelayTransportFactory,
+        scope: CoroutineScope,
+        config: SessionConfig = SessionConfig.Default,
+        additionalModules: List<NipModule> = emptyList(),
+    ) : this(
+        url = url,
+        registry = NipRegistry.Builder(codec)
+            .install(Nip01Module(codec))
+            .apply { additionalModules.forEach { install(it) } }
+            .build(),
+        jsonCodec = codec,
+        eventVerifier = eventVerifier,
+        transportFactory = transportFactory,
+        scope = scope,
+        config = config,
+    )
 
     /**
      * Event upgrader for clients that need typed event views.
@@ -296,10 +314,6 @@ class CoroutinesRelaySession(
 
     // Close completion signal
     private val closeCompletion = CompletableDeferred<Unit>()
-
-    // JSON codec for parsing messages
-    private val jsonCodec: JsonCodec
-        get() = codec
 
     // ========== Initialization ==========
 
@@ -893,7 +907,6 @@ class CoroutinesRelaySession(
     }
 
     private fun sendSubscribe(record: SubscriptionRecord) {
-        record.handle.updateStatus(SubscriptionStatus.CatchingUp)
         driveEngine(Nip01Intent.Subscribe(record.subscriptionId, record.filters))
     }
 
@@ -1055,7 +1068,6 @@ class CoroutinesRelaySession(
     }
 
     private fun sendPublish(record: PublishRecord) {
-        record.handle.updateStatus(PublishStatus.Pending)
         driveEngine(Nip01Intent.Publish(record.event))
     }
 

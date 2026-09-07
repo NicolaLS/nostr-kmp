@@ -73,8 +73,13 @@ is no empty registry module to install.
 `ProtocolEngine` threads immutable state through registered reducers. Inputs and
 signals are open interfaces. Effects describe sending a message or managing a
 timer; effects are executed by the runtime. Reducer registration order is explicit,
-with dependencies installed first. The session installs NIP-01 before additional
-modules.
+with dependencies installed first. The codec convenience constructors install
+NIP-01 before additional modules. Sessions and pools also accept a caller-built
+`NipRegistry` and a `JsonCodec`, preserving the caller's module order. This allows
+policy reducers to consume an intent before the base NIP-01 reducer sends it.
+Built-in subscription and publish handles require NIP-01-compatible lifecycle
+signals; consumed intents remain queued until an extension resumes or completes
+them. Shared reducers keep per-session state in `ProtocolState`.
 
 The coroutine runtime exposes `submit(ProtocolInput)` and `send(ClientMessageView)`.
 Its `signals` and `messages` flows expose all installed extensions. An application

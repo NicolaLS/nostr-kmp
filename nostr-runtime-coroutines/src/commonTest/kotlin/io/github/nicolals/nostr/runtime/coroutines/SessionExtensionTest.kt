@@ -13,7 +13,9 @@ import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
 import io.github.nicolals.nostr.core.message.view.RelayMessageView
 import io.github.nicolals.nostr.core.message.view.UnknownClientMessage
 import io.github.nicolals.nostr.core.nip.NipModule
+import io.github.nicolals.nostr.core.nip.NipRegistry
 import io.github.nicolals.nostr.core.protocol.InboundMessage
+import io.github.nicolals.nostr.core.protocol.ModuleStateKey
 import io.github.nicolals.nostr.core.protocol.ProtocolEffect
 import io.github.nicolals.nostr.core.protocol.ProtocolInput
 import io.github.nicolals.nostr.core.protocol.ProtocolReducer
@@ -21,9 +23,13 @@ import io.github.nicolals.nostr.core.protocol.ProtocolSignal
 import io.github.nicolals.nostr.core.protocol.ProtocolState
 import io.github.nicolals.nostr.core.protocol.ReduceResult
 import io.github.nicolals.nostr.core.runtime.SessionConfig
+import io.github.nicolals.nostr.core.runtime.PublishStatus
+import io.github.nicolals.nostr.core.runtime.SubscriptionStatus
 import io.github.nicolals.nostr.core.transport.RelayUrl
 import io.github.nicolals.nostr.core.transport.TransportResult
 import io.github.nicolals.nostr.nip01.protocol.Nip01Signal
+import io.github.nicolals.nostr.nip01.protocol.Nip01Intent
+import io.github.nicolals.nostr.nip01.Nip01Module
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -46,6 +52,24 @@ class SessionExtensionTest {
     private data object CustomRequest : ProtocolInput
     private data object CustomReplyReceived : ProtocolSignal
     private data class CustomReply(override val raw: RawRelayMessage) : RelayMessageView
+    private data object OpenGate : ProtocolInput
+    private object GateOpen : ModuleStateKey<Boolean> {
+        override val id = "test.gate.open"
+        override val default = false
+    }
+
+    private val gateModule = object : NipModule {
+        override val protocolReducers = listOf(object : ProtocolReducer {
+            override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? = when {
+                input == OpenGate -> ReduceResult(
+                    state.withModuleStates(state.moduleStates.set(GateOpen, true)), consumed = true,
+                )
+                !state.moduleStates[GateOpen] && (input is Nip01Intent.Subscribe || input is Nip01Intent.Publish) ->
+                    ReduceResult(state, consumed = true)
+                else -> null
+            }
+        })
+    }
 
     private val request = UnknownClientMessage(RawClientMessage(JsonArray(listOf(JsonString("CUSTOM")))))
     private val customModule = object : NipModule {
@@ -61,6 +85,72 @@ class SessionExtensionTest {
                 else -> null
             }
         })
+    }
+
+    @Test fun callerOrderedRegistryCanGateAndResumeExistingSubscriptionAndPublishHandles() = runTest {
+        val codec = TestWireCodec()
+        val registry = NipRegistry.Builder(codec).install(gateModule).install(Nip01Module(codec)).build()
+        val factory = FakeRelayTransportFactory()
+        val session = CoroutinesRelaySession(
+            url = RelayUrl.parse("wss://test.relay"), registry = registry, jsonCodec = codec,
+            eventVerifier = AcceptTestEvents, transportFactory = factory, scope = this,
+        )
+        session.connect()
+        runCurrent()
+        factory.lastConnection!!.simulateOpen()
+        runCurrent()
+        val subscribe = Nip01Intent.Subscribe(TestFixtures.testSubId, TestFixtures.testFilters)
+        val publish = Nip01Intent.Publish(TestFixtures.testEvent)
+        val subscription = session.subscribe(subscribe.filters, subscribe.subscriptionId)
+        val publication = session.publish(publish.event)
+        runCurrent()
+        assertTrue(factory.lastConnection!!.sentMessages.isEmpty())
+        assertEquals(SubscriptionStatus.Starting, subscription.status)
+        assertEquals(PublishStatus.Queued, publication.status)
+
+        session.submit(OpenGate)
+        session.submit(subscribe)
+        session.submit(publish)
+        assertEquals(2, factory.lastConnection!!.sentMessages.size)
+        assertEquals(SubscriptionStatus.CatchingUp, subscription.status)
+        assertEquals(PublishStatus.Pending, publication.status)
+        factory.lastConnection!!.simulateMessage(TestFixtures.eoseJson(subscription.subscriptionId))
+        factory.lastConnection!!.simulateMessage(TestFixtures.okJson(publication.eventId, true))
+        runCurrent()
+        assertEquals(SubscriptionStatus.Live, subscription.status)
+        assertIs<PublishStatus.Accepted>(publication.status)
+        session.closeAndJoin()
+    }
+
+    @Test fun poolPreservesCallerReducerOrderAndKeepsSharedRegistryStateIndependent() = runTest {
+        val codec = TestWireCodec()
+        val registry = NipRegistry.Builder(codec).install(gateModule).install(Nip01Module(codec)).build()
+        val factory = FakeRelayTransportFactory()
+        val pool = CoroutinesRelayPool(
+            registry = registry, jsonCodec = codec, eventVerifier = AcceptTestEvents,
+            transportFactory = factory, scope = this,
+        )
+        val firstUrl = RelayUrl.parse("wss://first.relay")
+        val secondUrl = RelayUrl.parse("wss://second.relay")
+        val first = pool.addRelay(firstUrl)
+        val second = pool.addRelay(secondUrl)
+        pool.connectAll()
+        runCurrent()
+        factory.connections.forEach { it.simulateOpen() }
+        runCurrent()
+        val subscription = pool.subscribe(TestFixtures.testFilters, TestFixtures.testSubId)
+        runCurrent()
+        assertTrue(factory.connections.all { it.sentMessages.isEmpty() })
+        first.submit(OpenGate)
+        val intent = Nip01Intent.Subscribe(TestFixtures.testSubId, TestFixtures.testFilters)
+        first.submit(intent)
+        second.submit(intent)
+        assertEquals(1, factory.connections.single { it.url == firstUrl }.sentMessages.size)
+        assertTrue(factory.connections.single { it.url == secondUrl }.sentMessages.isEmpty())
+        assertEquals(SubscriptionStatus.CatchingUp, subscription.handles.getValue(firstUrl).status)
+        assertEquals(SubscriptionStatus.Starting, subscription.handles.getValue(secondUrl).status)
+        pool.close()
+        subscription.close()
     }
 
     @Test fun thirdPartyModuleCanSubmitObserveAndSendWithoutRuntimeChanges() = runTest {

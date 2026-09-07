@@ -4,6 +4,9 @@ import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.nip.NipModule
 import io.github.nicolals.nostr.core.codec.NostrJsonCodec
+import io.github.nicolals.nostr.core.codec.JsonCodec
+import io.github.nicolals.nostr.core.nip.NipRegistry
+import io.github.nicolals.nostr.nip01.Nip01Module
 import io.github.nicolals.nostr.core.crypto.EventVerifier
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
 import io.github.nicolals.nostr.core.runtime.ConnectionStatus
@@ -43,16 +46,43 @@ enum class RelayRole {
 
 /**
  * Coroutines-based relay pool managing multiple sessions.
+ *
+ * The registry constructor preserves caller-defined reducer ordering. Registries
+ * are shared, so components and injected services must be safe to share. Keep
+ * per-session reducer state in ProtocolState, independently owned by each relay.
+ * Built-in operations require NIP-01-compatible reducers.
  */
 class CoroutinesRelayPool(
-    private val codec: NostrJsonCodec,
+    private val registry: NipRegistry,
+    private val jsonCodec: JsonCodec,
     private val eventVerifier: EventVerifier,
     private val transportFactory: RelayTransportFactory,
     private val scope: CoroutineScope,
     private val sessionConfig: SessionConfig = SessionConfig.Default,
     private val deduplicationPolicyFactory: () -> DeduplicationPolicy = { DeduplicationPolicy.lru() },
-    private val additionalModules: List<NipModule> = emptyList(),
 ) {
+    /** Installs NIP-01 followed by [additionalModules] for every pooled session. */
+    constructor(
+        codec: NostrJsonCodec,
+        eventVerifier: EventVerifier,
+        transportFactory: RelayTransportFactory,
+        scope: CoroutineScope,
+        sessionConfig: SessionConfig = SessionConfig.Default,
+        deduplicationPolicyFactory: () -> DeduplicationPolicy = { DeduplicationPolicy.lru() },
+        additionalModules: List<NipModule> = emptyList(),
+    ) : this(
+        registry = NipRegistry.Builder(codec)
+            .install(Nip01Module(codec))
+            .apply { additionalModules.forEach { install(it) } }
+            .build(),
+        jsonCodec = codec,
+        eventVerifier = eventVerifier,
+        transportFactory = transportFactory,
+        scope = scope,
+        sessionConfig = sessionConfig,
+        deduplicationPolicyFactory = deduplicationPolicyFactory,
+    )
+
     private data class RelayEntry(
         val session: CoroutinesRelaySession,
         var role: RelayRole,
@@ -92,12 +122,12 @@ class CoroutinesRelayPool(
 
             val session = CoroutinesRelaySession(
                 url = url,
-                codec = codec,
+                registry = registry,
+                jsonCodec = jsonCodec,
                 eventVerifier = eventVerifier,
                 transportFactory = transportFactory,
                 scope = scope,
                 config = sessionConfig,
-                additionalModules = additionalModules,
             )
             val newEntry = RelayEntry(session, role)
             relays[url] = newEntry

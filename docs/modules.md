@@ -102,8 +102,9 @@ val registry = NipRegistry.Builder(codec)
     .build()
 ```
 
-Install them on coroutine sessions with `additionalModules`. The session always
-installs NIP-01 first.
+Install them on coroutine sessions with `additionalModules`. This convenience
+constructor installs NIP-01 first. For custom ordering, pass a caller-built
+`NipRegistry` and `jsonCodec` to the registry constructor of a session or pool.
 
 ```kotlin
 val session = CoroutinesRelaySession(
