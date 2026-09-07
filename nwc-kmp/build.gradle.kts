@@ -49,22 +49,5 @@ kotlin {
             }
         }
 
-        val androidMain by getting {
-            dependencies {
-                implementation(libs.ktor.client.okhttp)
-            }
-        }
-
-        val jvmMain by getting {
-            dependencies {
-                implementation(libs.ktor.client.okhttp)
-            }
-        }
-
-        val iosMain by getting {
-            dependencies {
-                implementation(libs.ktor.client.darwin)
-            }
-        }
     }
 }

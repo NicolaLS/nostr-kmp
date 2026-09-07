@@ -135,3 +135,15 @@ decrypt wallet responses. Treat the full URI like a credential:
 - Do not send it to analytics.
 - Store it only in secure app storage.
 - Prefer showing wallet capabilities to the user before enabling payments.
+
+The default constructor installs WebSockets and owns its transport resources.
+`close()` cancels initialization as well as active subscriptions and permanently
+closes the client. Injected transport factories and HTTP clients stay caller-owned.
+Incoming wallet events are authenticated locally before decryption and correlation.
+
+For alternative transports, asynchronous signing/encryption, or additional wallet
+methods, see [Injecting Capabilities](docs/client.md#injecting-capabilities).
+
+A `NwcConnection` descriptor contains public wallet/client keys and relay URLs.
+Use `NwcClient(connection, scope, signer, cipher)` for remote or hardware accounts
+without exporting a private key or constructing a credential-bearing URI.

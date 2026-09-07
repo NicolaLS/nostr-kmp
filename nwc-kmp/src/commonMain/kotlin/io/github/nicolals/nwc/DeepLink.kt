@@ -62,7 +62,9 @@ sealed class NwcDeepLink {
      * A callback from a wallet app containing the connection string.
      * Format: `nostrnwc://connect?value=<encoded_nwc_uri>`
      */
-    data class Callback(val value: String) : NwcDeepLink()
+    data class Callback(val value: String) : NwcDeepLink() {
+        override fun toString(): String = "Callback([redacted])"
+    }
 
     companion object {
         /**

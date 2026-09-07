@@ -12,6 +12,22 @@ NwcClient(
     scope: CoroutineScope,
     httpClient: HttpClient? = null,
     cachedWalletInfo: WalletInfo? = null,
+    transportFactory: RelayTransportFactory? = null,
+    codec: NostrJsonCodec = KotlinxNostrJsonCodec(),
+    signer: EventTemplateSigner = /* local connection signer */,
+    verifier: EventVerifier = NostrEventVerifier(),
+    cipher: NwcCipher = /* local connection encryption */,
+)
+
+NwcClient(
+    connection: NwcConnection,
+    scope: CoroutineScope,
+    signer: EventTemplateSigner,
+    cipher: NwcCipher,
+    transportFactory: RelayTransportFactory? = null,
+    codec: NostrJsonCodec = KotlinxNostrJsonCodec(),
+    verifier: EventVerifier = NostrEventVerifier(),
+    cachedWalletInfo: WalletInfo? = null,
 )
 
 NwcClient.fromUri(
@@ -29,6 +45,21 @@ NwcClient.fromDeepLink(
 ): NwcClient?
 ```
 
+For custom capabilities, construct `NwcConnection(walletPubkey, clientPubkey, relays)`
+without a private key and use `NwcClient(connection, ...)`. Signer and
+cipher methods suspend and return `CryptoResult`; cancellation propagates.
+`Nip47Cipher` combines `Nip04Cipher` and `Nip44Cipher`. Injected transport
+factories and HTTP clients remain caller-owned.
+
+Additional protocol methods can use:
+
+```kotlin
+suspend fun request(request: NwcRequest, timeoutMs: Long = 30_000): NwcResult<NwcResponse>
+```
+
+`NwcRequest` and the protocol `NwcResponse` live in the NIP-47 model package.
+`NwcUnknownRequest(method, params)` carries wallet-specific methods.
+
 Discovery methods on `NwcClient`:
 
 ```kotlin
@@ -36,6 +67,7 @@ suspend fun discover(
     uri: String,
     httpClient: HttpClient? = null,
     timeoutMs: Long = 10_000,
+    transportFactory: RelayTransportFactory? = null,
 ): NwcResult<WalletDiscovery>
 
 suspend fun discoverFromDeepLink(
@@ -51,7 +83,8 @@ State:
 val state: StateFlow<NwcClientState>
 val walletInfo: StateFlow<WalletInfo>
 val notifications: SharedFlow<WalletNotification>
-val uri: NwcConnectionUri
+val connection: NwcConnection
+val uri: NwcConnectionUri?
 val encryption: NwcEncryption
 val pendingRequestCount: Int
 ```
@@ -66,7 +99,7 @@ fun connect(
 
 suspend fun awaitReady(timeoutMs: Long = 10_000): Boolean
 
-fun close()
+suspend fun close()
 ```
 
 Operations:
@@ -435,8 +468,8 @@ val requestUri = NwcConnectRequest.Builder()
 
 ## Platform Notes
 
-- Android uses the Ktor OkHttp engine.
-- JVM uses the Ktor OkHttp engine.
+- Android uses the Ktor CIO engine.
+- JVM uses the Ktor CIO engine.
 - iOS uses the Ktor Darwin engine.
 - The iOS framework is static and named `NwcKmp`.
 - Nostr public keys and NWC encryption types from `nostr-kmp` are part of the

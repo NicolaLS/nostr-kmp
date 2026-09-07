@@ -1,5 +1,7 @@
 package io.github.nicolals.nwc
 
+import kotlinx.coroutines.CancellationException
+
 /**
  * Result type for NWC operations.
  *
@@ -146,10 +148,12 @@ sealed class NwcResult<out T> {
          */
         inline fun <T> catch(block: () -> T): NwcResult<T> = try {
             Success(block())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: NwcException) {
             Failure(e.error)
         } catch (e: Exception) {
-            Failure(NwcError.ProtocolError(e.message ?: "Unknown error", e))
+            Failure(NwcError.ProtocolError("Operation failed"))
         }
     }
 }
@@ -161,8 +165,9 @@ fun <T> Result<T>.toNwcResult(): NwcResult<T> = fold(
     onSuccess = { NwcResult.Success(it) },
     onFailure = { e ->
         when (e) {
+            is CancellationException -> throw e
             is NwcException -> NwcResult.Failure(e.error)
-            else -> NwcResult.Failure(NwcError.ProtocolError(e.message ?: "Unknown error", e))
+            else -> NwcResult.Failure(NwcError.ProtocolError("Operation failed"))
         }
     }
 )

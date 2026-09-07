@@ -74,7 +74,7 @@ when (val result = client.getInfo()) {
 ```kotlin
 when (val result = client.payInvoice(invoice = bolt11)) {
     is NwcResult.Success -> {
-        println("Paid with preimage ${result.value.preimage}")
+        println("Payment completed")
         println("Fees: ${result.value.feesPaid ?: Amount.ZERO}")
     }
     is NwcResult.Failure -> {
@@ -97,7 +97,7 @@ shows the payment is still pending, the error is `NwcError.PaymentPending`:
 
 ```kotlin
 when (val result = client.payInvoice(invoice = bolt11)) {
-    is NwcResult.Success -> println(result.value.preimage)
+    is NwcResult.Success -> println("Payment completed")
     is NwcResult.Failure -> when (val error = result.error) {
         is NwcError.PaymentPending -> {
             println("Payment pending: ${error.paymentHash}")
@@ -137,8 +137,7 @@ val params = MakeInvoiceParams(
 when (val result = client.makeInvoice(params)) {
     is NwcResult.Success -> {
         val transaction = result.value
-        println(transaction.invoice)
-        println(transaction.paymentHash)
+        // Display transaction.invoice in the payment UI; keep it out of logs.
     }
     is NwcResult.Failure -> {
         println("Invoice creation failed: ${result.error.message}")
@@ -202,7 +201,7 @@ val params = KeysendParams(
 )
 
 when (val result = client.payKeysend(params)) {
-    is NwcResult.Success -> println(result.value.preimage)
+    is NwcResult.Success -> println("Payment completed")
     is NwcResult.Failure -> println(result.error.message)
 }
 ```
@@ -232,7 +231,7 @@ when (val result = client.multiPayInvoice(items)) {
         result.value.forEach { (id, itemResult) ->
             when (itemResult) {
                 is MultiPayItemResult.Success -> {
-                    println("$id paid: ${itemResult.result.preimage}")
+                    println("$id paid")
                 }
                 is MultiPayItemResult.Failed -> {
                     println("$id failed: ${itemResult.error.message}")
@@ -303,7 +302,7 @@ Wallet-defined NIP-47 failures are wrapped as `NwcError.WalletError`:
 
 ```kotlin
 when (val result = client.payInvoice(invoice = bolt11)) {
-    is NwcResult.Success -> println(result.value.preimage)
+    is NwcResult.Success -> println("Payment completed")
     is NwcResult.Failure -> when (val error = result.error) {
         is NwcError.WalletError -> when (error.code) {
             NwcErrorCode.INSUFFICIENT_BALANCE -> println("Not enough balance")

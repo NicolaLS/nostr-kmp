@@ -156,8 +156,10 @@ client.close()
 scope.cancel()
 ```
 
-`close()` stops relay subscriptions, closes the current session, and fails
-pending requests with `NwcError.Cancelled`.
+`close()` cancels connection initialization and pending work, closes the relay
+pool and owned transport, and permanently closes this client. Caller cancellation
+propagates through suspend operations. The caller still owns its supplied scope,
+HTTP client, or transport factory.
 
 ## Cache Wallet Info
 
@@ -177,13 +179,14 @@ The `walletInfo` StateFlow updates after fresh info is fetched from the relay.
 
 ## Custom HTTP Client
 
-Pass a Ktor `HttpClient` when you need custom engines, timeouts, logging, or
-platform configuration:
+Pass a Ktor `HttpClient` when you need custom engines, timeouts, or platform
+configuration. Install WebSockets on a custom client:
 
 ```kotlin
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.WebSockets
 
-val httpClient = HttpClient()
+val httpClient = HttpClient { install(WebSockets) }
 val client = NwcClient(
     uri = uri,
     scope = scope,
@@ -191,4 +194,7 @@ val client = NwcClient(
 )
 ```
 
-Manage the `HttpClient` lifecycle according to your app's ownership model.
+The supplied HTTP client remains caller-owned; close it after all clients using
+it have closed. Avoid logging request/response bodies, connection URIs, or
+payment preimages. For alternative transports or asynchronous account signing
+and encryption, see [Injecting Capabilities](client.md#injecting-capabilities).

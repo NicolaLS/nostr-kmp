@@ -27,7 +27,7 @@ when (val link = NwcDeepLink.parse(input)) {
         val client = NwcClient(link.uri, scope)
     }
     is NwcDeepLink.Callback -> {
-        println("Callback value: ${link.value}")
+        // Validate and handle the callback without logging its credential-bearing value.
     }
     null -> {
         println("Not an NWC link")

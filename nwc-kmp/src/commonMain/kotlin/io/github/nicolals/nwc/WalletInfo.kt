@@ -36,11 +36,16 @@ data class WalletInfo(
      * This indicates a wallet that doesn't explicitly advertise encryption support.
      */
     val encryptionDefaultedToNip04: Boolean = false,
+
+    /** Advertised wallet extensions that are not represented by [NwcCapability]. */
+    val additionalCapabilities: Set<String> = emptySet(),
 ) {
     /**
      * Whether the wallet supports a specific capability.
      */
     fun supports(capability: NwcCapability): Boolean = capability in capabilities
+
+    fun supports(method: String): Boolean = method in capabilityStrings
 
     /**
      * Whether the wallet supports receiving notifications.
@@ -52,7 +57,7 @@ data class WalletInfo(
      * Capabilities as string values for persistence.
      */
     val capabilityStrings: Set<String>
-        get() = capabilities.map { it.value }.toSet()
+        get() = capabilities.map { it.value }.toSet() + additionalCapabilities
 
     /**
      * Notifications as string values for persistence.
@@ -76,7 +81,7 @@ data class WalletInfo(
             val encryptions = event.supportedEncryptions.toSet()
 
             // Check if encryption defaulted (no encryption tag was present in info event)
-            val encryptionDefaulted = encryptions.isEmpty()
+            val encryptionDefaulted = event.encryptionCodes.isEmpty()
 
             val preferredEncryption = when {
                 NwcEncryption.NIP44_V2 in encryptions -> NwcEncryption.NIP44_V2
@@ -97,6 +102,7 @@ data class WalletInfo(
                 encryptions = effectiveEncryptions,
                 preferredEncryption = preferredEncryption,
                 encryptionDefaultedToNip04 = encryptionDefaulted,
+                additionalCapabilities = event.capabilities.filter { NwcCapability.fromValue(it) == null }.toSet(),
             )
         }
 

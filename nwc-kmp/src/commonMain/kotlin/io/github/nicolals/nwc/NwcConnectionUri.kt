@@ -67,6 +67,8 @@ data class NwcConnectionUri(
         computeClientPubkey(secret)
     }
 
+    override fun toString(): String = "NwcConnectionUri(walletPubkey=$walletPubkey, credentials=<redacted>)"
+
     companion object {
         private const val SCHEME_NWC = "nostr+walletconnect://"
         private const val SCHEME_NWC_ALT = "nostr+walletconnect:"
@@ -119,7 +121,7 @@ data class NwcConnectionUri(
             } catch (_: Exception) {
                 return null
             }
-            if (secret.size != 32) return null
+            if (secret.size != 32 || NostrSigning.verifySecretKey(secret).getOrNull() != true) return null
 
             // Extract relays (at least one required)
             val relays = params["relay"]?.map { urlDecode(it) } ?: emptyList()
