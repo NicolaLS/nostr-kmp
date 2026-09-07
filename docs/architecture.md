@@ -110,6 +110,15 @@ their delays indefinitely.
 subscription owns its cache, and pooled subscriptions separately deduplicate their
 merged events across relays. Reusing a configuration does not share mutable state.
 
+Subscription buffers default to 256 events. Overflow closes the affected
+subscription and fails its event flow with `SubscriptionBufferOverflowException`,
+so an incomplete history cannot appear successful. Configure
+`subscriptionBufferCapacity` for the workload. Applications that explicitly accept
+loss can select `SubscriptionOverflowPolicy.DropNewest` and observe the handle's
+`droppedEventsFlow`. Deduplication records IDs only after buffer admission; dropped
+events remain eligible for later replay. These policies also apply to each
+underlying subscription in a relay pool.
+
 Sessions and pools borrow their transport factory. The factory owner closes it
 when all sessions are finished. `KtorRelayTransportFactory()` owns its default
 WebSockets-enabled HTTP client; a supplied client is borrowed. Closing a connection

@@ -28,7 +28,17 @@ interface DeduplicationPolicy {
      * @param eventId The event ID to check.
      * @return True if the event is a duplicate (already seen), false if it's new.
      */
-    fun isDuplicate(eventId: EventId): Boolean
+    fun isDuplicate(eventId: EventId): Boolean {
+        val duplicate = contains(eventId)
+        if (!duplicate) record(eventId)
+        return duplicate
+    }
+
+    /** Checks an ID without recording unseen events. May refresh existing LRU entries. */
+    fun contains(eventId: EventId): Boolean
+
+    /** Records an event after it has been accepted for delivery. */
+    fun record(eventId: EventId)
 
     /**
      * Clears all recorded events.
@@ -64,7 +74,7 @@ interface DeduplicationPolicy {
  * Tracks the most recent [maxSize] event IDs. Oldest entries are
  * evicted when the limit is reached.
  *
- * Uses a combination of a HashMap for O(1) lookup and a MutableList
+ * Uses a combination of a HashMap for O(1) lookup and a linked list
  * for maintaining LRU order. When an existing event is accessed, it's
  * moved to the end of the list (most recently used).
  *
@@ -88,29 +98,18 @@ internal class LruDeduplicationPolicy(
     private var head: Node? = null
     private var tail: Node? = null
 
-    override fun isDuplicate(eventId: EventId): Boolean {
-        if (maxSize <= 0) {
-            return false
-        }
+    override fun contains(eventId: EventId): Boolean {
+        val existing = nodes[eventId] ?: return false
+        moveToTail(existing)
+        return true
+    }
 
-        // Check if we've seen this event
-        val existing = nodes[eventId]
-        if (existing != null) {
-            moveToTail(existing)
-            return true
-        }
-
-        // Record new event
+    override fun record(eventId: EventId) {
+        if (maxSize <= 0 || contains(eventId)) return
         val node = Node(eventId = eventId)
         appendToTail(node)
         nodes[eventId] = node
-
-        // Evict oldest if over capacity
-        if (nodes.size > maxSize) {
-            evictOldest()
-        }
-
-        return false
+        if (nodes.size > maxSize) evictOldest()
     }
 
     override fun clear() {
@@ -169,6 +168,7 @@ internal class LruDeduplicationPolicy(
  * Policy that never deduplicates.
  */
 internal data object NoDeduplicationPolicy : DeduplicationPolicy {
-    override fun isDuplicate(eventId: EventId): Boolean = false
+    override fun contains(eventId: EventId): Boolean = false
+    override fun record(eventId: EventId) {}
     override fun clear() {}
 }

@@ -48,8 +48,14 @@ data class SessionConfig(
     val pingIntervalMillis: Long? = null,
     /** Maximum queued signals or inbound messages per runtime observer. */
     val observerBufferCapacity: Int = 64,
+    /** Maximum buffered events for each subscription. */
+    val subscriptionBufferCapacity: Int = 256,
+    /** Fail incomplete subscriptions by default; dropping must be explicitly selected. */
+    val subscriptionOverflowPolicy: SubscriptionOverflowPolicy = SubscriptionOverflowPolicy.Fail,
+
 ) {
     init {
+        require(subscriptionBufferCapacity > 0) { "subscriptionBufferCapacity must be positive" }
         require(observerBufferCapacity > 0) { "observerBufferCapacity must be positive" }
         require(pingIntervalMillis == null || pingIntervalMillis > 0) {
             "pingIntervalMillis must be positive or null, got: $pingIntervalMillis"
@@ -75,4 +81,12 @@ data class SessionConfig(
             pingIntervalMillis = null,
         )
     }
+}
+
+/** Behavior when a subscription consumer cannot keep up with incoming events. */
+enum class SubscriptionOverflowPolicy {
+    /** Close the subscription and fail its event flow, preserving a visible incomplete result. */
+    Fail,
+    /** Drop the newest event, expose a cumulative drop count, and allow later replay. */
+    DropNewest,
 }

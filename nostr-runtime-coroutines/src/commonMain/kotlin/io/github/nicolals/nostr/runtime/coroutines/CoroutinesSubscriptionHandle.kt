@@ -45,27 +45,22 @@ import kotlinx.coroutines.withTimeoutOrNull
  *
  * ## Backpressure
  *
- * Events are buffered in a channel with limited capacity. If the consumer
- * is slower than events are arriving and the buffer fills up, new events
- * will be dropped and an error will be emitted to the session's error flow.
- *
- * To avoid dropped events:
- * - Process events quickly in the collector
- * - Use `buffer()` operator if processing is slow
- * - Consider using `conflate()` if only the latest event matters
+ * The session configures buffer capacity and overflow policy. By default overflow
+ * closes the subscription and fails [events] with [SubscriptionBufferOverflowException].
+ * DropNewest is opt-in; [droppedEventsFlow] retains the cumulative loss count.
  */
 class CoroutinesSubscriptionHandle internal constructor(
     override val subscriptionId: SubscriptionId,
     private val closeCallback: (CoroutinesSubscriptionHandle) -> Unit,
+    bufferCapacity: Int = 256,
     private val onBackpressure: ((SubscriptionId, EventId, Long) -> Unit)? = null,
 ) : SubscriptionHandle {
 
     private val _statusFlow = MutableStateFlow<SubscriptionStatus>(SubscriptionStatus.Starting)
-    private var droppedEvents: Long = 0
+    private val _droppedEvents = MutableStateFlow(0L)
+    val droppedEventsFlow: StateFlow<Long> = _droppedEvents.asStateFlow()
 
-    // Bounded channel for events - drops new events on overflow to prevent blocking
-    // Capacity of 256 provides reasonable buffer while limiting memory
-    private val eventChannel = Channel<Event>(capacity = 256)
+    private val eventChannel = Channel<Event>(capacity = bufferCapacity)
 
     /**
      * Observable status as a [StateFlow].
@@ -88,14 +83,8 @@ class CoroutinesSubscriptionHandle internal constructor(
      *
      * ## Backpressure Handling
      *
-     * Events are buffered in a channel with capacity 256. If the consumer
-     * cannot keep up:
-     * - Events will be dropped
-     * - An error will be emitted to the session's error flow
-     * - The subscription continues to operate
-     *
-     * Consider using operators like `buffer()` or `conflate()` if your
-     * processing is slow.
+     * Overflow fails the flow by default. If DropNewest is explicitly selected,
+     * [droppedEventsFlow] reports loss even if nobody was observing session errors.
      */
     val events: Flow<Event> = flow {
         try {
@@ -165,8 +154,8 @@ class CoroutinesSubscriptionHandle internal constructor(
         val result = eventChannel.trySend(event)
         if (!result.isSuccess) {
             // Buffer is full, event is dropped
-            droppedEvents += 1
-            onBackpressure?.invoke(subscriptionId, event.id, droppedEvents)
+            _droppedEvents.value += 1
+            onBackpressure?.invoke(subscriptionId, event.id, _droppedEvents.value)
             return false
         }
         return true
@@ -177,7 +166,16 @@ class CoroutinesSubscriptionHandle internal constructor(
      *
      * Internal use only - called by the session when the subscription ends.
      */
+    internal fun failOverflow() {
+        eventChannel.close(SubscriptionBufferOverflowException(subscriptionId))
+        updateStatus(SubscriptionStatus.Closed("Subscription event buffer exhausted"))
+    }
+
     internal fun closeEventChannel() {
         eventChannel.close()
     }
 }
+
+/** Buffered events can be read, but the subscription result is incomplete. */
+class SubscriptionBufferOverflowException(val subscriptionId: SubscriptionId) :
+    IllegalStateException("Subscription event buffer exhausted")

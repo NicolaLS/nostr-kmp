@@ -34,6 +34,7 @@ import io.github.nicolals.nostr.core.runtime.RelaySession
 import io.github.nicolals.nostr.core.runtime.RetryDecision
 import io.github.nicolals.nostr.core.runtime.SessionConfig
 import io.github.nicolals.nostr.core.runtime.SubscriptionRetryReason
+import io.github.nicolals.nostr.core.runtime.SubscriptionOverflowPolicy
 import io.github.nicolals.nostr.core.runtime.SubscriptionStatus
 import io.github.nicolals.nostr.core.transport.CloseInfo
 import io.github.nicolals.nostr.core.transport.RelayConnection
@@ -468,6 +469,7 @@ class CoroutinesRelaySession(
     ): CoroutinesSubscriptionHandle {
         val handle = CoroutinesSubscriptionHandle(
             subscriptionId = subscriptionId,
+            bufferCapacity = config.subscriptionBufferCapacity,
             closeCallback = { handle -> enqueueInput(SessionInput.CloseSubscription(handle)) },
             onBackpressure = { id, eventId, droppedCount ->
                 _errors.tryEmit(SessionError.BackpressureDropped(url, id, eventId, droppedCount))
@@ -1254,12 +1256,14 @@ class CoroutinesRelaySession(
             is Nip01Signal.SubscriptionEvent -> {
                 val record = subscriptions[signal.subscriptionId]
                 if (record != null && record.generation == signal.generation) {
-                    // Check deduplication
-                    if (!record.deduplication.isDuplicate(signal.event.id)) {
-                        val sent = record.handle.sendEvent(signal.event)
-                        if (!sent) {
-                            // Event was dropped due to backpressure
-                            // Error already emitted by handle callback
+                    if (!record.deduplication.contains(signal.event.id)) {
+                        if (record.handle.sendEvent(signal.event)) {
+                            record.deduplication.record(signal.event.id)
+                        } else if (config.subscriptionOverflowPolicy == SubscriptionOverflowPolicy.Fail) {
+                            record.handle.failOverflow()
+                            removeSubscription(signal.subscriptionId)
+                            driveEngine(Nip01Intent.CloseSubscription(signal.subscriptionId))
+                            forgetSubscription(signal.subscriptionId)
                         }
                     }
                 }
