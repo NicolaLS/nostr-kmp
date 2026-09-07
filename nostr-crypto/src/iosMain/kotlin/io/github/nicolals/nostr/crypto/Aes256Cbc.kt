@@ -30,7 +30,19 @@ internal actual object Aes256Cbc {
     actual fun decrypt(key: ByteArray, iv: ByteArray, ciphertext: ByteArray): ByteArray {
         require(ciphertext.isNotEmpty()) { "ciphertext must not be empty" }
         require(ciphertext.size % BLOCK_SIZE == 0) { "ciphertext length must be multiple of 16" }
-        return crypt(kCCDecrypt, key, iv, ciphertext)
+        // CommonCrypto's padding removal accepts malformed suffixes. Keep the raw final block
+        // and validate PKCS7 ourselves so every platform enforces the same decryption contract.
+        val padded = crypt(kCCDecrypt, key, iv, ciphertext)
+        require(padded.size == ciphertext.size) { "invalid decrypted length" }
+        val paddingSize = padded.last().toInt() and 0xff
+        var invalid = ((paddingSize - 1) shr 31) or ((BLOCK_SIZE - paddingSize) shr 31)
+        for (offset in 1..BLOCK_SIZE) {
+            val paddingMask = (offset - paddingSize - 1) shr 31
+            val value = padded[padded.size - offset].toInt() and 0xff
+            invalid = invalid or ((value xor paddingSize) and paddingMask)
+        }
+        require(invalid == 0) { "invalid PKCS7 padding" }
+        return padded.copyOf(padded.size - paddingSize)
     }
 
     private fun crypt(
@@ -52,7 +64,7 @@ internal actual object Aes256Cbc {
                             val status = CCCrypt(
                                 op = operation.convert(),
                                 alg = kCCAlgorithmAES128.convert(),
-                                options = kCCOptionPKCS7Padding.convert(),
+                                options = if (operation == kCCEncrypt) kCCOptionPKCS7Padding.convert() else 0u,
                                 key = keyPinned.addressOf(0),
                                 keyLength = kCCKeySizeAES256.convert(),
                                 iv = ivPinned.addressOf(0),
@@ -63,7 +75,7 @@ internal actual object Aes256Cbc {
                                 dataOutMoved = outLength.ptr,
                             )
                             if (status != kCCSuccess) {
-                                throw IllegalStateException("CCCrypt failed: $status")
+                                throw IllegalStateException("AES-CBC operation failed")
                             }
                             outputSize = outLength.value.toInt()
                         }

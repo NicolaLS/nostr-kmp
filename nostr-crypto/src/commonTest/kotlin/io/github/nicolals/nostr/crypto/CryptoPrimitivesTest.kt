@@ -57,6 +57,36 @@ class CryptoPrimitivesTest {
     }
 
     @Test
+    fun aesCbcValidatesEveryPkcs7PaddingByte() {
+        val key = "603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4".decodeHex()
+        val iv = "000102030405060708090a0b0c0d0e0f".decodeHex()
+        for (paddingSize in 1..16) {
+            val plaintext = ByteArray(16 - paddingSize) { 0x41 }.toByteString()
+            val ciphertext = NostrCrypto.aes256CbcEncrypt(key, iv, plaintext).getOrThrow()
+            assertEquals(16, ciphertext.size)
+            assertEquals(plaintext, NostrCrypto.aes256CbcDecrypt(key, iv, ciphertext).getOrThrow())
+            for (offset in 1..paddingSize) {
+                // In the first CBC block, changing the IV flips exactly the corresponding
+                // plaintext byte, so this corrupts padding deterministically, not probabilistically.
+                val changedIv = iv.toByteArray().apply {
+                    this[16 - offset] = (this[16 - offset].toInt() xor 1).toByte()
+                }.toByteString()
+                assertIs<CryptoResult.Err>(
+                    NostrCrypto.aes256CbcDecrypt(key, changedIv, ciphertext),
+                    "padding length $paddingSize, corrupted offset $offset",
+                )
+            }
+        }
+        val empty = NostrCrypto.aes256CbcEncrypt(key, iv, ByteString.EMPTY).getOrThrow()
+        for (invalidSize in listOf(0, 17, 255)) {
+            val changedIv = iv.toByteArray().apply {
+                this[15] = (this[15].toInt() xor 16 xor invalidSize).toByte()
+            }.toByteString()
+            assertIs<CryptoResult.Err>(NostrCrypto.aes256CbcDecrypt(key, changedIv, empty))
+        }
+    }
+
+    @Test
     fun base64AndConstantTimeComparison() {
         assertEquals("Zm9v", NostrCrypto.base64Encode("foo".encodeUtf8()).getOrThrow())
         assertEquals("foo", NostrCrypto.base64Decode("Zm9v").getOrThrow().utf8())
