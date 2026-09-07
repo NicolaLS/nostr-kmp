@@ -108,8 +108,8 @@ class TransportStateMachine(initial: TransportState = TransportState.Idle) {
          * Valid state transitions.
          */
         private val VALID_TRANSITIONS: Map<TransportState, Set<TransportState>> = mapOf(
-            TransportState.Idle to setOf(TransportState.Connecting),
-            TransportState.Connecting to setOf(TransportState.Open, TransportState.Failed),
+            TransportState.Idle to setOf(TransportState.Connecting, TransportState.Closing),
+            TransportState.Connecting to setOf(TransportState.Open, TransportState.Closing, TransportState.Failed),
             TransportState.Open to setOf(TransportState.Closing, TransportState.Failed),
             TransportState.Closing to setOf(TransportState.Closed, TransportState.Failed),
             TransportState.Failed to setOf(TransportState.Closed),

@@ -8,6 +8,9 @@ package io.github.nicolals.nostr.core.transport
  */
 sealed class TransportError {
 
+    /** The bounded outgoing queue cannot admit another message yet. */
+    data class Backpressure(val operation: String) : TransportError()
+
     /**
      * A network I/O error occurred (e.g., connection refused, network unreachable,
      * read/write failure).

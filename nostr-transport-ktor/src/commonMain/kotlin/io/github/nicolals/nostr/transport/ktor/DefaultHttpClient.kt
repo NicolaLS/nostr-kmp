@@ -6,8 +6,8 @@ import io.ktor.client.HttpClient
  * Creates a platform-specific [HttpClient] configured for WebSocket connections.
  *
  * The returned client uses the appropriate engine for the platform:
- * - JVM: OkHttp
- * - Android: OkHttp
+ * - JVM: CIO
+ * - Android: CIO
  * - iOS: Darwin
  *
  * The client has the WebSockets plugin installed and is ready to use with

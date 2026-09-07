@@ -17,9 +17,9 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":nostr-core"))
-                implementation(libs.ktor.client.core)
+                api(libs.ktor.client.core)
                 implementation(libs.ktor.client.websockets)
-                implementation(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.coroutines.core)
             }
         }
         val commonTest by getting {
@@ -30,12 +30,12 @@ kotlin {
         }
         val jvmMain by getting {
             dependencies {
-                implementation(libs.ktor.client.okhttp)
+                implementation(libs.ktor.client.cio)
             }
         }
         val androidMain by getting {
             dependencies {
-                implementation(libs.ktor.client.okhttp)
+                implementation(libs.ktor.client.cio)
             }
         }
         val iosMain by getting {
