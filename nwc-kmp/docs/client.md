@@ -241,6 +241,11 @@ injected transport resources under caller ownership. A closed client cannot
 reconnect. Cancellation from an operation's caller propagates as coroutine
 cancellation; it is not converted into a wallet error.
 
+Closing or reconnecting while a request's caller remains active returns a typed
+failure: `ConnectionError` if publication has not begun, or `Timeout` once the
+request may have been sent, including while waiting for the relay acknowledgment.
+The latter is an uncertain wallet outcome; reconcile payments before retrying.
+
 ## Request Deadlines
 
 A request's positive `timeoutMs` covers connection readiness, remote encryption

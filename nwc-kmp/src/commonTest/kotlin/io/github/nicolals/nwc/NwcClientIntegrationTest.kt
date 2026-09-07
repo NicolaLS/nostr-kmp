@@ -280,10 +280,13 @@ class NwcClientIntegrationTest {
         val client = NwcClient(uri, backgroundScope, transportFactory = factory, cachedWalletInfo = walletInfo)
         try {
             runCurrent()
-            val result = async { client.getBalance() }
+            var returnedToCancelledCaller = false
+            val result = async { client.getBalance().also { returnedToCancelledCaller = true } }
             runCurrent()
             assertEquals(1, client.pendingRequestCount)
             result.cancelAndJoin()
+            assertTrue(result.isCancelled)
+            assertFalse(returnedToCancelledCaller)
             assertEquals(0, client.pendingRequestCount)
             assertEquals(NwcClientState.Ready, client.state.value)
         } finally {
@@ -362,34 +365,87 @@ class NwcClientIntegrationTest {
     }
 
     @Test
-    fun closeAndReconnectCancelRemoteApprovalBeforePublication() = runTest {
-        for (reconnect in listOf(false, true)) {
+    fun closeAndReconnectReturnNotSentWhileCancellingRemotePreparation() = runTest {
+        for (reconnect in listOf(false, true)) for (batch in listOf(false, true)) for (encrypting in listOf(false, true)) {
             val approvalStarted = CompletableDeferred<Unit>()
             var approvalCancelled = false
+            suspend fun approve() {
+                approvalStarted.complete(Unit)
+                try {
+                    delay(60_000)
+                } finally {
+                    approvalCancelled = true
+                }
+            }
             val remoteSigner = object : EventTemplateSigner {
                 override val pubkey = clientSigner.pubkey
                 override suspend fun sign(draft: EventDraft): io.github.nicolals.nostr.core.crypto.CryptoResult<Event> {
-                    approvalStarted.complete(Unit)
-                    try {
-                        delay(60_000)
-                        return clientSigner.sign(draft)
-                    } finally {
-                        approvalCancelled = true
-                    }
+                    if (!encrypting) approve()
+                    return clientSigner.sign(draft)
                 }
             }
+            val localCipher = cipher(clientSecret)
+            val remoteCipher = object : NwcCipher {
+                override suspend fun encrypt(plaintext: String, encryption: NwcEncryption, recipientPublicKey: PublicKey): io.github.nicolals.nostr.core.crypto.CryptoResult<String> {
+                    if (encrypting) approve()
+                    return localCipher.encrypt(plaintext, encryption, recipientPublicKey)
+                }
+                override suspend fun decrypt(content: String, encryption: NwcEncryption, senderPublicKey: PublicKey) =
+                    localCipher.decrypt(content, encryption, senderPublicKey)
+            }
             val factory = TestRelayFactory(codec)
-            val client = NwcClient(uri, backgroundScope, transportFactory = factory, cachedWalletInfo = walletInfo, signer = remoteSigner)
-            runCurrent()
-            val result = async { client.getBalance() }
-            runCurrent()
-            assertTrue(approvalStarted.isCompleted)
-            if (reconnect) client.connect(forceReconnect = true) else client.close()
-            runCurrent()
-            assertTrue(approvalCancelled)
-            assertTrue(result.isCancelled)
-            assertTrue(factory.connections.all { it.publications.isEmpty() })
-            client.close()
+            val client = NwcClient(
+                uri, backgroundScope, transportFactory = factory, cachedWalletInfo = walletInfo,
+                signer = remoteSigner, cipher = remoteCipher,
+            )
+            try {
+                runCurrent()
+                val result = async {
+                    if (batch) client.multiPayInvoice(listOf(MultiPayInvoiceItem("a", "invoice-a"))).map { }
+                    else client.getBalance().map { }
+                }
+                runCurrent()
+                assertTrue(approvalStarted.isCompleted)
+                if (reconnect) client.connect(forceReconnect = true) else client.close()
+                runCurrent()
+                assertTrue(approvalCancelled)
+                assertTrue(result.await().errorOrNull() is NwcError.ConnectionError)
+                assertFalse(result.isCancelled)
+                assertTrue(factory.connections.all { it.publications.isEmpty() })
+                assertEquals(0, client.pendingRequestCount)
+            } finally {
+                client.close()
+            }
+        }
+    }
+
+    @Test
+    fun closeAndReconnectAfterPublicationReturnAnUncertainOutcomeWithOrWithoutAck() = runTest {
+        for (reconnect in listOf(false, true)) for (batch in listOf(false, true)) for (acknowledged in listOf(false, true)) {
+            val factory = TestRelayFactory(codec)
+            val client = NwcClient(uri, backgroundScope, transportFactory = factory, cachedWalletInfo = walletInfo)
+            try {
+                runCurrent()
+                val relay = factory.connections.single()
+                val result = async {
+                    if (batch) client.multiPayInvoice(listOf(MultiPayInvoiceItem("a", "invoice-a"))).map { }
+                    else client.getBalance().map { }
+                }
+                runCurrent()
+                val publication = relay.publications.single()
+                if (acknowledged) {
+                    relay.ack(publication)
+                    runCurrent()
+                }
+                assertFalse(result.isCompleted)
+                if (reconnect) client.connect(forceReconnect = true) else client.close()
+                runCurrent()
+                assertTrue(result.await().isTimeout)
+                assertFalse(result.isCancelled)
+                assertEquals(0, client.pendingRequestCount)
+            } finally {
+                client.close()
+            }
         }
     }
 

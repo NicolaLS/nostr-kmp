@@ -972,20 +972,38 @@ class NwcClient private constructor(
         }
     }
 
+    private class RequestAttempt {
+        // Written by the client-owned operation and read by its caller after cancellation.
+        private val mayHaveBeenPublished = MutableStateFlow(false)
+
+        fun beforePublication() {
+            mayHaveBeenPublished.value = true
+        }
+
+        fun interrupted(timeoutMs: Long): io.github.nicolals.nwc.NwcError =
+            if (mayHaveBeenPublished.value) {
+                io.github.nicolals.nwc.NwcError.Timeout("Request interrupted after possible publication", timeoutMs)
+            } else {
+                io.github.nicolals.nwc.NwcError.ConnectionError("Request interrupted before publication")
+            }
+    }
+
     private suspend fun <T> executeWithDeadline(
         timeoutMs: Long,
-        block: suspend (UnixTimeSeconds) -> io.github.nicolals.nwc.NwcResult<T>,
+        block: suspend (UnixTimeSeconds, RequestAttempt) -> io.github.nicolals.nwc.NwcResult<T>,
     ): io.github.nicolals.nwc.NwcResult<T> {
+        currentCoroutineContext().ensureActive()
         if (timeoutMs <= 0) return io.github.nicolals.nwc.NwcResult.failure(
             io.github.nicolals.nwc.NwcError.ProtocolError("timeoutMs must be positive")
         )
         val expiration = UnixTimeSeconds(requestExpirationSeconds(UnixTimeSeconds.now().value, timeoutMs))
+        val attempt = RequestAttempt()
         val operation = scope.async {
             try {
                 withTimeoutOrNull(timeoutMs) {
                     val job = requireNotNull(currentCoroutineContext()[Job])
                     try {
-                        block(expiration)
+                        block(expiration, attempt)
                     } finally {
                         withContext(NonCancellable) { lifecycleMutex.withLock { preparingRequests.remove(job) } }
                     }
@@ -1001,24 +1019,31 @@ class NwcClient private constructor(
                 )
             }
         }
-        return try {
+        val result = try {
             operation.await()
+        } catch (e: CancellationException) {
+            // Closing/replacing the client must not cancel an independently active caller.
+            currentCoroutineContext().ensureActive()
+            io.github.nicolals.nwc.NwcResult.failure(attempt.interrupted(timeoutMs))
         } finally {
             withContext(NonCancellable) { operation.cancelAndJoin() }
         }
+        currentCoroutineContext().ensureActive()
+        return result
     }
 
     private suspend fun executeRequest(
         request: NwcRequest,
         timeoutMs: Long,
-    ): io.github.nicolals.nwc.NwcResult<NwcResponse> = executeWithDeadline(timeoutMs) { expiration ->
-        executeRequestWithinDeadline(request, timeoutMs, expiration)
+    ): io.github.nicolals.nwc.NwcResult<NwcResponse> = executeWithDeadline(timeoutMs) { expiration, attempt ->
+        executeRequestWithinDeadline(request, timeoutMs, expiration, attempt)
     }
 
     private suspend fun executeRequestWithinDeadline(
         request: NwcRequest,
         timeoutMs: Long,
         expiration: UnixTimeSeconds,
+        attempt: RequestAttempt,
     ): io.github.nicolals.nwc.NwcResult<NwcResponse> {
         // Ensure we are connected before proceeding
         // Give generous time for connection establishment with retries.
@@ -1104,7 +1129,7 @@ class NwcClient private constructor(
                 pendingRequests[requestId] = PendingRequest(request.method, encryption, deferred)
                 _pendingRequestCount.value = pendingRequests.size
             }
-            val publishError = awaitPublication(currentPool, generation, signedEvent.event) { deferred.isCompleted }
+            val publishError = awaitPublication(currentPool, generation, signedEvent.event, attempt) { deferred.isCompleted }
             if (publishError != null) return io.github.nicolals.nwc.NwcResult.failure(publishError)
             val response = withTimeoutOrNull(timeoutMs) { deferred.await() }
             when {
@@ -1120,10 +1145,7 @@ class NwcClient private constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: NwcException) {
-            // Once publication is attempted, a missing response does not establish payment failure.
-            io.github.nicolals.nwc.NwcResult.failure(
-                io.github.nicolals.nwc.NwcError.Timeout("Connection lost while waiting for response (request may have been sent)", timeoutMs)
-            )
+            io.github.nicolals.nwc.NwcResult.failure(attempt.interrupted(timeoutMs))
         } catch (e: Exception) {
             io.github.nicolals.nwc.NwcResult.failure(
                 io.github.nicolals.nwc.NwcError.ProtocolError("Request failed")
@@ -1140,6 +1162,7 @@ class NwcClient private constructor(
         pool: CoroutinesRelayPool,
         generation: Long,
         event: Event,
+        attempt: RequestAttempt,
         hasResponse: () -> Boolean,
     ): io.github.nicolals.nwc.NwcError? {
         val preparationJob = requireNotNull(currentCoroutineContext()[Job])
@@ -1148,26 +1171,20 @@ class NwcClient private constructor(
             if (relayPool !== pool || connectionGeneration != generation || _state.value != NwcClientState.Ready) {
                 return io.github.nicolals.nwc.NwcError.ConnectionError("Connection changed before publication")
             }
+            // Publication can begin before its handle is returned or its status is observed.
+            attempt.beforePublication()
             pool.publish(event)
         }
         try {
-            var mayHaveBeenSent = handle.status.values.any {
-                it == PublishStatus.Pending || it is PublishStatus.Accepted
-            }
             val statuses = withTimeoutOrNull(PUBLISH_ACK_TIMEOUT_MS) {
                 handle.statusFlow.first { statuses ->
-                    if (statuses.values.any { it == PublishStatus.Pending || it is PublishStatus.Accepted }) {
-                        mayHaveBeenSent = true
-                    }
                     statuses.values.any { it is PublishStatus.Accepted } || statuses.values.all { it.isTerminal }
                 }
             }
             if (statuses?.values?.any { it is PublishStatus.Accepted } == true || hasResponse()) return null
-            return if (mayHaveBeenSent) {
-                io.github.nicolals.nwc.NwcError.Timeout("Request may have been published without acknowledgment", PUBLISH_ACK_TIMEOUT_MS)
-            } else {
-                io.github.nicolals.nwc.NwcError.ConnectionError("Request not sent: no relay accepted publication")
-            }
+            return io.github.nicolals.nwc.NwcError.Timeout(
+                "Request may have been published without acknowledgment", PUBLISH_ACK_TIMEOUT_MS
+            )
         } finally {
             handle.close()
         }
@@ -1177,8 +1194,8 @@ class NwcClient private constructor(
         request: NwcRequest,
         itemIds: List<String>,
         timeoutMs: Long,
-    ): io.github.nicolals.nwc.NwcResult<Map<String, NwcResponse>> = executeWithDeadline(timeoutMs) { expiration ->
-        executeMultiRequestWithinDeadline(request, itemIds, timeoutMs, expiration)
+    ): io.github.nicolals.nwc.NwcResult<Map<String, NwcResponse>> = executeWithDeadline(timeoutMs) { expiration, attempt ->
+        executeMultiRequestWithinDeadline(request, itemIds, timeoutMs, expiration, attempt)
     }
 
     private suspend fun executeMultiRequestWithinDeadline(
@@ -1186,6 +1203,7 @@ class NwcClient private constructor(
         itemIds: List<String>,
         timeoutMs: Long,
         expiration: UnixTimeSeconds,
+        attempt: RequestAttempt,
     ): io.github.nicolals.nwc.NwcResult<Map<String, NwcResponse>> {
         // Ensure we are connected before proceeding
         // Give generous time for connection establishment with retries
@@ -1277,7 +1295,7 @@ class NwcClient private constructor(
             pendingMutex.withLock {
                 pendingMultiRequests[requestId] = PendingBatch(request.method, encryption, deferreds.toMutableMap())
             }
-            val publishError = awaitPublication(currentPool, generation, signedEvent.event) { deferreds.values.any { it.isCompleted } }
+            val publishError = awaitPublication(currentPool, generation, signedEvent.event, attempt) { deferreds.values.any { it.isCompleted } }
             if (publishError != null) return io.github.nicolals.nwc.NwcResult.failure(publishError)
             val responses = withTimeoutOrNull(timeoutMs) {
                 buildMap {
@@ -1294,9 +1312,7 @@ class NwcClient private constructor(
         } catch (e: CancellationException) {
             throw e
         } catch (e: NwcException) {
-            io.github.nicolals.nwc.NwcResult.failure(
-                io.github.nicolals.nwc.NwcError.Timeout("Connection lost while waiting for responses (request may have been sent)", timeoutMs)
-            )
+            io.github.nicolals.nwc.NwcResult.failure(attempt.interrupted(timeoutMs))
         } catch (e: Exception) {
             io.github.nicolals.nwc.NwcResult.failure(
                 io.github.nicolals.nwc.NwcError.ProtocolError("Batch request failed")
