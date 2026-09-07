@@ -46,6 +46,9 @@ import io.github.nicolals.nostr.nip42.protocol.Nip42Reducer
 class Nip42Module(
     codec: NostrWireCodec,
 ) : NipModule {
+    override val id: String = "nip42"
+    override val requires: Set<String> = setOf("nip01")
+
 
     override val eventUpgraders: List<EventUpgrader<out EventView>> =
         listOf(AuthEventUpgrader())

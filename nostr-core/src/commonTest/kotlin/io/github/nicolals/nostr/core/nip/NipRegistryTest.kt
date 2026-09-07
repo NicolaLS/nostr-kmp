@@ -20,8 +20,29 @@ import kotlin.test.Test
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertSame
+import kotlin.test.assertFailsWith
+import kotlin.test.assertEquals
 
 class NipRegistryTest {
+    @Test fun duplicateAndBlankModuleIdsAreRejected() {
+        val builder = NipRegistry.Builder(StubCodec).install(TestModule)
+        assertFailsWith<IllegalArgumentException> { builder.install(TestModule) }
+        assertFailsWith<IllegalArgumentException> { builder.install(object : NipModule { override val id = " " }) }
+        assertEquals(setOf(TestModule.id), builder.build().moduleIds)
+    }
+
+    @Test fun missingAndMisorderedDependenciesAreRejected() {
+        val dependent = object : NipModule {
+            override val id = "test.dependent"
+            override val requires = setOf(TestModule.id)
+        }
+        assertFailsWith<IllegalArgumentException> { NipRegistry.Builder(StubCodec).install(dependent).build() }
+        assertFailsWith<IllegalArgumentException> {
+            NipRegistry.Builder(StubCodec).install(dependent).install(TestModule).build()
+        }
+        val registry = NipRegistry.Builder(StubCodec).install(TestModule).install(dependent).build()
+        assertEquals(setOf(TestModule.id, dependent.id), registry.moduleIds)
+    }
 
     // Stub codec for testing - methods throw since tests don't use codec functionality
     private object StubCodec : NostrWireCodec {
@@ -77,6 +98,7 @@ class NipRegistryTest {
 
     // Test module - no context needed for this simple test
     private object TestModule : NipModule {
+        override val id = "test.NipRegistryTest.1"
         override val eventUpgraders = listOf(TestEventUpgrader)
     }
 

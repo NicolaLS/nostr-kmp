@@ -20,6 +20,12 @@ import io.github.nicolals.nostr.core.protocol.ProtocolReducer
  * - Protocol reducers for handling protocol lifecycle semantics
  */
 interface NipModule {
+    /** Stable namespaced identity. A registry accepts each ID exactly once. */
+    val id: String
+
+    /** Module IDs that must be installed before this module's reducers. */
+    val requires: Set<String> get() = emptySet()
+
     /** Event upgraders provided by this NIP module */
     val eventUpgraders: List<EventUpgrader<out EventView>> get() = emptyList()
 

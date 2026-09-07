@@ -67,6 +67,16 @@ pure protocol reducers. `NipRegistry.Builder(codec).install(module)` installs al
 those pieces together. Unknown event kinds and message tokens remain available as
 generic views.
 
+Every module declares a stable `id` and any `requires` module IDs. Duplicate IDs
+are rejected on installation; missing or incorrectly ordered dependencies are
+rejected on build. Sessions and pools require `nip01`, while standalone registries
+may contain only the decoders an application needs. Do not include NIP-01 in
+`additionalModules`: convenience constructors already install it.
+
+Module state keys must be stable instances, normally singleton objects. The store
+checks key identity before reading or replacing a namespaced slot and rejects
+collisions explicitly. Its diagnostics list keys without exposing stored values.
+
 Dependencies are explicit: `Nip01Module(codec)` uses JSON and wire codecs;
 `Nip42Module(codec)` and `Nip45Module(codec)` require only wire encoding;
 `Nip04Module()` needs no service to interpret an event; `Nip47Module(selector)`

@@ -7,6 +7,8 @@ import io.github.nicolals.nostr.core.message.raw.RawRelayMessage
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
 import io.github.nicolals.nostr.core.message.view.RelayMessageView
 import io.github.nicolals.nostr.core.nip.NipModule
+import io.github.nicolals.nostr.core.nip.NipRegistry
+import io.github.nicolals.nostr.nip01.Nip01Module
 import io.github.nicolals.nostr.core.protocol.*
 import io.github.nicolals.nostr.core.runtime.ConnectionStatus
 import io.github.nicolals.nostr.core.runtime.PublishStatus
@@ -21,6 +23,22 @@ import kotlin.test.*
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionSafetyTest {
+    @Test fun sessionAndPoolRejectMissingBaseAndDuplicateBaseModulesBeforeStarting() = runTest {
+        val codec = TestWireCodec()
+        val empty = NipRegistry.Builder(codec).build()
+        val factory = FakeRelayTransportFactory()
+        assertFailsWith<IllegalArgumentException> {
+            CoroutinesRelaySession(url, empty, codec, AcceptTestEvents, factory, this)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            CoroutinesRelayPool(empty, codec, AcceptTestEvents, factory, this)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            CoroutinesRelaySession(url, codec, AcceptTestEvents, factory, this,
+                additionalModules = listOf(Nip01Module(codec)))
+        }
+        assertTrue(factory.connections.isEmpty())
+    }
     private val url = RelayUrl.parse("wss://test.relay")
 
     private fun TestScope.connect(session: CoroutinesRelaySession, factory: FakeRelayTransportFactory) {
@@ -35,6 +53,7 @@ class SessionSafetyTest {
     @Test fun standardEventVerificationAndRoutingCannotBeShadowed() = runTest {
         var upgrades = 0
         val wrapper = object : NipModule {
+        override val id = "test.SessionSafetyTest.1"
             override val relayMessageUpgraders = listOf(object : RelayMessageUpgrader<WrappedEvent> {
                 override val tokens = setOf("EVENT")
                 override val priority = 100
@@ -82,6 +101,7 @@ class SessionSafetyTest {
 
     private suspend fun TestScope.assertReducerFailureCloses(shouldThrow: (ProtocolInput) -> Boolean) {
         val faulty = object : NipModule {
+        override val id = "test.SessionSafetyTest.2"
             override val protocolReducers = listOf(object : ProtocolReducer {
                 override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? {
                     if (shouldThrow(input)) error("private extension details")

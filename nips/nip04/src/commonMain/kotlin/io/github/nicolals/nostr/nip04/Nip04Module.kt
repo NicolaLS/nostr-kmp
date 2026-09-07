@@ -7,6 +7,8 @@ import io.github.nicolals.nostr.nip04.event.EncryptedDirectMessageEventUpgrader
 
 /** Registers the kind-4 event view; encryption capabilities are configured separately. */
 class Nip04Module : NipModule {
+    override val id: String = "nip04"
+
     override val eventUpgraders: List<EventUpgrader<out EventView>> =
         listOf(EncryptedDirectMessageEventUpgrader())
 }

@@ -23,6 +23,8 @@ import okio.ByteString
 class Nip47Module(
     private val encryptionSelector: NwcEncryptionSelector,
 ) : NipModule {
+    override val id: String = "nip47"
+
     override val eventUpgraders: List<EventUpgrader<out EventView>> =
         listOf(
             NwcInfoEventUpgrader(),

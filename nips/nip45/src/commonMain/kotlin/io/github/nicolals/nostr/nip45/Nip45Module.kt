@@ -19,6 +19,8 @@ import io.github.nicolals.nostr.nip45.message.Nip45RelayMessageUpgrader
 class Nip45Module(
     codec: NostrWireCodec,
 ) : NipModule {
+    override val id: String = "nip45"
+
     override val clientMessageUpgraders: List<ClientMessageUpgrader<*>> =
         listOf(Nip45ClientMessageUpgrader(codec))
 

@@ -83,6 +83,10 @@ class CoroutinesRelayPool(
         deduplicationPolicyFactory = deduplicationPolicyFactory,
     )
 
+    init {
+        require("nip01" in registry.moduleIds) { "Relay pools require the nip01 module" }
+    }
+
     private data class RelayEntry(
         val session: CoroutinesRelaySession,
         var role: RelayRole,

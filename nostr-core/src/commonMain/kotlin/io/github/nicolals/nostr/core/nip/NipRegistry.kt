@@ -38,7 +38,10 @@ import io.github.nicolals.nostr.core.protocol.ProtocolEngine
  * Installation order matters for protocol reducers. Install dependencies first
  * (e.g., Nip01 before Nip42, since Nip42's reducer depends on Nip01's OK message handling).
  */
-class NipRegistry(
+class NipRegistry private constructor(
+    /** Validated module identities in installation order. */
+    val moduleIds: Set<String>,
+
     /** Registry for upgrading events to typed views */
     val events: EventUpgradeRegistry,
 
@@ -57,30 +60,37 @@ class NipRegistry(
      * @param wireCodec The codec used for encoding/decoding Nostr wire messages.
      */
     class Builder(private val wireCodec: NostrWireCodec) {
-        private val eventBuilder = EventUpgradeRegistry.Builder()
-        private val messageBuilder = MessageUpgradeRegistry.Builder()
-        private val engineBuilder = ProtocolEngine.Builder()
+        private val modules = linkedMapOf<String, NipModule>()
 
-        /**
-         * Installs a NIP module into all registries.
-         *
-         * This registers the module's event upgraders, message upgraders,
-         * and protocol reducers in one call.
-         */
+        /** Adds a module once. Dependencies are validated when building. */
         fun install(module: NipModule) = apply {
-            eventBuilder.install(module)
-            messageBuilder.install(module)
-            engineBuilder.install(module)
+            require(module.id.isNotBlank()) { "Module ID must not be blank" }
+            require(module.id !in modules) { "Duplicate module: ${module.id}" }
+            modules[module.id] = module
         }
 
-        /**
-         * Builds the [NipRegistry] with all installed modules.
-         */
-        fun build() = NipRegistry(
-            events = eventBuilder.build(),
-            messages = messageBuilder.build(),
-            engine = engineBuilder.build(),
-            wireCodec = wireCodec,
-        )
+        /** Rejects missing or incorrectly ordered dependencies before creating registries. */
+        fun build(): NipRegistry {
+            val installed = mutableSetOf<String>()
+            val eventBuilder = EventUpgradeRegistry.Builder()
+            val messageBuilder = MessageUpgradeRegistry.Builder()
+            val engineBuilder = ProtocolEngine.Builder()
+            for ((id, module) in modules) {
+                require(installed.containsAll(module.requires)) {
+                    "Module $id requires earlier installation of: ${module.requires - installed}"
+                }
+                eventBuilder.install(module)
+                messageBuilder.install(module)
+                engineBuilder.install(module)
+                installed += id
+            }
+            return NipRegistry(
+                moduleIds = installed.toSet(),
+                events = eventBuilder.build(),
+                messages = messageBuilder.build(),
+                engine = engineBuilder.build(),
+                wireCodec = wireCodec,
+            )
+        }
     }
 }

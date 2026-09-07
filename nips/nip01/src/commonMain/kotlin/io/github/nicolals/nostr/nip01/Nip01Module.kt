@@ -24,6 +24,8 @@ import io.github.nicolals.nostr.nip01.model.Metadata
 class Nip01Module(
     codec: NostrJsonCodec,
 ) : NipModule {
+    override val id: String = "nip01"
+
     override val eventUpgraders: List<EventUpgrader<out EventView>> =
         listOf(MetadataEventUpgrader(codec))
 

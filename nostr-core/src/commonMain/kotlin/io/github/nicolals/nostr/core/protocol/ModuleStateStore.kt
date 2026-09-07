@@ -50,38 +50,40 @@ interface ModuleStateKey<T : Any> {
  *
  * The store is immutable; [set] returns a new store with the updated value.
  */
-class ModuleStateStore(
-    private val map: Map<String, Any> = emptyMap(),
+class ModuleStateStore private constructor(
+    private val map: Map<String, Entry>,
 ) {
-    /**
-     * Gets the state for the given key, or the key's default if not set.
-     */
+    constructor() : this(emptyMap())
+
+    private data class Entry(val key: ModuleStateKey<*>, val value: Any)
+
+    private fun entry(key: ModuleStateKey<*>): Entry? {
+        val entry = map[key.id] ?: return null
+        require(entry.key === key) { "Module state key collision: ${key.id}" }
+        return entry
+    }
+
+    /** The same key instance must be used for every access to a state slot. */
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(key: ModuleStateKey<T>): T =
-        (map[key.id] as? T) ?: key.default
+        entry(key)?.value as T? ?: key.default
 
-    /**
-     * Returns a new store with the given key set to the given value.
-     */
-    fun <T : Any> set(key: ModuleStateKey<T>, value: T): ModuleStateStore =
-        ModuleStateStore(map + (key.id to value))
+    fun <T : Any> set(key: ModuleStateKey<T>, value: T): ModuleStateStore {
+        entry(key) // Reject a different key before overwriting its state.
+        return ModuleStateStore(map + (key.id to Entry(key, value)))
+    }
 
-    /**
-     * Returns a new store with the given key removed.
-     */
-    fun remove(key: ModuleStateKey<*>): ModuleStateStore =
-        ModuleStateStore(map - key.id)
+    fun remove(key: ModuleStateKey<*>): ModuleStateStore {
+        entry(key)
+        return ModuleStateStore(map - key.id)
+    }
 
-    /**
-     * Checks if state exists for the given key.
-     */
-    fun contains(key: ModuleStateKey<*>): Boolean =
-        key.id in map
+    fun contains(key: ModuleStateKey<*>): Boolean = entry(key) != null
 
     override fun equals(other: Any?): Boolean =
         other is ModuleStateStore && map == other.map
 
     override fun hashCode(): Int = map.hashCode()
 
-    override fun toString(): String = "ModuleStateStore($map)"
+    override fun toString(): String = "ModuleStateStore(keys=${map.keys})"
 }

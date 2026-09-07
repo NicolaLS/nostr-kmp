@@ -322,6 +322,7 @@ class CoroutinesRelaySession(
     // ========== Initialization ==========
 
     init {
+        require("nip01" in registry.moduleIds) { "Relay sessions require the nip01 module" }
         startActor()
     }
 

@@ -59,6 +59,7 @@ class SessionExtensionTest {
     }
 
     private val gateModule = object : NipModule {
+        override val id = "test.SessionExtensionTest.1"
         override val protocolReducers = listOf(object : ProtocolReducer {
             override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? = when {
                 input == OpenGate -> ReduceResult(
@@ -73,6 +74,7 @@ class SessionExtensionTest {
 
     private val request = UnknownClientMessage(RawClientMessage(JsonArray(listOf(JsonString("CUSTOM")))))
     private val customModule = object : NipModule {
+        override val id = "test.SessionExtensionTest.2"
         override val relayMessageUpgraders = listOf(object : RelayMessageUpgrader<CustomReply> {
             override val tokens = setOf("CUSTOM_REPLY")
             override fun upgradeOrNull(raw: RawRelayMessage, token: String) = CustomReply(raw)
@@ -257,6 +259,7 @@ class SessionExtensionTest {
             override fun parse(json: String): JsonValue = error("Parser rejected $privateContent: $json")
         }
         val module = object : NipModule {
+        override val id = "test.SessionExtensionTest.3"
             override val protocolReducers = listOf(object : ProtocolReducer {
                 override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? {
                     if (input == CustomRequest) error("Reducer rejected $privateContent")
