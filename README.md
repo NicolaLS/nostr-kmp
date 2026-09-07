@@ -122,6 +122,7 @@ exporting private keys. Modules take the codecs or crypto capabilities they need
 - [Getting Started](docs/getting-started.md): installation, signing, publishing, subscribing, and relay pools.
 - [Modules](docs/modules.md): artifacts, dependencies, and NIP capabilities.
 - [Architecture](docs/architecture.md): event model, codecs, NIP registries, transport, runtime, and policies.
+- [Security](docs/security.md): authentication boundaries, encryption, credentials, and key custody.
 - [Recipes](docs/recipes.md): focused examples for typed messages, metadata, encryption, COUNT, and NWC.
 - [Nostr Wallet Connect Client](nwc-kmp/README.md): wallet connections, payments, invoices, and notifications.
 - [Publishing](docs/publishing.md): snapshot and release publishing instructions.
