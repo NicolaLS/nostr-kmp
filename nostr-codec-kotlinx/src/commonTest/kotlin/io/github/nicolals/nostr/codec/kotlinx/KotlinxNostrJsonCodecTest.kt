@@ -1,7 +1,9 @@
 package io.github.nicolals.nostr.codec.kotlinx
 
+import io.github.nicolals.nostr.core.codec.JsonArray
 import io.github.nicolals.nostr.core.codec.JsonNumber
 import io.github.nicolals.nostr.core.codec.JsonString
+import io.github.nicolals.nostr.core.codec.JsonValue
 import io.github.nicolals.nostr.core.codec.wire.WireEvent
 import io.github.nicolals.nostr.core.codec.wire.WireFilter
 import io.github.nicolals.nostr.core.codec.wire.toFilterOrNull
@@ -191,6 +193,14 @@ class KotlinxNostrJsonCodecTest {
             assertFailsWith<IllegalArgumentException>(key) { Filter(extraFields = fields) }
             assertFailsWith<IllegalArgumentException>(key) { WireFilter(extraFields = fields) }
         }
+    }
+
+    @Test
+    fun encodingRevalidatesCallerOwnedExtensionMaps() {
+        val fields = mutableMapOf<String, JsonValue>("search" to JsonString("bitcoin"))
+        val filter = WireFilter(extraFields = fields)
+        fields["authors"] = JsonArray(emptyList())
+        assertFailsWith<IllegalArgumentException> { codec.encodeFilter(filter) }
     }
 
     @Test
