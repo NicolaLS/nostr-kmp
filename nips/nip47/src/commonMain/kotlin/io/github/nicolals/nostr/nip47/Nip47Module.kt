@@ -4,7 +4,7 @@ import io.github.nicolals.nostr.core.crypto.CryptoResult
 import io.github.nicolals.nostr.core.event.upgrade.EventUpgrader
 import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.nip.NipModule
-import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.crypto.CryptoPrimitives
 import io.github.nicolals.nostr.core.primitives.PublicKey
 import io.github.nicolals.nostr.nip04.decryptNip04Content
 import io.github.nicolals.nostr.nip04.encryptNip04Content
@@ -21,7 +21,6 @@ import okio.ByteString
  * NIP-47 Nostr Wallet Connect module for event views and payload helpers.
  */
 class Nip47Module(
-    ctx: NipModuleContext,
     private val encryptionSelector: NwcEncryptionSelector,
 ) : NipModule {
     override val eventUpgraders: List<EventUpgrader<out EventView>> =
@@ -33,7 +32,7 @@ class Nip47Module(
         )
 }
 
-fun NipModuleContext.encryptNwcContent(
+fun CryptoPrimitives.encryptNwcContent(
     plaintext: String,
     encryption: NwcEncryption,
     senderPrivateKey: ByteString,
@@ -43,7 +42,7 @@ fun NipModuleContext.encryptNwcContent(
     NwcEncryption.NIP04 -> encryptNip04Content(plaintext, senderPrivateKey, recipientPublicKey)
 }
 
-fun NipModuleContext.decryptNwcContent(
+fun CryptoPrimitives.decryptNwcContent(
     content: String,
     encryption: NwcEncryption,
     receiverPrivateKey: ByteString,

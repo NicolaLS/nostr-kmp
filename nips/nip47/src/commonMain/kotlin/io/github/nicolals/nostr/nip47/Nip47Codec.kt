@@ -1,7 +1,6 @@
 package io.github.nicolals.nostr.nip47
 
 import io.github.nicolals.nostr.core.codec.*
-import io.github.nicolals.nostr.core.nip.NipModuleContext
 import io.github.nicolals.nostr.nip47.model.NwcBalanceResult
 import io.github.nicolals.nostr.nip47.model.NwcError
 import io.github.nicolals.nostr.nip47.model.NwcGetBalanceRequest
@@ -31,23 +30,23 @@ import io.github.nicolals.nostr.nip47.model.NwcUnknownNotification
 import io.github.nicolals.nostr.nip47.model.NwcUnknownRequest
 import io.github.nicolals.nostr.nip47.model.NwcUnknownResult
 
-fun NipModuleContext.encodeNwcRequest(request: NwcRequest): String =
-    jsonCodec.stringify(request.toJsonObject())
+fun JsonCodec.encodeNwcRequest(request: NwcRequest): String =
+    stringify(request.toJsonObject())
 
-fun NipModuleContext.decodeNwcRequestOrNull(content: String): NwcRequest? =
-    jsonCodec.parseObjectOrNull(content)?.let(::parseNwcRequest)
+fun JsonCodec.decodeNwcRequestOrNull(content: String): NwcRequest? =
+    parseObjectOrNull(content)?.let(::parseNwcRequest)
 
-fun NipModuleContext.encodeNwcResponse(response: NwcResponse): String =
-    jsonCodec.stringify(response.toJsonObject())
+fun JsonCodec.encodeNwcResponse(response: NwcResponse): String =
+    stringify(response.toJsonObject())
 
-fun NipModuleContext.decodeNwcResponseOrNull(content: String): NwcResponse? =
-    jsonCodec.parseObjectOrNull(content)?.let(::parseNwcResponse)
+fun JsonCodec.decodeNwcResponseOrNull(content: String): NwcResponse? =
+    parseObjectOrNull(content)?.let(::parseNwcResponse)
 
-fun NipModuleContext.encodeNwcNotification(notification: NwcNotification): String =
-    jsonCodec.stringify(notification.toJsonObject())
+fun JsonCodec.encodeNwcNotification(notification: NwcNotification): String =
+    stringify(notification.toJsonObject())
 
-fun NipModuleContext.decodeNwcNotificationOrNull(content: String): NwcNotification? =
-    jsonCodec.parseObjectOrNull(content)?.let(::parseNwcNotification)
+fun JsonCodec.decodeNwcNotificationOrNull(content: String): NwcNotification? =
+    parseObjectOrNull(content)?.let(::parseNwcNotification)
 
 private fun NwcRequest.toJsonObject(): JsonObject = when (this) {
     is NwcPayInvoiceRequest -> requestObject(

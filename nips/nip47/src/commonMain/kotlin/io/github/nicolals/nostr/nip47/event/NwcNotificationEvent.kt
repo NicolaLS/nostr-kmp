@@ -6,25 +6,26 @@ import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.event.template.EventDraft
 import io.github.nicolals.nostr.core.event.template.EventTemplate
 import io.github.nicolals.nostr.core.event.view.EventView
-import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.codec.JsonCodec
+import io.github.nicolals.nostr.nip47.NwcCipher
 import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.primitives.EventTag
 import io.github.nicolals.nostr.core.primitives.EventTags
 import io.github.nicolals.nostr.core.primitives.PublicKey
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
 import io.github.nicolals.nostr.nip47.decodeNwcNotificationOrNull
-import io.github.nicolals.nostr.nip47.decryptNwcContent
 import io.github.nicolals.nostr.nip47.encodeNwcNotification
-import io.github.nicolals.nostr.nip47.encryptNwcContent
 import io.github.nicolals.nostr.nip47.model.NwcEncryption
 import io.github.nicolals.nostr.nip47.model.NwcNotification
-import okio.ByteString
 
+/**
+ * A parsed event view, not proof of its sender's identity. Before decrypting received events,
+ * verify the canonical ID/signature and check the expected sender and recipient.
+ */
 open class NwcNotificationEvent(
     override val event: Event,
     val clientPubkey: PublicKey,
     val encryption: NwcEncryption,
-    private val knownNotification: NwcNotification? = null,
 ) : EventView {
     companion object {
         val KIND = EventKind(23197)
@@ -44,17 +45,17 @@ open class NwcNotificationEvent(
             )
         }
 
-        fun template(
+        suspend fun template(
             clientPubkey: PublicKey,
             notification: NwcNotification,
             createdAt: UnixTimeSeconds,
-            ctx: NipModuleContext,
-            walletPrivateKey: ByteString,
+            codec: JsonCodec,
+            cipher: NwcCipher,
             encryption: NwcEncryption = NwcEncryption.NIP44_V2,
             extraTags: EventTags = emptyList(),
         ): CryptoResult<EventTemplate<NwcNotificationEvent>> {
-            val payload = ctx.encodeNwcNotification(notification)
-            return ctx.encryptNwcContent(payload, encryption, walletPrivateKey, clientPubkey).map { content ->
+            val payload = codec.encodeNwcNotification(notification)
+            return cipher.encrypt(payload, encryption, clientPubkey).map { content ->
                 val kind = kindForEncryption(encryption)
                 val tags = buildTags(clientPubkey, extraTags)
                 val draft = EventDraft(
@@ -68,7 +69,6 @@ open class NwcNotificationEvent(
                         event = event,
                         clientPubkey = clientPubkey,
                         encryption = encryption,
-                        knownNotification = notification,
                     )
                 }
             }
@@ -80,43 +80,41 @@ open class NwcNotificationEvent(
         }
     }
 
-    fun decryptContent(
-        ctx: NipModuleContext,
-        receiverPrivateKey: ByteString,
+    suspend fun decryptContent(
+        cipher: NwcCipher,
         senderPublicKey: PublicKey,
         encryptionOverride: NwcEncryption? = null,
     ): CryptoResult<String> {
         val resolved = resolveEncryption(encryptionOverride)
-        return ctx.decryptNwcContent(event.content, resolved, receiverPrivateKey, senderPublicKey)
+        return cipher.decrypt(event.content, resolved, senderPublicKey)
     }
 
-    fun decryptNotification(
-        ctx: NipModuleContext,
-        receiverPrivateKey: ByteString,
+    suspend fun decryptNotification(
+        codec: JsonCodec,
+        cipher: NwcCipher,
         senderPublicKey: PublicKey,
         encryptionOverride: NwcEncryption? = null,
     ): CryptoResult<NwcNotification> {
-        knownNotification?.let { return CryptoResult.Ok(it) }
-        return decryptContent(ctx, receiverPrivateKey, senderPublicKey, encryptionOverride).flatMap { plaintext ->
-            val notification = ctx.decodeNwcNotificationOrNull(plaintext)
+        return decryptContent(cipher, senderPublicKey, encryptionOverride).flatMap { plaintext ->
+            val notification = codec.decodeNwcNotificationOrNull(plaintext)
                 ?: return@flatMap CryptoResult.Err(CryptoError.DecodeError("nwc notification"))
             CryptoResult.Ok(notification)
         }
     }
 
-    fun decryptForClient(
-        ctx: NipModuleContext,
-        clientPrivateKey: ByteString,
+    suspend fun decryptForClient(
+        codec: JsonCodec,
+        cipher: NwcCipher,
         encryptionOverride: NwcEncryption? = null,
     ): CryptoResult<NwcNotification> =
-        decryptNotification(ctx, clientPrivateKey, event.pubkey, encryptionOverride)
+        decryptNotification(codec, cipher, event.pubkey, encryptionOverride)
 
-    fun decryptForWallet(
-        ctx: NipModuleContext,
-        walletPrivateKey: ByteString,
+    suspend fun decryptForWallet(
+        codec: JsonCodec,
+        cipher: NwcCipher,
         encryptionOverride: NwcEncryption? = null,
     ): CryptoResult<NwcNotification> =
-        decryptNotification(ctx, walletPrivateKey, clientPubkey, encryptionOverride)
+        decryptNotification(codec, cipher, clientPubkey, encryptionOverride)
 
     private fun resolveEncryption(encryptionOverride: NwcEncryption?): NwcEncryption =
         encryptionOverride ?: encryption
