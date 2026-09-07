@@ -1,22 +1,20 @@
 package io.github.nicolals.nostr.nip04.event
 
+import io.github.nicolals.nostr.core.crypto.CryptoError
 import io.github.nicolals.nostr.core.crypto.CryptoResult
+import io.github.nicolals.nostr.core.crypto.EventVerifier
 import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.event.template.EventDraft
 import io.github.nicolals.nostr.core.event.template.EventTemplate
 import io.github.nicolals.nostr.core.event.view.EventView
-import io.github.nicolals.nostr.core.nip.NipModuleContext
 import io.github.nicolals.nostr.core.primitives.EventId
 import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.primitives.EventTag
 import io.github.nicolals.nostr.core.primitives.EventTags
 import io.github.nicolals.nostr.core.primitives.PublicKey
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
-import io.github.nicolals.nostr.nip04.decryptNip04
-import io.github.nicolals.nostr.nip04.encryptNip04
+import io.github.nicolals.nostr.nip04.Nip04Cipher
 import io.github.nicolals.nostr.nip04.model.Nip04CipherText
-import io.github.nicolals.nostr.nip04.parseContentOrNull
-import okio.ByteString
 
 open class EncryptedDirectMessageEvent(
     override val event: Event,
@@ -27,11 +25,11 @@ open class EncryptedDirectMessageEvent(
     companion object {
         val KIND = EventKind(4)
 
-        fun fromEventOrNull(event: Event, ctx: NipModuleContext): EncryptedDirectMessageEvent? {
+        fun fromEventOrNull(event: Event): EncryptedDirectMessageEvent? {
             if (event.kind != KIND) {
                 return null
             }
-            val ciphertext = ctx.parseContentOrNull(event.content) ?: return null
+            val ciphertext = Nip04CipherText.parseOrNull(event.content) ?: return null
             val recipientPubkey = recipientPubkeyFromTags(event.tags) ?: return null
             val replyToEventId = replyToEventIdFromTags(event.tags)
             return EncryptedDirectMessageEvent(
@@ -42,22 +40,27 @@ open class EncryptedDirectMessageEvent(
             )
         }
 
-        fun template(
+        suspend fun template(
             recipientPubkey: PublicKey,
             plaintext: String,
             createdAt: UnixTimeSeconds,
-            ctx: NipModuleContext,
-            senderPrivateKey: ByteString,
+            cipher: Nip04Cipher,
             replyToEventId: EventId? = null,
             extraTags: EventTags = emptyList(),
         ): CryptoResult<EventTemplate<EncryptedDirectMessageEvent>> =
-            ctx.encryptNip04(plaintext, senderPrivateKey, recipientPubkey).map { ciphertext ->
-                template(
-                    recipientPubkey = recipientPubkey,
-                    ciphertext = ciphertext,
-                    createdAt = createdAt,
-                    replyToEventId = replyToEventId,
-                    extraTags = extraTags,
+            cipher.encrypt(plaintext, recipientPubkey).flatMap { content ->
+                val ciphertext = Nip04CipherText.parseOrNull(content)
+                    ?: return@flatMap CryptoResult.Err(
+                        CryptoError.DecodeError("nip04"),
+                    )
+                CryptoResult.Ok(
+                    template(
+                        recipientPubkey = recipientPubkey,
+                        ciphertext = ciphertext,
+                        createdAt = createdAt,
+                        replyToEventId = replyToEventId,
+                        extraTags = extraTags,
+                    ),
                 )
             }
 
@@ -86,15 +89,23 @@ open class EncryptedDirectMessageEvent(
         }
     }
 
-    fun decryptForRecipient(
-        recipientPrivateKey: ByteString,
-        ctx: NipModuleContext,
-    ): CryptoResult<String> = ctx.decryptNip04(ciphertext, recipientPrivateKey, event.pubkey)
+    suspend fun decryptForRecipient(
+        cipher: Nip04Cipher,
+        verifier: EventVerifier,
+    ): CryptoResult<String> = verifier.verify(event).flatMap {
+        cipher.decrypt(event.content, event.pubkey)
+    }
 
-    fun decryptForSender(
-        senderPrivateKey: ByteString,
-        ctx: NipModuleContext,
-    ): CryptoResult<String> = ctx.decryptNip04(ciphertext, senderPrivateKey, recipientPubkey)
+    suspend fun decryptForSender(
+        cipher: Nip04Cipher,
+        verifier: EventVerifier,
+    ): CryptoResult<String> = verifier.verify(event).flatMap {
+        val recipient = recipientPubkeyFromTags(event.tags)
+            ?: return@flatMap CryptoResult.Err(
+                CryptoError.DecryptionFailed("Missing recipient"),
+            )
+        cipher.decrypt(event.content, recipient)
+    }
 }
 
 private fun recipientPubkeyFromTags(tags: EventTags): PublicKey? {
