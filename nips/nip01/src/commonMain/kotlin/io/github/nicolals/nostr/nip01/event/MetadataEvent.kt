@@ -4,7 +4,7 @@ import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.event.template.EventDraft
 import io.github.nicolals.nostr.core.event.template.EventTemplate
 import io.github.nicolals.nostr.core.event.view.EventView
-import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.codec.JsonCodec
 import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.primitives.EventTags
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
@@ -20,11 +20,11 @@ open class MetadataEvent(
     companion object {
         val KIND = EventKind(0)
 
-        fun fromEventOrNull(event: Event, ctx: NipModuleContext): MetadataEvent? {
+        fun fromEventOrNull(event: Event, codec: JsonCodec): MetadataEvent? {
             if (event.kind != KIND) {
                 return null
             }
-            val metadata = ctx.decodeContentOrNull(event.content) ?: return null
+            val metadata = codec.decodeContentOrNull(event.content) ?: return null
             return MetadataEvent(event = event, metadata = metadata)
         }
 
@@ -34,7 +34,7 @@ open class MetadataEvent(
             picture: String,
             createdAt: UnixTimeSeconds,
             tags: EventTags,
-            ctx: NipModuleContext,
+            codec: JsonCodec,
             displayName: String? = null,
             website: String? = null,
             banner: String? = null,
@@ -55,7 +55,7 @@ open class MetadataEvent(
                 metadata = metadata,
                 createdAt = createdAt,
                 tags = tags,
-                ctx = ctx
+                codec = codec
             )
         }
 
@@ -63,9 +63,9 @@ open class MetadataEvent(
             metadata: Metadata,
             createdAt: UnixTimeSeconds,
             tags: EventTags,
-            ctx: NipModuleContext
+            codec: JsonCodec
         ): EventTemplate<MetadataEvent> {
-            val metadataContent = ctx.encodeContent(metadata)
+            val metadataContent = codec.encodeContent(metadata)
             val draft = EventDraft(
                 createdAt = createdAt,
                 kind = KIND,

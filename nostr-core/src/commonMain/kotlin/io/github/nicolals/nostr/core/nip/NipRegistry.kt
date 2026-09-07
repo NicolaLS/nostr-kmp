@@ -18,11 +18,10 @@ import io.github.nicolals.nostr.core.protocol.ProtocolEngine
  *
  * ```kotlin
  * val codec = KotlinxNostrJsonCodec()
- * val ctx = SimpleNipModuleContext(codec, NostrCrypto)
  *
  * val registry = NipRegistry.Builder(codec)
- *     .install(Nip01Module(ctx))
- *     .install(Nip42Module(ctx))
+ *     .install(Nip01Module(codec))
+ *     .install(Nip42Module(codec))
  *     .build()
  *
  * // Access individual registries

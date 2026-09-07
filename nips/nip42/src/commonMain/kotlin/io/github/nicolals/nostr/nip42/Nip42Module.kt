@@ -5,7 +5,7 @@ import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.message.upgrade.ClientMessageUpgrader
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
 import io.github.nicolals.nostr.core.nip.NipModule
-import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.codec.NostrWireCodec
 import io.github.nicolals.nostr.core.protocol.ProtocolReducer
 import io.github.nicolals.nostr.nip42.event.AuthEventUpgrader
 import io.github.nicolals.nostr.nip42.message.Nip42ClientMessageUpgrader
@@ -25,8 +25,8 @@ import io.github.nicolals.nostr.nip42.protocol.Nip42Reducer
  * Install the module to handle AUTH protocol messages:
  * ```kotlin
  * val messageRegistry = MessageUpgradeRegistry.Builder()
- *     .install(Nip01Module(ctx))
- *     .install(Nip42Module(ctx))
+ *     .install(Nip01Module(codec))
+ *     .install(Nip42Module(codec))
  *     .build()
  * ```
  *
@@ -44,18 +44,18 @@ import io.github.nicolals.nostr.nip42.protocol.Nip42Reducer
  * @see <a href="https://github.com/nostr-protocol/nips/blob/master/42.md">NIP-42 Specification</a>
  */
 class Nip42Module(
-    private val ctx: NipModuleContext,
+    codec: NostrWireCodec,
 ) : NipModule {
 
     override val eventUpgraders: List<EventUpgrader<out EventView>> =
         listOf(AuthEventUpgrader())
 
     override val clientMessageUpgraders: List<ClientMessageUpgrader<*>> =
-        listOf(Nip42ClientMessageUpgrader(ctx.wireCodec))
+        listOf(Nip42ClientMessageUpgrader(codec))
 
     override val relayMessageUpgraders: List<RelayMessageUpgrader<*>> =
         listOf(Nip42RelayMessageUpgrader())
 
     override val protocolReducers: List<ProtocolReducer> =
-        listOf(Nip42Reducer(ctx.wireCodec))
+        listOf(Nip42Reducer(codec))
 }

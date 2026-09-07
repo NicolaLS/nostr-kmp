@@ -6,7 +6,7 @@ import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.message.upgrade.ClientMessageUpgrader
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
 import io.github.nicolals.nostr.core.nip.NipModule
-import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.codec.JsonCodec
 import io.github.nicolals.nostr.core.protocol.ProtocolReducer
 import io.github.nicolals.nostr.nip01.event.MetadataEventUpgrader
 import io.github.nicolals.nostr.nip01.message.Nip01ClientMessageUpgrader
@@ -22,22 +22,22 @@ import io.github.nicolals.nostr.nip01.model.Metadata
  * - Protocol message views for relay messages (EVENT, OK, EOSE, CLOSED, NOTICE)
  */
 class Nip01Module(
-    private val ctx: NipModuleContext,
+    codec: NostrJsonCodec,
 ) : NipModule {
     override val eventUpgraders: List<EventUpgrader<out EventView>> =
-        listOf(MetadataEventUpgrader(ctx))
+        listOf(MetadataEventUpgrader(codec))
 
     override val clientMessageUpgraders: List<ClientMessageUpgrader<*>> =
-        listOf(Nip01ClientMessageUpgrader(ctx.wireCodec))
+        listOf(Nip01ClientMessageUpgrader(codec))
 
     override val relayMessageUpgraders: List<RelayMessageUpgrader<*>> =
-        listOf(Nip01RelayMessageUpgrader(ctx.wireCodec))
+        listOf(Nip01RelayMessageUpgrader(codec))
 
     override val protocolReducers: List<ProtocolReducer> =
-        listOf(Nip01Reducer(ctx.wireCodec))
+        listOf(Nip01Reducer(codec))
 }
 
-fun NipModuleContext.encodeContent(metadata: Metadata): String {
+fun JsonCodec.encodeContent(metadata: Metadata): String {
     val birthday = metadata.birthday?.toJsonObjectOrNull()
     val value = jsonObjectOf(
         "name" to JsonString(metadata.name),
@@ -49,11 +49,11 @@ fun NipModuleContext.encodeContent(metadata: Metadata): String {
         "bot" to metadata.bot?.let(::JsonBoolean),
         "birthday" to birthday,
     )
-    return jsonCodec.stringify(value)
+    return stringify(value)
 }
 
-fun NipModuleContext.decodeContentOrNull(content: String): Metadata? {
-    val value = jsonCodec.parseObjectOrNull(content) ?: return null
+fun JsonCodec.decodeContentOrNull(content: String): Metadata? {
+    val value = parseObjectOrNull(content) ?: return null
     val name = value.stringValue("name") ?: return null
     val about = value.stringValue("about") ?: return null
     val picture = value.stringValue("picture") ?: return null
