@@ -2,12 +2,15 @@ package io.github.nicolals.nostr.runtime.coroutines
 
 import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.message.Filter
+import io.github.nicolals.nostr.core.message.view.ClientMessageView
 import io.github.nicolals.nostr.core.primitives.EventId
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
 import io.github.nicolals.nostr.core.protocol.ProtocolInput
 import io.github.nicolals.nostr.core.protocol.TimerKey
 import io.github.nicolals.nostr.core.transport.CloseInfo
 import io.github.nicolals.nostr.core.transport.TransportError
+import io.github.nicolals.nostr.core.transport.TransportResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 
 /**
@@ -21,19 +24,19 @@ internal sealed interface SessionInput {
     // ========== Transport Events ==========
 
     /** Transport connection opened */
-    data object TransportOpened : SessionInput
+    data class TransportOpened(val generation: Long) : SessionInput
 
     /** Transport received a message */
-    data class TransportMessage(val text: String) : SessionInput
+    data class TransportMessage(val generation: Long, val text: String) : SessionInput
 
     /** Transport closing (handshake started) */
-    data class TransportClosing(val info: CloseInfo) : SessionInput
+    data class TransportClosing(val generation: Long, val info: CloseInfo) : SessionInput
 
     /** Transport fully closed */
-    data class TransportClosed(val info: CloseInfo) : SessionInput
+    data class TransportClosed(val generation: Long, val info: CloseInfo) : SessionInput
 
     /** Transport failed */
-    data class TransportFailed(val error: TransportError) : SessionInput
+    data class TransportFailed(val generation: Long, val error: TransportError) : SessionInput
 
     // ========== User Commands ==========
 
@@ -60,7 +63,11 @@ internal sealed interface SessionInput {
     ) : SessionInput
 
     /** User requested to close a subscription */
-    data class CloseSubscription(val subscriptionId: SubscriptionId) : SessionInput
+    data class CloseSubscription(val handle: CoroutinesSubscriptionHandle) : SessionInput
+
+    data class Submit(val input: ProtocolInput, val completion: CompletableDeferred<Unit>) : SessionInput
+
+    data class Send(val message: ClientMessageView, val completion: CompletableDeferred<TransportResult<Unit>>) : SessionInput
 
     // ========== Internal Events ==========
 
@@ -71,13 +78,15 @@ internal sealed interface SessionInput {
     data class CloseTimeout(val subscriptionId: SubscriptionId) : SessionInput
 
     /** Reconnect delay elapsed, attempt reconnection */
-    data object ReconnectNow : SessionInput
+    data class ReconnectNow(val generation: Long) : SessionInput
 
     /** Retry a publish after delay */
-    data class RetryPublish(val eventId: EventId) : SessionInput
+    data class RetryPublish(val eventId: EventId, val handle: CoroutinesPublishHandle) : SessionInput
 
     /** Retry a subscription after reconnect */
-    data class RetrySubscription(val subscriptionId: SubscriptionId) : SessionInput
+    data class RetrySubscription(val subscriptionId: SubscriptionId, val handle: CoroutinesSubscriptionHandle) : SessionInput
+
+    data class Ping(val generation: Long) : SessionInput
 
     /** Internal: pending job completed */
     data class PendingJobCompleted(val job: Job) : SessionInput

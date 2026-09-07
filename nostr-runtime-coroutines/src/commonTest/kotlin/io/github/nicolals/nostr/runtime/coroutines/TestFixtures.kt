@@ -7,26 +7,22 @@ import io.github.nicolals.nostr.core.codec.JsonNumber
 import io.github.nicolals.nostr.core.codec.JsonObject
 import io.github.nicolals.nostr.core.codec.JsonString
 import io.github.nicolals.nostr.core.codec.JsonValue
-import io.github.nicolals.nostr.core.codec.NostrWireCodec
+import io.github.nicolals.nostr.core.codec.NostrJsonCodec
 import io.github.nicolals.nostr.core.codec.wire.WireEvent
 import io.github.nicolals.nostr.core.codec.wire.WireFilter
-import io.github.nicolals.nostr.core.crypto.CryptoError
-import io.github.nicolals.nostr.core.crypto.CryptoPrimitives
+import io.github.nicolals.nostr.core.crypto.EventVerifier
 import io.github.nicolals.nostr.core.crypto.CryptoResult
 import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.message.raw.RawClientMessage
 import io.github.nicolals.nostr.core.message.raw.RawRelayMessage
 import io.github.nicolals.nostr.core.message.view.ClientMessageView
-import io.github.nicolals.nostr.core.nip.NipModuleContext
-import io.github.nicolals.nostr.core.nip.SimpleNipModuleContext
 import io.github.nicolals.nostr.core.primitives.EventId
 import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.primitives.EventSig
 import io.github.nicolals.nostr.core.primitives.PublicKey
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
-import okio.ByteString
 
 /**
  * Test fixtures for session tests.
@@ -216,7 +212,7 @@ class TestJsonCodec : JsonCodec {
 /**
  * Wire codec that uses [TestJsonCodec] for parsing/encoding.
  */
-class TestWireCodec : NostrWireCodec, JsonCodec by TestJsonCodec() {
+class TestWireCodec : NostrJsonCodec, JsonCodec by TestJsonCodec() {
 
     override fun decodeEvent(value: JsonValue): WireEvent {
         val obj = value as? JsonObject ?: error("Expected object")
@@ -278,52 +274,5 @@ class TestWireCodec : NostrWireCodec, JsonCodec by TestJsonCodec() {
     }
 }
 
-/**
- * Stub crypto primitives for testing (not used in session tests).
- */
-object StubCryptoPrimitives : CryptoPrimitives {
-    private val notImplemented = CryptoError.Unsupported("test stub")
-
-    override fun randomBytes(length: Int): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun ecdhXOnly(privateKey32: ByteString, publicKeyBytes: ByteString): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun sha256(data: ByteString): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun hmacSha256(key: ByteString, data: ByteString): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun hkdfExtractSha256(salt: ByteString, ikm: ByteString): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun hkdfExpandSha256(prk: ByteString, info: ByteString, length: Int): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun aes256CbcEncrypt(key32: ByteString, iv16: ByteString, plaintext: ByteString): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun aes256CbcDecrypt(key32: ByteString, iv16: ByteString, ciphertext: ByteString): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun chacha20IetfXor(key32: ByteString, nonce12: ByteString, input: ByteString): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun base64Encode(data: ByteString): CryptoResult<String> =
-        CryptoResult.Err(notImplemented)
-
-    override fun base64Decode(data: String): CryptoResult<ByteString> =
-        CryptoResult.Err(notImplemented)
-
-    override fun constantTimeEquals(a: ByteString, b: ByteString): CryptoResult<Boolean> =
-        CryptoResult.Ok(a == b)
-}
-
-/**
- * Creates a test [NipModuleContext] with the test codec and stub crypto.
- */
-fun createTestModuleContext(): NipModuleContext {
-    return SimpleNipModuleContext(TestWireCodec(), StubCryptoPrimitives)
-}
+/** Explicit test-only trust policy for protocol lifecycle tests. */
+val AcceptTestEvents = EventVerifier { CryptoResult.Ok(Unit) }

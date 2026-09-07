@@ -28,6 +28,9 @@ class FakeRelayConnection(
         get() = _state
 
     val sentMessages = mutableListOf<String>()
+    var sendError: TransportError? = null
+
+    fun captureListener(): RelayConnectionListener = checkNotNull(listener)
     var closeCode: Int? = null
     var closeReason: String? = null
 
@@ -37,6 +40,7 @@ class FakeRelayConnection(
     }
 
     override fun send(text: String): TransportResult<Unit> {
+        sendError?.let { return TransportResult.failure(it) }
         if (_state != TransportState.Open) {
             return TransportResult.failure(TransportError.InvalidState("send", _state))
         }
@@ -93,8 +97,8 @@ class FakeRelayConnection(
     fun simulateFailure(error: TransportError) {
         _state = TransportState.Failed
         listener?.onFailure(error)
-        // Note: actual implementations transition to Closed after Failed
         _state = TransportState.Closed
+        listener?.onClosed(CloseInfo(CloseInfo.ABNORMAL_CLOSURE, null, false))
     }
 
     fun clearSentMessages() {

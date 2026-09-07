@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -43,10 +44,11 @@ class CoroutinesPoolPublishHandle internal constructor(
     init {
         for ((url, handle) in handles) {
             val job = scope.launch {
-                handle.statusFlow.collect { status ->
+                handle.statusFlow.first { status ->
                     _statusFlow.update { current ->
                         current + (url to status)
                     }
+                    status.isTerminal
                 }
             }
             jobs.add(job)

@@ -3,7 +3,8 @@ package io.github.nicolals.nostr.runtime.coroutines
 import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.nip.NipModule
-import io.github.nicolals.nostr.core.nip.NipModuleContext
+import io.github.nicolals.nostr.core.codec.NostrJsonCodec
+import io.github.nicolals.nostr.core.crypto.EventVerifier
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
 import io.github.nicolals.nostr.core.runtime.ConnectionStatus
 import io.github.nicolals.nostr.core.runtime.DeduplicationPolicy
@@ -44,7 +45,8 @@ enum class RelayRole {
  * Coroutines-based relay pool managing multiple sessions.
  */
 class CoroutinesRelayPool(
-    private val moduleContext: NipModuleContext,
+    private val codec: NostrJsonCodec,
+    private val eventVerifier: EventVerifier,
     private val transportFactory: RelayTransportFactory,
     private val scope: CoroutineScope,
     private val sessionConfig: SessionConfig = SessionConfig.Default,
@@ -90,7 +92,8 @@ class CoroutinesRelayPool(
 
             val session = CoroutinesRelaySession(
                 url = url,
-                moduleContext = moduleContext,
+                codec = codec,
+                eventVerifier = eventVerifier,
                 transportFactory = transportFactory,
                 scope = scope,
                 config = sessionConfig,

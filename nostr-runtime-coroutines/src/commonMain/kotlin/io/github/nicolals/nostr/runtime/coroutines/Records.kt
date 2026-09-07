@@ -5,6 +5,7 @@ import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.primitives.EventId
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
 import io.github.nicolals.nostr.core.runtime.SubscriptionRetryReason
+import io.github.nicolals.nostr.core.runtime.DeduplicationPolicy
 
 /**
  * Internal record tracking a subscription with its handle and metadata.
@@ -19,6 +20,7 @@ internal data class SubscriptionRecord(
     val subscriptionId: SubscriptionId,
     val filters: List<Filter>,
     val handle: CoroutinesSubscriptionHandle,
+    val deduplication: DeduplicationPolicy,
     val generation: Int = 0,
     val retryCount: Int = 0,
     val lastRetryReason: SubscriptionRetryReason? = null,

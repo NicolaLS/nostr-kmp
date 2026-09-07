@@ -56,14 +56,14 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 class CoroutinesSubscriptionHandle internal constructor(
     override val subscriptionId: SubscriptionId,
-    private val closeCallback: (SubscriptionId) -> Unit,
+    private val closeCallback: (CoroutinesSubscriptionHandle) -> Unit,
     private val onBackpressure: ((SubscriptionId, EventId, Long) -> Unit)? = null,
 ) : SubscriptionHandle {
 
     private val _statusFlow = MutableStateFlow<SubscriptionStatus>(SubscriptionStatus.Starting)
     private var droppedEvents: Long = 0
 
-    // Bounded channel for events - drops oldest on overflow to prevent blocking
+    // Bounded channel for events - drops new events on overflow to prevent blocking
     // Capacity of 256 provides reasonable buffer while limiting memory
     private val eventChannel = Channel<Event>(capacity = 256)
 
@@ -82,7 +82,9 @@ class CoroutinesSubscriptionHandle internal constructor(
      * Flow of events received for this subscription.
      *
      * Events are emitted in order as they arrive from the relay. The flow
-     * completes when the subscription is closed or interrupted.
+     * completes when the subscription is closed. Interruptions and retries keep
+     * the flow open. Each event is delivered to one collector; use shareIn if
+     * multiple observers need every event.
      *
      * ## Backpressure Handling
      *
@@ -106,7 +108,7 @@ class CoroutinesSubscriptionHandle internal constructor(
     }
 
     override fun close() {
-        closeCallback(subscriptionId)
+        closeCallback(this)
     }
 
     /**

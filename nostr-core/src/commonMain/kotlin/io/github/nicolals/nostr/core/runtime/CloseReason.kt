@@ -35,4 +35,18 @@ sealed interface CloseReason {
     data class Other(
         override val rawMessage: String,
     ) : CloseReason
+
+    companion object {
+        /** Parses machine-readable CLOSED prefixes while preserving the relay text. */
+        fun parse(rawMessage: String): CloseReason {
+            val trimmed = rawMessage.trimStart()
+            return when {
+                trimmed.startsWith("auth-required:") ->
+                    AuthRequired(trimmed.removePrefix("auth-required:").trimStart(), rawMessage)
+                trimmed.startsWith("restricted:") ->
+                    Restricted(trimmed.removePrefix("restricted:").trimStart(), rawMessage)
+                else -> Other(rawMessage)
+            }
+        }
+    }
 }

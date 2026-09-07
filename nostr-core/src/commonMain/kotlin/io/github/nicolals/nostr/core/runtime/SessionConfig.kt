@@ -14,7 +14,7 @@ package io.github.nicolals.nostr.core.runtime
  *         baseDelayMs = 500,
  *     ),
  *     retryPolicy = RetryPolicy.default(),
- *     deduplicationPolicy = DeduplicationPolicy.lru(maxSize = 5000),
+ *     deduplicationPolicyFactory = { DeduplicationPolicy.lru(maxSize = 5000) },
  *     closePolicy = ClosePolicy.Immediate,
  *     pingIntervalMillis = 30_000, // Send ping every 30 seconds
  * )
@@ -31,7 +31,9 @@ package io.github.nicolals.nostr.core.runtime
  *
  * @property reconnectPolicy How to handle disconnects.
  * @property retryPolicy How to handle interrupted operations after reconnect.
- * @property deduplicationPolicy How to filter duplicate events.
+ * @property deduplicationPolicyFactory Creates independent deduplication state for each
+ *   logical subscription. The same subscription retains its cache across reconnections.
+ *   The factory must return a fresh policy unless that policy is stateless.
  * @property closePolicy How to handle client-initiated subscription close.
  * @property pingIntervalMillis Interval in milliseconds between WebSocket pings.
  *   When set, the session will periodically send pings to detect dead connections.
@@ -41,11 +43,14 @@ package io.github.nicolals.nostr.core.runtime
 data class SessionConfig(
     val reconnectPolicy: ReconnectPolicy = ReconnectPolicy.exponentialBackoff(),
     val retryPolicy: RetryPolicy = RetryPolicy.default(),
-    val deduplicationPolicy: DeduplicationPolicy = DeduplicationPolicy.lru(),
+    val deduplicationPolicyFactory: () -> DeduplicationPolicy = { DeduplicationPolicy.lru() },
     val closePolicy: ClosePolicy = ClosePolicy.Immediate,
     val pingIntervalMillis: Long? = null,
+    /** Maximum queued signals or inbound messages per runtime observer. */
+    val observerBufferCapacity: Int = 64,
 ) {
     init {
+        require(observerBufferCapacity > 0) { "observerBufferCapacity must be positive" }
         require(pingIntervalMillis == null || pingIntervalMillis > 0) {
             "pingIntervalMillis must be positive or null, got: $pingIntervalMillis"
         }
@@ -65,7 +70,7 @@ data class SessionConfig(
         val Minimal: SessionConfig = SessionConfig(
             reconnectPolicy = ReconnectPolicy.never(),
             retryPolicy = RetryPolicy.never(),
-            deduplicationPolicy = DeduplicationPolicy.none(),
+            deduplicationPolicyFactory = { DeduplicationPolicy.none() },
             closePolicy = ClosePolicy.Immediate,
             pingIntervalMillis = null,
         )

@@ -18,8 +18,7 @@ kotlin {
             dependencies {
                 api(project(":nostr-core"))
                 api(project(":nips:nip01"))
-                implementation(project(":nips:nip42"))
-                implementation(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.coroutines.core)
             }
         }
         val commonTest by getting {

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -70,10 +71,11 @@ class CoroutinesPoolSubscriptionHandle internal constructor(
     init {
         for ((url, handle) in handles) {
             val job = scope.launch {
-                handle.statusFlow.collect { status ->
+                handle.statusFlow.first { status ->
                     _statusFlow.update { current ->
                         current + (url to status)
                     }
+                    status.isTerminal
                 }
             }
             jobs.add(job)

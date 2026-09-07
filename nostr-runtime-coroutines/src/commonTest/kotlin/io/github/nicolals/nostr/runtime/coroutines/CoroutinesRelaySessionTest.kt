@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 class CoroutinesRelaySessionTest {
 
     private val testUrl = RelayUrl.parse("wss://test.relay")
-    private val testModuleContext = createTestModuleContext()
+    private val testCodec = TestWireCodec()
 
     // ===== Connection Lifecycle Tests =====
 
@@ -565,7 +565,8 @@ class CoroutinesRelaySessionTest {
     ): CoroutinesRelaySession {
         return CoroutinesRelaySession(
             url = testUrl,
-            moduleContext = testModuleContext,
+            codec = testCodec,
+            eventVerifier = AcceptTestEvents,
             transportFactory = factory,
             scope = this,
             config = config,
