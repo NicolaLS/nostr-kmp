@@ -1,7 +1,7 @@
 package io.github.nicolals.nostr.nip42.protocol
 
 import io.github.nicolals.nostr.core.event.Event
-import io.github.nicolals.nostr.core.protocol.ProtocolInput
+import io.github.nicolals.nostr.core.protocol.OperationIntent
 
 /**
  * User intent inputs for NIP-42 authentication operations.
@@ -10,7 +10,7 @@ import io.github.nicolals.nostr.core.protocol.ProtocolInput
  * authentication operations. The NIP-42 reducer processes these
  * intents and produces appropriate effects and state changes.
  */
-sealed interface Nip42Intent : ProtocolInput {
+sealed interface Nip42Intent : OperationIntent {
 
     /**
      * Request to authenticate with the relay using a signed auth event.

@@ -5,7 +5,8 @@ import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.message.view.ClientMessageView
 import io.github.nicolals.nostr.core.primitives.EventId
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
-import io.github.nicolals.nostr.core.protocol.ProtocolInput
+import io.github.nicolals.nostr.core.protocol.ProtocolIntent
+import io.github.nicolals.nostr.core.protocol.AdmissionDecision
 import io.github.nicolals.nostr.core.protocol.TimerKey
 import io.github.nicolals.nostr.core.transport.CloseInfo
 import io.github.nicolals.nostr.core.transport.TransportError
@@ -65,7 +66,7 @@ internal sealed interface SessionInput {
     /** User requested to close a subscription */
     data class CloseSubscription(val handle: CoroutinesSubscriptionHandle) : SessionInput
 
-    data class Submit(val input: ProtocolInput, val completion: CompletableDeferred<Unit>) : SessionInput
+    data class Submit(val input: ProtocolIntent, val completion: CompletableDeferred<AdmissionDecision>) : SessionInput
 
     data class Send(val message: ClientMessageView, val completion: CompletableDeferred<TransportResult<Unit>>) : SessionInput
 

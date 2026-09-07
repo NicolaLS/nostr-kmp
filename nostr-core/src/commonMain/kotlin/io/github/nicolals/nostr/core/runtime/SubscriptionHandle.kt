@@ -69,6 +69,12 @@ interface SubscriptionHandle {
  * Status of a subscription.
  */
 sealed interface SubscriptionStatus {
+    /** Waiting for an admission policy; automatically reconsidered when protocol state changes. */
+    data class Deferred(val reason: String) : SubscriptionStatus {
+        override val isActive: Boolean = false
+        override val isTerminal: Boolean = false
+    }
+
     /**
      * Whether the subscription is currently active (can receive events).
      */

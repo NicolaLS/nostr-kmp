@@ -4,6 +4,7 @@ import io.github.nicolals.nostr.core.event.Event
 import io.github.nicolals.nostr.core.message.Filter
 import io.github.nicolals.nostr.core.primitives.EventId
 import io.github.nicolals.nostr.core.primitives.SubscriptionId
+import io.github.nicolals.nostr.core.protocol.OperationIntent
 import io.github.nicolals.nostr.core.protocol.ProtocolInput
 
 /**
@@ -30,7 +31,7 @@ sealed interface Nip01Intent : ProtocolInput {
     data class Subscribe(
         val subscriptionId: SubscriptionId,
         val filters: List<Filter>,
-    ) : Nip01Intent
+    ) : Nip01Intent, OperationIntent
 
     /**
      * Request to publish an event to the relay.
@@ -43,7 +44,7 @@ sealed interface Nip01Intent : ProtocolInput {
      *
      * @property event The signed event to publish.
      */
-    data class Publish(val event: Event) : Nip01Intent
+    data class Publish(val event: Event) : Nip01Intent, OperationIntent
 
     /**
      * Request to close a subscription.

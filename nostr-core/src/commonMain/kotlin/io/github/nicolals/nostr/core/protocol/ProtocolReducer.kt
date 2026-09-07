@@ -8,13 +8,11 @@ package io.github.nicolals.nostr.core.protocol
  * @property state The new protocol state after processing.
  * @property effects Effects for the runtime to execute (send messages, timers).
  * @property signals Signals for consumers to observe (status changes, events).
- * @property consumed If true, stop processing further reducers for this input.
  */
 data class ReduceResult(
     val state: ProtocolState,
     val effects: List<ProtocolEffect> = emptyList(),
     val signals: List<ProtocolSignal> = emptyList(),
-    val consumed: Boolean = false,
 ) {
     companion object {
         /**
@@ -60,10 +58,9 @@ data class ReduceResult(
  * ## Reducer Composition
  *
  * Multiple reducers can process the same input. The engine runs reducers
- * in registration order, threading state through each. A reducer can:
- * - Return `null` to indicate it doesn't handle the input
- * - Return a result with `consumed = false` to allow other reducers to also process
- * - Return a result with `consumed = true` to stop further processing
+ * in registration order, threading state through each. Return null for unhandled
+ * inputs. Every reducer can observe lifecycle inputs; operation vetoes belong in
+ * OperationAdmission, which runs before any reducers.
  *
  * ## Purity
  *

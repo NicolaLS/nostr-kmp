@@ -17,6 +17,10 @@ import io.github.nicolals.nostr.core.nip.NipRegistry
 import io.github.nicolals.nostr.core.protocol.InboundMessage
 import io.github.nicolals.nostr.core.protocol.ModuleStateKey
 import io.github.nicolals.nostr.core.protocol.ProtocolEffect
+import io.github.nicolals.nostr.core.protocol.AdmissionDecision
+import io.github.nicolals.nostr.core.protocol.OperationAdmission
+import io.github.nicolals.nostr.core.protocol.OperationIntent
+import io.github.nicolals.nostr.core.protocol.ProtocolIntent
 import io.github.nicolals.nostr.core.protocol.ProtocolInput
 import io.github.nicolals.nostr.core.protocol.ProtocolReducer
 import io.github.nicolals.nostr.core.protocol.ProtocolSignal
@@ -49,24 +53,25 @@ import kotlin.test.assertFailsWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionExtensionTest {
-    private data object CustomRequest : ProtocolInput
+    private data object CustomRequest : OperationIntent
     private data object CustomReplyReceived : ProtocolSignal
     private data class CustomReply(override val raw: RawRelayMessage) : RelayMessageView
-    private data object OpenGate : ProtocolInput
+    private data object OpenGate : ProtocolIntent
     private object GateOpen : ModuleStateKey<Boolean> {
         override val id = "test.gate.open"
         override val default = false
     }
 
     private val gateModule = object : NipModule {
-        override val id = "test.SessionExtensionTest.1"
+        override val id = "test.gate"
+        override val admissionPolicies = listOf(OperationAdmission { state, _ ->
+            if (state.moduleStates[GateOpen]) AdmissionDecision.Allow else AdmissionDecision.Defer("Gate closed")
+        })
         override val protocolReducers = listOf(object : ProtocolReducer {
             override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? = when {
                 input == OpenGate -> ReduceResult(
-                    state.withModuleStates(state.moduleStates.set(GateOpen, true)), consumed = true,
+                    state.withModuleStates(state.moduleStates.set(GateOpen, true)),
                 )
-                !state.moduleStates[GateOpen] && (input is Nip01Intent.Subscribe || input is Nip01Intent.Publish) ->
-                    ReduceResult(state, consumed = true)
                 else -> null
             }
         })
@@ -89,9 +94,55 @@ class SessionExtensionTest {
         })
     }
 
-    @Test fun callerOrderedRegistryCanGateAndResumeExistingSubscriptionAndPublishHandles() = runTest {
+    @Test fun additionalModuleRejectsManagedOperationsBeforeSending() = runTest {
+        val denial = object : NipModule {
+            override val id = "test.denial"
+            override val admissionPolicies = listOf(OperationAdmission { _, _ -> AdmissionDecision.Reject("Denied") })
+        }
+        val factory = FakeRelayTransportFactory()
+        val session = CoroutinesRelaySession(
+            RelayUrl.parse("wss://test.relay"), TestWireCodec(), AcceptTestEvents, factory, this,
+            additionalModules = listOf(denial),
+        )
+        session.connect()
+        runCurrent()
+        factory.lastConnection!!.simulateOpen()
+        runCurrent()
+        val publication = session.publish(TestFixtures.testEvent)
+        val subscription = session.subscribe(TestFixtures.testFilters)
+        runCurrent()
+        assertEquals(PublishStatus.Rejected("Denied"), publication.status)
+        assertEquals(SubscriptionStatus.Closed("Denied"), subscription.status)
+        assertTrue(factory.lastConnection!!.sentMessages.isEmpty())
+        assertEquals(AdmissionDecision.Reject("Denied"), session.submit(CustomRequest))
+        session.closeAndJoin()
+    }
+
+    @Test fun closedDeferredSubscriptionCannotBeResumed() = runTest {
+        val factory = FakeRelayTransportFactory()
+        val session = CoroutinesRelaySession(
+            RelayUrl.parse("wss://test.relay"), TestWireCodec(), AcceptTestEvents, factory, this,
+            additionalModules = listOf(gateModule),
+        )
+        session.connect()
+        runCurrent()
+        factory.lastConnection!!.simulateOpen()
+        runCurrent()
+        val subscription = session.subscribe(TestFixtures.testFilters)
+        runCurrent()
+        assertIs<SubscriptionStatus.Deferred>(subscription.status)
+        subscription.close()
+        runCurrent()
+        session.submit(OpenGate)
+        assertIs<SubscriptionStatus.Closed>(subscription.status)
+        assertTrue(factory.lastConnection!!.sentMessages.isEmpty())
+        assertEquals(AdmissionDecision.Reject("Unsupported intent"), session.submit(CustomRequest))
+        session.closeAndJoin()
+    }
+
+    @Test fun admissionInstalledAfterBaseAutomaticallyResumesManagedHandles() = runTest {
         val codec = TestWireCodec()
-        val registry = NipRegistry.Builder(codec).install(gateModule).install(Nip01Module(codec)).build()
+        val registry = NipRegistry.Builder(codec).install(Nip01Module(codec)).install(gateModule).build()
         val factory = FakeRelayTransportFactory()
         val session = CoroutinesRelaySession(
             url = RelayUrl.parse("wss://test.relay"), registry = registry, jsonCodec = codec,
@@ -107,12 +158,10 @@ class SessionExtensionTest {
         val publication = session.publish(publish.event)
         runCurrent()
         assertTrue(factory.lastConnection!!.sentMessages.isEmpty())
-        assertEquals(SubscriptionStatus.Starting, subscription.status)
-        assertEquals(PublishStatus.Queued, publication.status)
+        assertEquals(SubscriptionStatus.Deferred("Gate closed"), subscription.status)
+        assertEquals(PublishStatus.Deferred("Gate closed"), publication.status)
 
         session.submit(OpenGate)
-        session.submit(subscribe)
-        session.submit(publish)
         assertEquals(2, factory.lastConnection!!.sentMessages.size)
         assertEquals(SubscriptionStatus.CatchingUp, subscription.status)
         assertEquals(PublishStatus.Pending, publication.status)
@@ -124,9 +173,9 @@ class SessionExtensionTest {
         session.closeAndJoin()
     }
 
-    @Test fun poolPreservesCallerReducerOrderAndKeepsSharedRegistryStateIndependent() = runTest {
+    @Test fun poolKeepsAdmissionStateIndependentAcrossSessions() = runTest {
         val codec = TestWireCodec()
-        val registry = NipRegistry.Builder(codec).install(gateModule).install(Nip01Module(codec)).build()
+        val registry = NipRegistry.Builder(codec).install(Nip01Module(codec)).install(gateModule).build()
         val factory = FakeRelayTransportFactory()
         val pool = CoroutinesRelayPool(
             registry = registry, jsonCodec = codec, eventVerifier = AcceptTestEvents,
@@ -144,13 +193,10 @@ class SessionExtensionTest {
         runCurrent()
         assertTrue(factory.connections.all { it.sentMessages.isEmpty() })
         first.submit(OpenGate)
-        val intent = Nip01Intent.Subscribe(TestFixtures.testSubId, TestFixtures.testFilters)
-        first.submit(intent)
-        second.submit(intent)
         assertEquals(1, factory.connections.single { it.url == firstUrl }.sentMessages.size)
         assertTrue(factory.connections.single { it.url == secondUrl }.sentMessages.isEmpty())
         assertEquals(SubscriptionStatus.CatchingUp, subscription.handles.getValue(firstUrl).status)
-        assertEquals(SubscriptionStatus.Starting, subscription.handles.getValue(secondUrl).status)
+        assertEquals(SubscriptionStatus.Deferred("Gate closed"), subscription.handles.getValue(secondUrl).status)
         pool.close()
         subscription.close()
     }

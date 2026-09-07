@@ -49,6 +49,11 @@ interface PublishHandle {
  * Status of a publish operation.
  */
 sealed interface PublishStatus {
+    /** Waiting for an admission policy; automatically reconsidered when protocol state changes. */
+    data class Deferred(val reason: String) : PublishStatus {
+        override val isTerminal: Boolean = false
+    }
+
     /**
      * Whether this is a terminal (final) status.
      */

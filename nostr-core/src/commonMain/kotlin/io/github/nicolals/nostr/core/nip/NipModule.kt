@@ -6,6 +6,7 @@ import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.message.upgrade.ClientMessageUpgrader
 import io.github.nicolals.nostr.core.message.upgrade.MessageUpgradeRegistry
 import io.github.nicolals.nostr.core.message.upgrade.RelayMessageUpgrader
+import io.github.nicolals.nostr.core.protocol.OperationAdmission
 import io.github.nicolals.nostr.core.protocol.ProtocolEngine
 import io.github.nicolals.nostr.core.protocol.ProtocolReducer
 
@@ -25,6 +26,9 @@ interface NipModule {
 
     /** Module IDs that must be installed before this module's reducers. */
     val requires: Set<String> get() = emptySet()
+
+    /** Policies evaluated before any reducer handles an operation. */
+    val admissionPolicies: List<OperationAdmission> get() = emptyList()
 
     /** Event upgraders provided by this NIP module */
     val eventUpgraders: List<EventUpgrader<out EventView>> get() = emptyList()
@@ -58,5 +62,6 @@ fun MessageUpgradeRegistry.Builder.install(nip: NipModule) = apply {
  * Install all protocol reducers from a NIP module into the engine builder.
  */
 fun ProtocolEngine.Builder.install(nip: NipModule) = apply {
+    nip.admissionPolicies.forEach(::admission)
     nip.protocolReducers.forEach(::register)
 }

@@ -108,41 +108,26 @@ class ProtocolEngineTest {
         assertEquals(TestSignal("second"), result.signals[1])
     }
 
-    @Test
-    fun consumedFlagStopsFurtherProcessing() {
-        var firstReducerCalled = false
-        var secondReducerCalled = false
+    private data object Operation : OperationIntent
 
-        val consumingReducer = object : ProtocolReducer {
-            override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? {
-                firstReducerCalled = true
-                return ReduceResult(
-                    state = state,
-                    signals = listOf(TestSignal("consumed")),
-                    consumed = true,
-                )
-            }
-        }
-
-        val skippedReducer = object : ProtocolReducer {
-            override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult? {
-                secondReducerCalled = true
-                return ReduceResult(state = state, signals = listOf(TestSignal("skipped")))
-            }
-        }
-
+    @Test fun admissionRunsBeforeReducersAndCannotBlockLifecycleInputs() {
+        var calls = 0
         val engine = ProtocolEngine.Builder()
-            .register(consumingReducer)
-            .register(skippedReducer)
+            .register(object : ProtocolReducer {
+                override fun reduce(state: ProtocolState, input: ProtocolInput): ReduceResult {
+                    calls++
+                    return ReduceResult(state)
+                }
+            })
+            .admission { _, _ -> AdmissionDecision.Defer("waiting") }
+            .admission { _, _ -> AdmissionDecision.Reject("denied") }
             .build()
-
-        val result = engine.process(ProtocolState(), TestInput("test"))
-
-        assertTrue(firstReducerCalled)
-        // Second reducer should NOT be called due to consumed flag
-        assertTrue(!secondReducerCalled)
-        assertEquals(1, result.signals.size)
-        assertEquals(TestSignal("consumed"), result.signals[0])
+        val result = engine.process(ProtocolState(), Operation)
+        assertEquals(AdmissionDecision.Reject("denied"), result.admission)
+        assertTrue(result.effects.isEmpty())
+        assertEquals(0, calls)
+        assertEquals(AdmissionDecision.Allow, engine.process(ProtocolState(), TransportInput.Opened).admission)
+        assertEquals(1, calls)
     }
 
     @Test

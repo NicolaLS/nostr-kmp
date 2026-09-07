@@ -85,18 +85,28 @@ is no empty registry module to install.
 
 ## Protocol engine and extensions
 
-`ProtocolEngine` threads immutable state through registered reducers. Inputs and
-signals are open interfaces. Effects describe sending a message or managing a
-timer; effects are executed by the runtime. Reducer registration order is explicit,
-with dependencies installed first. The codec convenience constructors install
-NIP-01 before additional modules. Sessions and pools also accept a caller-built
-`NipRegistry` and a `JsonCodec`, preserving the caller's module order. This allows
-policy reducers to consume an intent before the base NIP-01 reducer sends it.
-Built-in subscription and publish handles require NIP-01-compatible lifecycle
-signals; consumed intents remain queued until an extension resumes or completes
-them. Shared reducers keep per-session state in `ProtocolState`.
+`ProtocolEngine` threads immutable state through registered reducers, with
+module dependencies installed first. Every reducer can observe lifecycle inputs;
+reducers cannot suppress one another. Shared reducers keep per-session state in
+`ProtocolState`. Effects describe sending a message or managing a timer and are
+executed by the runtime.
 
-The coroutine runtime exposes `submit(ProtocolInput)` and `send(ClientMessageView)`.
+Modules can contribute `admissionPolicies`. Before any reducer handles an
+`OperationIntent`, these policies return `Allow`, `Reject(reason)`, or
+`Defer(reason)`. Rejection takes precedence over deferral. Admission runs before
+all reducers regardless of module order, including for `additionalModules`.
+Lifecycle and cleanup inputs never pass through admission.
+
+Managed publish/subscribe handles expose `Deferred` while waiting. The session
+owns these operations and automatically reevaluates them when protocol state
+changes. Rejection completes the handle; closing a deferred subscription removes
+it. Policies must be pure and use protocol state rather than mutable external
+flags. Raw `send` is a transport-level escape hatch and bypasses admission.
+
+The coroutine runtime exposes `submit(ProtocolIntent)` and `send(ClientMessageView)`.
+`submit` cannot inject synthetic inbound messages or transport lifecycle inputs.
+It returns an admission decision; custom submitted operations are caller-owned
+and must be resubmitted explicitly after deferral. Unsupported intents are rejected.
 Its `signals` and `messages` flows expose all installed extensions. An application
 can implement a new reducer or issue COUNT/AUTH commands without changing runtime
 source code. Start collecting before submitting the corresponding operation.

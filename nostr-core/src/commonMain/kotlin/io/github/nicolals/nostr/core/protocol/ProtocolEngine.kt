@@ -13,9 +13,8 @@ package io.github.nicolals.nostr.core.protocol
  * the input can modify the state. Effects and signals from all reducers
  * are collected and returned together.
  *
- * A reducer can set `consumed = true` in its result to stop further
- * processing. This is useful for gating behavior (e.g., auth required
- * before subscribe).
+ * Operation admission runs before all reducers, independently of registration
+ * order. Reducers cannot suppress other reducers or lifecycle cleanup.
  *
  * ## Thread Safety
  *
@@ -45,6 +44,7 @@ package io.github.nicolals.nostr.core.protocol
  */
 class ProtocolEngine internal constructor(
     private val reducers: List<ProtocolReducer>,
+    private val admissions: List<OperationAdmission>,
 ) {
     /**
      * Processes an input through all reducers and produces a result.
@@ -53,7 +53,19 @@ class ProtocolEngine internal constructor(
      * @param input The input to process.
      * @return The result containing the new state, collected effects, and signals.
      */
-    fun process(state: ProtocolState, input: ProtocolInput): ReduceResult {
+    fun process(state: ProtocolState, input: ProtocolInput): ProtocolResult {
+        if (input is OperationIntent) {
+            var decision: AdmissionDecision = AdmissionDecision.Allow
+            for (policy in admissions) {
+                when (val candidate = policy.evaluate(state, input)) {
+                    is AdmissionDecision.Reject -> return ProtocolResult(state, admission = candidate)
+                    is AdmissionDecision.Defer -> if (decision == AdmissionDecision.Allow) decision = candidate
+                    AdmissionDecision.Allow -> Unit
+                }
+            }
+            if (decision != AdmissionDecision.Allow) return ProtocolResult(state, admission = decision)
+        }
+        var handled = false
         var currentState = state
         val allEffects = mutableListOf<ProtocolEffect>()
         val allSignals = mutableListOf<ProtocolSignal>()
@@ -61,16 +73,16 @@ class ProtocolEngine internal constructor(
         for (reducer in reducers) {
             val result = reducer.reduce(currentState, input) ?: continue
 
+            handled = true
             currentState = result.state
             allEffects += result.effects
             allSignals += result.signals
-
-            if (result.consumed) {
-                break
-            }
         }
 
-        return ReduceResult(
+        if (!handled && input is ProtocolIntent) {
+            return ProtocolResult(state, admission = AdmissionDecision.Reject("Unsupported intent"))
+        }
+        return ProtocolResult(
             state = currentState,
             effects = allEffects,
             signals = allSignals,
@@ -82,6 +94,10 @@ class ProtocolEngine internal constructor(
      */
     class Builder {
         private val reducers = mutableListOf<ProtocolReducer>()
+        private val admissions = mutableListOf<OperationAdmission>()
+
+        fun admission(policy: OperationAdmission) = apply { admissions += policy }
+
 
         /**
          * Registers a reducer.
@@ -95,6 +111,6 @@ class ProtocolEngine internal constructor(
         /**
          * Builds the engine with all registered reducers.
          */
-        fun build(): ProtocolEngine = ProtocolEngine(reducers.toList())
+        fun build(): ProtocolEngine = ProtocolEngine(reducers.toList(), admissions.toList())
     }
 }

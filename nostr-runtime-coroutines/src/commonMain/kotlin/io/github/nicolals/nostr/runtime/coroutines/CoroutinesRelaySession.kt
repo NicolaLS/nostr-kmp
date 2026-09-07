@@ -19,6 +19,8 @@ import io.github.nicolals.nostr.core.primitives.SubscriptionId
 import io.github.nicolals.nostr.core.protocol.CoreSignal
 import io.github.nicolals.nostr.core.protocol.InboundMessage
 import io.github.nicolals.nostr.core.protocol.ProtocolEffect
+import io.github.nicolals.nostr.core.protocol.AdmissionDecision
+import io.github.nicolals.nostr.core.protocol.ProtocolIntent
 import io.github.nicolals.nostr.core.protocol.ProtocolInput
 import io.github.nicolals.nostr.core.protocol.ProtocolSignal
 import io.github.nicolals.nostr.core.protocol.ProtocolState
@@ -86,7 +88,7 @@ import kotlin.concurrent.Volatile
  *
  * The codec convenience constructor installs NIP-01 followed by additional NIP
  * modules. The registry constructor gives the caller full control over reducer
- * ordering, including interceptors that consume an intent before NIP-01 runs.
+ * ordering. Module admission policies run before all operation reducers.
  * Built-in subscription and publish handles require NIP-01-compatible reducers
  * that emit the corresponding [Nip01Signal] lifecycle signals.
  *
@@ -339,7 +341,9 @@ class CoroutinesRelaySession(
                         continue
                     }
                     try {
+                        val previousState = protocolState
                         processInput(input)
+                        if (!_isClosed && protocolState !== previousState) resumeDeferredOperations()
                     } catch (e: CancellationException) {
                         rejectInput(input, "Session cancelled")
                         throw e
@@ -507,12 +511,14 @@ class CoroutinesRelaySession(
     /**
      * Submits an intent to the installed protocol reducers and waits for it to be
      * processed. NIP modules can expose their own [ProtocolInput] types without
-     * requiring runtime changes. Throws if the session is closed or overloaded.
+     * requiring runtime changes. Returns an explicit admission decision. Unlike
+     * publish/subscribe handles, custom submitted operations remain caller-owned:
+     * a deferred result must be resubmitted by the caller. Throws if closed or overloaded.
      */
-    suspend fun submit(input: ProtocolInput) {
-        val completion = CompletableDeferred<Unit>()
+    suspend fun submit(input: ProtocolIntent): AdmissionDecision {
+        val completion = CompletableDeferred<AdmissionDecision>()
         enqueueInput(SessionInput.Submit(input, completion))
-        completion.await()
+        return completion.await()
     }
 
     /**
@@ -551,8 +557,7 @@ class CoroutinesRelaySession(
             is SessionInput.Publish -> handlePublish(input)
             is SessionInput.CloseSubscription -> handleCloseSubscription(input.handle)
             is SessionInput.Submit -> {
-                driveEngine(input.input)
-                input.completion.complete(Unit)
+                input.completion.complete(driveEngine(input.input))
             }
             is SessionInput.Send -> input.completion.complete(sendMessage(input.message))
             is SessionInput.Ping -> if (isCurrentTransport(input.generation)) {
@@ -915,7 +920,25 @@ class CoroutinesRelaySession(
     }
 
     private fun sendSubscribe(record: SubscriptionRecord) {
-        driveEngine(Nip01Intent.Subscribe(record.subscriptionId, record.filters))
+        when (val decision = driveEngine(Nip01Intent.Subscribe(record.subscriptionId, record.filters))) {
+            AdmissionDecision.Allow -> Unit
+            is AdmissionDecision.Defer -> record.handle.updateStatus(SubscriptionStatus.Deferred(decision.reason))
+            is AdmissionDecision.Reject -> {
+                record.handle.updateStatus(SubscriptionStatus.Closed(decision.reason))
+                removeSubscription(record.subscriptionId)
+                forgetSubscription(record.subscriptionId)
+            }
+        }
+    }
+
+    private fun resumeDeferredOperations() {
+        if (_connectionStatus.value != ConnectionStatus.Connected) return
+        for (record in subscriptions.values.toList()) {
+            if (record.handle.status is SubscriptionStatus.Deferred) sendSubscribe(record)
+        }
+        for (record in publishes.values.toList()) {
+            if (record.handle.status is PublishStatus.Deferred) sendPublish(record)
+        }
     }
 
     private fun handleCloseSubscription(handle: CoroutinesSubscriptionHandle) {
@@ -1076,7 +1099,15 @@ class CoroutinesRelaySession(
     }
 
     private fun sendPublish(record: PublishRecord) {
-        driveEngine(Nip01Intent.Publish(record.event))
+        when (val decision = driveEngine(Nip01Intent.Publish(record.event))) {
+            AdmissionDecision.Allow -> Unit
+            is AdmissionDecision.Defer -> record.handle.updateStatus(PublishStatus.Deferred(decision.reason))
+            is AdmissionDecision.Reject -> {
+                record.handle.updateStatus(PublishStatus.Rejected(decision.reason))
+                publishes.remove(record.eventId)
+                forgetPublish(record.eventId)
+            }
+        }
     }
 
     private fun retryPublish(record: PublishRecord) {
@@ -1133,7 +1164,7 @@ class CoroutinesRelaySession(
 
     // ========== Engine Integration ==========
 
-    private fun driveEngine(input: ProtocolInput) {
+    private fun driveEngine(input: ProtocolInput): AdmissionDecision {
         val result = registry.engine.process(protocolState, input)
         protocolState = result.state
 
@@ -1146,6 +1177,7 @@ class CoroutinesRelaySession(
         for (signal in result.signals) {
             processSignal(signal)
         }
+        return result.admission
     }
 
     private fun executeEffect(effect: ProtocolEffect) {
