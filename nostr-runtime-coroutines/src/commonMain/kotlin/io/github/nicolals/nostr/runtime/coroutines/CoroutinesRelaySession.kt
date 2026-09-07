@@ -10,6 +10,7 @@ import io.github.nicolals.nostr.core.nip.NipModule
 import io.github.nicolals.nostr.core.codec.NostrJsonCodec
 import io.github.nicolals.nostr.core.crypto.EventVerifier
 import io.github.nicolals.nostr.core.crypto.CryptoResult
+import io.github.nicolals.nostr.nip01.message.Nip01RelayMessageUpgrader
 import io.github.nicolals.nostr.nip01.message.RelayEventMessage
 import kotlinx.coroutines.flow.Flow
 import io.github.nicolals.nostr.core.nip.NipRegistry
@@ -285,6 +286,8 @@ class CoroutinesRelaySession(
 
     // ========== Mutable State (only accessed from actor) ==========
 
+    private val baseMessages = Nip01RelayMessageUpgrader(registry.wireCodec)
+    private var processingFailed = false
     private var protocolState = ProtocolState()
     private var transport: RelayConnection? = null
     private var transportGeneration = 0L
@@ -341,6 +344,8 @@ class CoroutinesRelaySession(
                     } catch (e: Exception) {
                         rejectInput(input, "Protocol processing failed")
                         _errors.tryEmit(SessionError.ProcessingError(url))
+                        processingFailed = true
+                        break // State may be partially updated; terminate and clean up all handles.
                     }
                 }
             } finally {
@@ -785,8 +790,8 @@ class CoroutinesRelaySession(
         }
         publishes.clear()
 
-        // Update connection status
-        _connectionStatus.value = ConnectionStatus.Disconnected
+        // Preserve a terminal processing failure for observers after cleanup.
+        _connectionStatus.value = if (processingFailed) ConnectionStatus.Failed(null) else ConnectionStatus.Disconnected
         signalStream.close()
         messageStream.close()
 
@@ -1173,28 +1178,38 @@ class CoroutinesRelaySession(
     }
 
     private fun handleTransportMessage(text: String) {
-        try {
+        val messageView = try {
             val jsonValue = jsonCodec.parse(text)
             val rawMessage = registry.wireCodec.decodeRelayMessage(jsonValue)
-            val messageView = registry.messages.upgradeRelay(rawMessage)
-            if (messageView is RelayEventMessage) {
-                val event = messageView.event ?: return
-                when (val verification = eventVerifier.verify(event)) {
-                    is CryptoResult.Ok -> Unit
-                    is CryptoResult.Err -> {
-                        _errors.tryEmit(SessionError.EventRejected(url, event.id))
-                        return
-                    }
-                }
+            // Standard envelopes own verification and lifecycle routing. Extensions
+            // interpret event contents through events.upgrade, not by replacing EVENT.
+            val token = rawMessage.tokenOrNull
+            if (token in baseMessages.tokens) {
+                baseMessages.upgradeOrNull(rawMessage, checkNotNull(token))
+                    ?: throw IllegalArgumentException("Malformed standard message")
+            } else {
+                registry.messages.upgradeRelay(rawMessage)
             }
-            messageStream.emit(messageView)
-            driveEngine(InboundMessage(messageView))
         } catch (e: CancellationException) {
             throw e
         } catch (_: Exception) {
-            // Malformed message - emit error and continue
             _errors.tryEmit(SessionError.ParseError(url))
+            return
         }
+        if (messageView is RelayEventMessage) {
+            val event = messageView.event ?: return
+            when (eventVerifier.verify(event)) {
+                is CryptoResult.Ok -> Unit
+                is CryptoResult.Err -> {
+                    _errors.tryEmit(SessionError.EventRejected(url, event.id))
+                    return
+                }
+            }
+        }
+        messageStream.emit(messageView)
+        // Reducer failures must reach the actor's terminal failure path, not be
+        // mistaken for malformed JSON and leave partially updated session state.
+        driveEngine(InboundMessage(messageView))
     }
 
     // ========== Signal Processing ==========

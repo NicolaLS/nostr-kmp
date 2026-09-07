@@ -22,6 +22,11 @@ validate the configured wallet author, client recipient, and request correlation
 Applications implementing other authenticated workflows must also enforce their
 own expected identities and protocol-specific constraints.
 
+Sessions decode standard NIP-01 message envelopes through the built-in decoder;
+custom message upgraders cannot shadow EVENT verification or OK/EOSE routing.
+Use event upgraders to interpret verified event contents. Custom wire message
+tokens still use the installed message registry.
+
 ## Cryptographic capabilities
 
 `CryptoPrimitives` and `SigningPrimitives` expose local algorithms for low-level
@@ -93,6 +98,10 @@ session shutdown. Streams complete when the session closes.
 
 The session actor serializes state changes. Bounded operation admission fails
 rejected handles explicitly; lifecycle commands remain deliverable under load.
+An unexpected reducer, verifier, or effect-processing exception permanently closes
+the affected session, completes its handles, and leaves its connection status
+`Failed`. Diagnostics omit exception payloads. Malformed wire messages remain
+recoverable parse errors. Create a new session after correcting a processing fault.
 Transport callbacks carry a connection generation, and termination is processed
 once per connection. Timers execute scheduled retries instead of recalculating
 their delays indefinitely.
