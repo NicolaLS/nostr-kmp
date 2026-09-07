@@ -1,14 +1,20 @@
 package io.github.nicolals.nostr.core.primitives
 
 typealias EventTag = List<String>
-/**
- * A tag array of a signed nostr event.
- *
- * This is modeled as a `List<List<String>> (a **read-only** view) to prevent accidental mutation,
- * as mutating tags of an already signed event breaks the `Event.id` and `Event.sig` which will
- * lead to rejection by relays and errors in other modules of this SDK.
- *
- * In case you need to mutate tags for some reason you can cast it to a `MutableList` but be aware
- * that this breaks the event in which these tags are included.
- */
 typealias EventTags = List<EventTag>
+
+/** Events and drafts own immutable snapshots of both list levels. */
+internal fun snapshotEventTags(tags: EventTags): EventTags =
+    if (tags is ImmutableEventTags) tags else ImmutableEventTags(tags)
+
+private class ImmutableEventTags(tags: EventTags) : AbstractList<EventTag>() {
+    private val entries = tags.map { ImmutableEventTag(it) }
+    override val size: Int get() = entries.size
+    override fun get(index: Int): EventTag = entries[index]
+}
+
+private class ImmutableEventTag(tag: EventTag) : AbstractList<String>() {
+    private val entries = tag.toList()
+    override val size: Int get() = entries.size
+    override fun get(index: Int): String = entries[index]
+}

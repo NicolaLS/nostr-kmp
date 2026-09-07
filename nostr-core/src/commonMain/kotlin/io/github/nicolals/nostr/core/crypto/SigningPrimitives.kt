@@ -12,8 +12,9 @@ import okio.ByteString
  * ## Implementations
  *
  * The default implementation uses secp256k1 with BIP-340 Schnorr signatures as required
- * by the Nostr protocol. Alternative implementations could support hardware security
- * modules, remote signing services (NIP-46), or other key management strategies.
+ * by the Nostr protocol. These are local operations on explicit key bytes. Use
+ * [EventTemplateSigner] for remote services, hardware keys, or other signers whose
+ * private key material must remain unavailable to callers.
  */
 interface SigningPrimitives {
 

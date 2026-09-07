@@ -118,16 +118,11 @@ object NostrSigning : SigningPrimitives {
         return withSodium("schnorrSign") {
             @OptIn(ExperimentalUnsignedTypes::class)
             val actualAuxRand = auxRand ?: LibsodiumRandom.buf(32).toByteArray()
-            try {
-                val sig = Secp256k1.signSchnorr(
-                    message32.toByteArray(),
-                    secretKey32.toByteArray(),
-                    actualAuxRand
-                )
-                sig.toByteString()
-            } catch (e: Exception) {
-                throw RuntimeException("Schnorr signing failed: ${e.message}", e)
-            }
+            Secp256k1.signSchnorr(
+                message32.toByteArray(),
+                secretKey32.toByteArray(),
+                actualAuxRand,
+            ).toByteString()
         }
     }
 
@@ -172,7 +167,7 @@ object NostrSigning : SigningPrimitives {
                 CryptoResult.Err(CryptoError.InitializationFailed("libsodium"))
             }
         } catch (e: Exception) {
-            CryptoResult.Err(CryptoError.InitializationFailed("libsodium", e.message))
+            CryptoResult.Err(CryptoError.InitializationFailed("libsodium"))
         }
     }
 
@@ -187,6 +182,6 @@ object NostrSigning : SigningPrimitives {
         try {
             CryptoResult.Ok(block())
         } catch (e: Exception) {
-            CryptoResult.Err(CryptoError.ProviderError(operation, e.message))
+            CryptoResult.Err(CryptoError.ProviderError(operation))
         }
 }

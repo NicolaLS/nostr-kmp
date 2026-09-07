@@ -15,6 +15,13 @@ private fun Buffer.writeNip01JsonString(s: String, context: String) {
 
     for (i in 0 until n) {
         val ch = s[i]
+        // Unpaired UTF-16 surrogates have no UTF-8 representation. Replacing them would sign
+        // different content from the value provided by the caller or received from the relay.
+        if ((ch.isHighSurrogate() && (i + 1 == n || !s[i + 1].isLowSurrogate())) ||
+            (ch.isLowSurrogate() && (i == 0 || !s[i - 1].isHighSurrogate()))
+        ) {
+            throw EventIdSerializationException("Invalid Unicode in $context")
+        }
         // Reject control chars that would require \u00XX escapes; otherwise ID hashing becomes ambiguous.
         if (ch.code < 0x20) {
             when (ch) {

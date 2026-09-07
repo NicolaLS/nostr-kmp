@@ -1,47 +1,33 @@
 package io.github.nicolals.nostr.core.crypto
 
+import io.github.nicolals.nostr.core.event.Event
+import io.github.nicolals.nostr.core.event.template.EventDraft
 import io.github.nicolals.nostr.core.event.template.EventTemplate
 import io.github.nicolals.nostr.core.event.view.EventView
 import io.github.nicolals.nostr.core.primitives.PublicKey
 
 /**
- * Signs event templates to produce signed Nostr events.
+ * An account's event-signing capability. Implementations may use local keys, a remote signer,
+ * a browser extension, or hardware without exposing private key material.
  *
- * This interface abstracts the signing operation, allowing for different implementations:
- * - In-memory private key signing ([NostrSigner])
- * - Hardware security module signing
- * - Remote signing (NIP-46 bunker)
- * - Browser extension signing (NIP-07)
- *
- * ## Usage
- *
- * ```kotlin
- * val signer: EventTemplateSigner = NostrSigner.generate().getOrThrow()
- *
- * val template = eventTemplate(
- *     kind = EventKind(1),
- *     createdAt = UnixTimeSeconds.now(),
- *     tags = emptyList(),
- *     content = "Hello, Nostr!"
- * )
- *
- * val signedEvent = signer.sign(template)
- * ```
+ * Signing can suspend for I/O or user approval. Cancellation propagates to the caller;
+ * signing failures and rejected requests are returned as [CryptoResult.Err].
  */
 interface EventTemplateSigner {
-    /**
-     * The public key associated with this signer.
-     */
     val pubkey: PublicKey
 
-    /**
-     * Signs an event template and returns the typed event view.
-     *
-     * The implementation computes the event ID (SHA-256 of serialized event data),
-     * creates a Schnorr signature, and constructs the complete signed event.
-     *
-     * @param template The unsigned event template to sign
-     * @return The signed event wrapped in its typed view
-     */
-    fun <T : EventView> sign(template: EventTemplate<T>): T
+    suspend fun sign(draft: EventDraft): CryptoResult<Event>
+
+    /** Signs the immutable draft and wraps the matching result in its typed event view. */
+    suspend fun <T : EventView> sign(template: EventTemplate<T>): CryptoResult<T> =
+        sign(template.draft).flatMap { event ->
+            val draft = template.draft
+            if (event.pubkey != pubkey || event.createdAt != draft.createdAt || event.kind != draft.kind ||
+                event.tags != draft.tags || event.content != draft.content
+            ) {
+                CryptoResult.Err(CryptoError.SigningFailed("Signer returned an event for a different draft"))
+            } else {
+                CryptoResult.Ok(template.wrap(event))
+            }
+        }
 }

@@ -7,67 +7,17 @@ import io.github.nicolals.nostr.core.primitives.EventKind
 import io.github.nicolals.nostr.core.primitives.EventTags
 import io.github.nicolals.nostr.core.primitives.UnixTimeSeconds
 
-
 /**
- * Represents an unsigned event draft plus a typed wrapper factory for the final signed [Event].
+ * An immutable unsigned draft and a cheap factory for its typed signed view.
  *
- * ## Important
- * - `wrap(event)` MUST be cheap. It should generally be `::MyTypedView`.
- * - If the typed view would otherwise need expensive decrypt/parse to expose properties,
- *   the wrap closure may capture "known fields" (derived at template creation/upgrade time)
- *   in the `EventTemplateUpgrader` implementation and pass them into the typed view to avoid repeating
- *   work after signing.
- *
- *   Example:
- *   ```kotlin
- *   object NwcPayReqTemplate : EventTemplateUpgrader<NwcPayReq> {
- *     override val kind: EventKind = EventKind(23194)
- *
- *     fun create(amount: Long): EventTemplate<NwcPayReq> {
- *         val known = NwcPayKnown(amount)
- *         val payload = somehowBuildPayload(amount)
- *         val content = encrypt(payload)
- *         val tags = somehowBuildTags()
- *         // ...
- *
- *         val draft = EventDraft(createdAt, kind, tags, content)
- *         return EventTemplate(draft) { event -> NwcPayReq(event, known = known, decryptor = null) }
- *     }
- *
- *     override fun upgradeOrNull(draft: EventDraft): EventTemplate<NwcPayReq> {
- *       // ...
- *     }
- * }
- *
- *   ```
+ * Pass this to EventTemplateSigner.sign. The factory may capture known public fields to avoid
+ * parsing them again, but must not cache decrypted content as a substitute for authentication.
  */
 class EventTemplate<U : EventView>(
     val draft: EventDraft,
     internal val wrap: (Event) -> U,
-) {
-    /**
-     * Signs this template by constructing a complete [Event] using the provided factory function.
-     *
-     * The [createEvent] function receives the draft and should return a signed [Event]
-     * with computed id, pubkey, and sig fields.
-     *
-     * @param createEvent Factory function that creates the signed Event from this draft
-     * @return The typed event view wrapping the signed event
-     */
-    fun sign(createEvent: (EventDraft) -> Event): U {
-        val event = createEvent(draft)
-        return wrap(event)
-    }
-}
+)
 
-/**
- * Creates a generic event template with the given parameters.
- *
- * @param kind The event kind
- * @param content The event content
- * @param tags The event tags (default: empty)
- * @param createdAt The creation timestamp (default: current time)
- */
 fun eventTemplate(
     kind: EventKind,
     content: String,
@@ -75,8 +25,5 @@ fun eventTemplate(
     createdAt: UnixTimeSeconds = UnixTimeSeconds.now(),
 ): EventTemplate<GenericEvent> = EventTemplate(
     draft = EventDraft(createdAt, kind, tags, content),
-    wrap = ::GenericEvent
+    wrap = ::GenericEvent,
 )
-
-
-// TODO: Provide update and builder ergonomics.

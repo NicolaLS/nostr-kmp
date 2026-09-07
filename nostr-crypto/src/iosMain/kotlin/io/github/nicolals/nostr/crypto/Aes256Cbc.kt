@@ -56,7 +56,7 @@ internal actual object Aes256Cbc {
                                 key = keyPinned.addressOf(0),
                                 keyLength = kCCKeySizeAES256.convert(),
                                 iv = ivPinned.addressOf(0),
-                                dataIn = inputPinned.addressOf(0),
+                                dataIn = if (input.isEmpty()) null else inputPinned.addressOf(0),
                                 dataInLength = input.size.convert(),
                                 dataOut = outputPinned.addressOf(0),
                                 dataOutAvailable = output.size.convert(),

@@ -23,6 +23,8 @@ value class SecretKey private constructor(val bytes: ByteString) {
      */
     val hex: String get() = bytes.hex()
 
+    override fun toString(): String = "SecretKey([redacted])"
+
     companion object {
         fun fromHex(hex: String) = SecretKey(hex.decodeHex())
 

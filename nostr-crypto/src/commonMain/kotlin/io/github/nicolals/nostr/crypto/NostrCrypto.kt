@@ -210,7 +210,7 @@ object NostrCrypto : CryptoPrimitives {
                 CryptoResult.Err(CryptoError.InitializationFailed("libsodium"))
             }
         } catch (e: Exception) {
-            CryptoResult.Err(CryptoError.InitializationFailed("libsodium", e.message))
+            CryptoResult.Err(CryptoError.InitializationFailed("libsodium"))
         }
     }
 
@@ -228,14 +228,14 @@ object NostrCrypto : CryptoPrimitives {
         try {
             CryptoResult.Ok(block())
         } catch (e: Exception) {
-            CryptoResult.Err(CryptoError.ProviderError(operation, e.message))
+            CryptoResult.Err(CryptoError.ProviderError(operation))
         }
 
     private inline fun <T> runDecrypt(block: () -> T): CryptoResult<T> =
         try {
             CryptoResult.Ok(block())
         } catch (e: Exception) {
-            CryptoResult.Err(CryptoError.DecryptionFailed(e.message))
+            CryptoResult.Err(CryptoError.DecryptionFailed())
         }
 
     @OptIn(ExperimentalUnsignedTypes::class)

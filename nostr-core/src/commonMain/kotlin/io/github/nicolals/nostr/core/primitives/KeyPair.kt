@@ -11,7 +11,7 @@ package io.github.nicolals.nostr.core.primitives
  * val keys = KeyPair.generate().getOrThrow()
  *
  * // Create from existing secret key
- * val keys = KeyPair.fromSecretKey(secretKey).getOrThrow()
+ * val keys = secretKey.toKeyPair().getOrThrow()
  *
  * // Access keys
  * println("Public key: ${keys.publicKey.hex}")
@@ -24,5 +24,7 @@ data class KeyPair(
     val secretKey: SecretKey,
     val publicKey: PublicKey,
 ) {
-    companion object
+    companion object {}
+
+    override fun toString(): String = "KeyPair(publicKey=$publicKey, secretKey=[redacted])"
 }
