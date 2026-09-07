@@ -195,30 +195,36 @@ private fun parseJsonNumberToLong(raw: String, label: String): Long {
     val fracPart = match.groupValues[3]
     val expPart = match.groupValues[4]
 
-    var digits = intPart + fracPart
-    if (digits.all { it == '0' }) {
+    var digits = (intPart + fracPart).trimStart('0')
+    if (digits.isEmpty()) {
         return 0L
     }
 
-    val scale = fracPart.length
-    val exponent = expPart.toIntOrNull() ?: 0
-    val shift = exponent - scale
+    val exponent = if (expPart.isEmpty()) 0 else {
+        expPart.toIntOrNull() ?: throw IllegalArgumentException("Number out of range for $label")
+    }
+    // Use Long for the shift so an extreme exponent cannot overflow the subtraction.
+    val shift = exponent.toLong() - fracPart.length
     if (shift < 0) {
         val trim = -shift
         if (digits.length <= trim) {
             throw IllegalArgumentException("Expected integer for $label")
         }
-        val fractionalDigits = digits.takeLast(trim)
+        val fractionalDigits = digits.takeLast(trim.toInt())
         if (fractionalDigits.any { it != '0' }) {
             throw IllegalArgumentException("Expected integer for $label")
         }
-        digits = digits.dropLast(trim)
+        digits = digits.dropLast(trim.toInt())
     } else if (shift > 0) {
-        digits += "0".repeat(shift)
+        // A Long has at most 19 decimal digits. Bound expansion before allocating.
+        if (digits.length + shift > 19) {
+            throw IllegalArgumentException("Number out of range for $label")
+        }
+        digits += "0".repeat(shift.toInt())
     }
 
-    val unsigned = digits.toLongOrNull() ?: throw IllegalArgumentException("Expected integer for $label")
-    return if (negative) -unsigned else unsigned
+    val signed = if (negative) "-$digits" else digits
+    return signed.toLongOrNull() ?: throw IllegalArgumentException("Number out of range for $label")
 }
 
 private fun JsonObject.requireValue(key: String): JsonValue =

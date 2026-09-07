@@ -133,6 +133,39 @@ class KotlinxNostrJsonCodecTest {
     }
 
     @Test
+    fun numericOverflowIsRejectedWithoutExpandingTheExponent() {
+        for (literal in listOf(
+            "1e2147483647", "1e2147483648", "1e-2147483648", "1e-2147483649",
+            "1.0e-2147483648", "1e9999999999999999999999999999999999999999",
+            "9223372036854775808", "-9223372036854775809", "1e19",
+        )) {
+            assertFailsWith<IllegalArgumentException>(literal) {
+                codec.decodeFilter("""{"since":$literal}""")
+            }
+        }
+    }
+
+    @Test
+    fun integerConversionIsExactAtLongBoundaries() {
+        val examples = mapOf(
+            "9223372036854775807" to Long.MAX_VALUE,
+            "-9223372036854775808" to Long.MIN_VALUE,
+            "-9.223372036854775808e18" to Long.MIN_VALUE,
+            "1000e-3" to 1L,
+            "0.000010e5" to 1L,
+            "-0e999999999999999999999999" to 0L,
+        )
+        for ((literal, expected) in examples) {
+            assertEquals(expected, codec.decodeFilter("""{"since":$literal}""").since, literal)
+        }
+        for (literal in listOf("1.01", "1e-1", "1001e-3", "0.0001")) {
+            assertFailsWith<IllegalArgumentException>(literal) {
+                codec.decodeFilter("""{"since":$literal}""")
+            }
+        }
+    }
+
+    @Test
     fun stringifyRejectsInvalidJsonNumberLiteral() {
         assertFailsWith<IllegalArgumentException> {
             codec.stringify(JsonNumber("01"))
