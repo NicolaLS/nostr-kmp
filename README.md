@@ -1,5 +1,16 @@
 # nostr-kmp
 
+> [!IMPORTANT]
+> **This repository is archived.** nostr-kmp was built for
+> [Rayl](https://github.com/NicolaLS/rayl), its only user, so it now lives in
+> Rayl's [`nostr/`](https://github.com/NicolaLS/rayl/tree/main/nostr) directory,
+> history included. Keeping it as a separately published library cost more than
+> it gave. It's no longer maintained here, and nothing was released to Maven
+> Central (the old snapshots have expired).
+>
+> If you'd like to use nostr-kmp and want it developed and maintained again, or
+> you'd like to contribute, email [hello@nicolasusca.com](mailto:hello@nicolasusca.com).
+
 `nostr-kmp` is a Kotlin Multiplatform SDK for building Nostr clients, tools,
 and protocol extensions. It separates the protocol model, codec, crypto,
 transport, runtime, and NIP support into small modules so applications can
